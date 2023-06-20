@@ -33,7 +33,8 @@ class AuthController extends Controller
         $user = Auth::user();
         $token = $user->createToken('token')->plainTextToken;
         return response([
-            'jwt'=>$token
+            'jwt'=>$token,
+            'type' => 'bearer'
         ]);
     }
 
@@ -43,4 +44,13 @@ class AuthController extends Controller
             'message'=>'succesfully logged out!'
         ]);
     }
+
+    public function checkToken(){
+        $user = Auth::user();
+        return response([
+            'user'=> $user
+        ]);
+    }
+
+
 }
