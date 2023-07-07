@@ -1,9 +1,9 @@
 <?php
 
-namespace SAPb1\Filters;
+namespace App\Libraries\SAPb1\Filters;
 
 abstract class Filter{
-    
+
     private $op;
 
     public function setOperator($op){
@@ -13,7 +13,7 @@ abstract class Filter{
     public function getOperator(){
         return $this->op;
     }
-    
+
     public function escape($value){
         if(is_string($value)){
             $value = str_replace("'", "''", $value);
@@ -21,6 +21,6 @@ abstract class Filter{
         }
         return $value;
     }
-    
+
     public abstract function execute();
 }

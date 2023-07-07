@@ -1,12 +1,12 @@
 <?php
 
-namespace SAPb1\Filters;
+namespace App\Libraries\SAPb1\Filters;
 
 class MoreThan extends Filter{
-    
+
     private $field;
     private $value;
-    
+
     public function __construct($field, $value){
         $this->field = $field;
         $this->value = $value;

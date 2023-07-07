@@ -1,15 +1,18 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Response;
 use Session;
+use App\Libraries\SAPb1\SAPClient;
 
 class BudgetController extends Controller
 {
 
+    private $sapsession;
+    private $sap;
 
     public function createBudget($a=1)
     {
@@ -67,8 +70,24 @@ class BudgetController extends Controller
         }
         echo $response;
     }
+    public function getBudget()
+    {
 
-    public function getBudget($skip=20)
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $BudgetReq = $this->sap->getService('BudgetReq');
+        $BudgetReq->headers(['OData-Version' => '4.0']);
+
+        $result = $BudgetReq->queryBuilder()
+            ->select('Code,Name,U_Project,U_Pillar,U_Classification,U_SubClass,U_SubClass2')
+            ->orderBy('Code', 'desc')
+            ->findAll();
+
+        return $result;
+    }
+
+    public function getBudget2($skip=20)
     {
         if(!Session::has('sapcookies')){
             $this->getCookie();
@@ -82,13 +101,19 @@ class BudgetController extends Controller
         ])
         ->withBody($data,'application/json')
         ->withHeaders ([
-            'content-Type' => 'application/json',
+            'Content-Type' => 'application/json; odata.metadata=minimal',
             'OData-Version' => '4.0'
 
         ])->get('https://'.env('SAP_URL').':50000/b1s/v2/BudgetReq?$select=Code,Name,U_Project,U_Pillar,U_Classification,U_SubClass,U_SubClass2&$skip='.$skip);
 
         $content = $response->getBody();
         $array = json_decode($content, true);
+
+        if(array_key_exists("@odata.context",$array)){
+           $array["@odata.context"] = stripslashes("http://localhost:8000/api/".'$metadata'."#BudgetReq");
+
+        }
+
         if(array_key_exists("error",$array)){
             $code = $array['error']['code'];
             if($code == 301){ //if request timed out
@@ -96,45 +121,60 @@ class BudgetController extends Controller
                 $this->getBudget();
             }
         }
-        echo $response;
+        $contents = json_encode($array,JSON_UNESCAPED_SLASHES);
+        $response = Response::make($contents, 200);
+
+        $response->withHeaders([
+            'Content-Type' => 'application/json; odata.metadata=minimal',
+            'OData-Version' => '4.0'
+
+        ]);
+        return $response;
     }
 
     public function metadata()
     {
-        if(!Session::has('sapcookies')){
-            $this->getCookie();
-        }
-        $cookie = Session::get('sapcookies');
-        $data = '';
-        $response = Http::withoutVerifying()
-        ->withOptions([
-            'cookies' => $cookie,
-            'verify'=>false
-        ])
-        ->withBody($data,'application/json')
-        ->withHeaders ([
-            'content-Type' => 'application/json'
-        ])->get('https://'.env('SAP_URL').':50000/b1s/v2/$metadata');
+        // if(!Session::has('sapcookies')){
+        //     $this->getCookie();
+        // }
+        // $cookie = Session::get('sapcookies');
+        // $data = '';
+        // $response = Http::withoutVerifying()
+        // ->withOptions([
+        //     'cookies' => $cookie,
+        //     'verify'=>false
+        // ])
+        // ->withBody($data,'application/json')
+        // ->withHeaders ([
+        //     'content-Type' => 'application/json'
+        // ])->get('https://'.env('SAP_URL').':50000/b1s/v2/$metadata');
 
-        $content = $response->getBody();
-        header('Access-Control-Allow-Origin : *');
-        echo $response;
+        // $content = $response->getBody();
+        // header('Access-Control-Allow-Origin : *');
+        // echo $response;
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $BudgetReq = $this->sap->getService('BudgetReq');
+        $metadata = $BudgetReq->getMetaData();
+        return $metadata;
+
     }
 
-    public function getCookie()
+    public function getSession()
     {
-        $response = Http::withoutVerifying()
-        ->withOptions(["verify"=>false])
-        ->withHeaders ([
-            'content-Type' => 'application/json'
-        ])
-        ->post('https://'.env('SAP_URL').':50000/b1s/v2/Login', [
-            'CompanyDB' => 'POS_29JUN',
-            'UserName' => 'manager',
-            'Password' => '1234'
-        ]);
-        $cookies = $response->cookies();
-        Session::put('sapcookies', $cookies);
-        return $cookies;
+        $config = [
+            "https" => true,
+            "host" => "localhost",
+            "port" => 50000,
+            "version" => 2,
+            "sslOptions" => [
+                "verify_peer"=>false,
+                "verify_peer_name"=>false
+            ]
+        ];
+        $sap = SAPClient::createSession($config, "manager", "1234", "POS_29JUN");
+        $this->sap = $sap;
+        return $sap;
     }
 }

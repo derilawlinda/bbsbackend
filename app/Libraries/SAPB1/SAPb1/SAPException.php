@@ -1,11 +1,11 @@
 <?php
 
-namespace SAPb1;
+namespace App\Libraries\SAPb1;
 
 class SAPException extends \Exception{
-    
+
     protected $statusCode;
-    
+
     /**
      * Initializes a new instance of SAPException.
      */
@@ -22,10 +22,10 @@ class SAPException extends \Exception{
             $message = $response->getJson()->error->message->value;
             $erroCode = $response->getJson()->error->code;
         }
-        
+
         parent::__construct($message, $erroCode);
     }
-    
+
     public function getStatusCode() : int{
         return $this->statusCode;
     }

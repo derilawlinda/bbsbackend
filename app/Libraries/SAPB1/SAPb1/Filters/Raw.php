@@ -1,11 +1,11 @@
 <?php
 
-namespace SAPb1\Filters;
+namespace App\Libraries\SAPb1\Filters;
 
 class Raw extends Filter{
-    
+
     private $string;
-    
+
     public function __construct($string){
         $this->string = $string;
     }

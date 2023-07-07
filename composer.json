@@ -29,7 +29,7 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "classmap": [
-            "app/libraries"
+            "app/Libraries"
         ]
     },
     "autoload-dev": {

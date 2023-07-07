@@ -1,9 +1,9 @@
 <?php
 
-namespace SAPb1\Filters;
+namespace App\Libraries\SAPb1\Filters;
 
 class Between extends Filter{
-    
+
     private $field;
     private $fromValue;
     private $toValue;

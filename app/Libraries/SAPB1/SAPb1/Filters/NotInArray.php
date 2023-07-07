@@ -1,12 +1,12 @@
 <?php
 
-namespace SAPb1\Filters;
+namespace App\Libraries\SAPb1\Filters;
 
 class NotInArray extends Filter{
-    
+
     private $field;
     private $collection;
-    
+
     public function __construct($field, array $collection){
         $this->field = $field;
         $this->collection = $collection;

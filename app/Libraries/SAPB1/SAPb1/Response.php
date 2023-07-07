@@ -1,12 +1,12 @@
 <?php
 
-namespace SAPb1;
+namespace App\Libraries\SAPb1;
 
 /**
  * Encapsulates an SAP B1 HTTP response.
  */
 class Response{
-    
+
     protected $statusCode;
     protected $headers;
     protected $cookies;
@@ -21,14 +21,14 @@ class Response{
         $this->cookies = $cookies;
         $this->body = $body;
     }
-    
+
     /**
      * Gets the response status code.
      */
     public function getStatusCode() : int{
         return $this->statusCode;
     }
-    
+
     /**
      * Gets an array of response headers. If $header is specified and $header
      * exists then returns the value of the $header key.
@@ -41,14 +41,14 @@ class Response{
         }
         return $this->headers;
     }
-    
+
     /**
      * Gets an array of response of cookies.
      */
     public function getCookies() : array{
         return $this->cookies;
     }
-    
+
     /**
      * Gets the response body.
      */

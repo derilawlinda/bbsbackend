@@ -1,13 +1,13 @@
 <?php
 
-namespace SAPb1;
+namespace App\Libraries\SAPb1;
 
 /**
- * SAPClient manages access to SAP B1 Service Layer and provides methods to 
+ * SAPClient manages access to SAP B1 Service Layer and provides methods to
  * perform CRUD operations.
  */
 class SAPClient{
-    
+
     private $config = [];
     private $session = [];
 
@@ -18,14 +18,14 @@ class SAPClient{
         $this->config = new Config($configOptions);
         $this->session = $session;
     }
-    
+
     /**
      * Returns a new instance of SAPb1\Service.
      */
     public function getService(string $serviceName) : Service{
         return new Service($this->config, $this->session, $serviceName);
     }
-    
+
     /**
      * Returns the current SAP B1 session data.
      */
@@ -45,18 +45,18 @@ class SAPClient{
      * Throws SAPb1\SAPException if an error occurred.
      */
     public static function createSession(array $configOptions, string $username, string $password, string $company) : SAPClient{
-        
+
         $config = new Config($configOptions);
 
         $request = new Request($config->getServiceUrl('Login'), $config->getSSLOptions());
         $request->setMethod('POST');
         $request->setPost(['UserName' => $username, 'Password' => $password, 'CompanyDB' => $company]);
         $response = $request->getResponse();
-        
+
         if($response->getStatusCode() === 200){
             return new SAPClient($config->toArray(), $response->getCookies());
         }
-        
+
         throw new SAPException($response);
     }
 }
