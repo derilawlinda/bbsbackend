@@ -99,6 +99,14 @@ class Query{
         return $this->doRequest('/$count');
     }
 
+     /**
+     * Returns a count of the result.
+     */
+    public function maxcode() : int{
+        return $this->doRequest('/$count');
+    }
+
+
     /**
      * Returns a single result using the specified $id.
      */

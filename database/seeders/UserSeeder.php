@@ -19,16 +19,28 @@ class UserSeeder extends Seeder
                 'role_id' => Role::where('name', 'Admin')->first()->id,
             ],
             [
-                'name' => 'Jane Smith',
-                'email' => 'jane@gmail.com',
+                'name' => 'Abang Sales',
+                'email' => 'sales@gmail.com',
                 'password' => Hash::make('password'),
                 'role_id' => Role::where('name', 'Sales')->first()->id,
             ],
             [
-                'name' => 'John Smith',
-                'email' => 'john@gmail.com',
+                'name' => 'Ibu Finance',
+                'email' => 'finance@gmail.com',
                 'password' => Hash::make('password'),
                 'role_id' => Role::where('name', 'Finance')->first()->id,
+            ],
+            [
+                'name' => 'Manager',
+                'email' => 'manager@gmail.com',
+                'password' => Hash::make('password'),
+                'role_id' => Role::where('name', 'Manager')->first()->id,
+            ],
+            [
+                'name' => 'Pak Direktur',
+                'email' => 'direktur@gmail.com',
+                'password' => Hash::make('password'),
+                'role_id' => Role::where('name', 'Director')->first()->id,
             ]
             // Add more users as needed
         ];

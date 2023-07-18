@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 
 
 class AuthController extends Controller
@@ -38,8 +40,10 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout(){
-        auth()->user()->currentAccessToken()->delete();
+    public function logout(Request $request){
+        $accessToken = $request->bearerToken();
+        $token = PersonalAccessToken::findToken($accessToken);
+        $token->delete();
         return response([
             'message'=>'succesfully logged out!'
         ]);
@@ -47,8 +51,10 @@ class AuthController extends Controller
 
     public function checkToken(){
         $user = Auth::user();
+        $role = $user->role()->get();
         return response([
-            'user'=> $user
+            'user'=> $user,
+            'role'=> $role
         ]);
     }
 

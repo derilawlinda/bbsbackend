@@ -1,29 +1,20 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Response;
-use Session;
-use App\Libraries\SAPb1\SAPClient;
-use App\Libraries\SAPb1\Filters\Equal;
-use Illuminate\Support\Facades\Auth;
 
-class BudgetController extends Controller
+class MaterialRequestController extends Controller
 {
-
-    private $sapsession;
-    private $sap;
-
-    public function createBudget(Request $request)
+    public function createMaterialRequest(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
 
-        $BudgetReq = $this->sap->getService('BudgetReq');
+        $BudgetReq = $this->sap->getService('MaterialReq');
 
         $count = $BudgetReq->queryBuilder()->count();
         $request["Code"] = 50000001 + $count;
@@ -32,13 +23,13 @@ class BudgetController extends Controller
         $result = $BudgetReq->create($request->all());
         return $result;
     }
-    public function getBudget()
+    public function getMaterialRequest()
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
-        $BudgetReq = $this->sap->getService('BudgetReq');
+        $BudgetReq = $this->sap->getService('MaterialReq');
         $BudgetReq->headers(['OData-Version' => '4.0']);
         if ($user["role_id"] == 3) {
             $result = $BudgetReq->queryBuilder()
@@ -57,7 +48,7 @@ class BudgetController extends Controller
         return $result;
     }
 
-    public function getBudgetById(Request $request)
+    public function getMaterialRequestById(Request $request)
     {
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
@@ -72,13 +63,13 @@ class BudgetController extends Controller
 
     }
 
-    public function approveBudget(Request $request)
+    public function approveMR(Request $request)
     {
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
         $user = Auth::user();
-        $budgets = $this->sap->getService('BudgetReq');
+        $budgets = $this->sap->getService('MaterialReq');
         $code = $request->Code;
         if ($user["role_id"] == 5) {
             $result = $budgets->update($code, [

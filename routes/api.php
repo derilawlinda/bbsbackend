@@ -22,8 +22,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::post('/register', [AuthController::class, 'register'])->middleware('auth:sanctum');
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/checkToken', [AuthController::class, 'checkToken'])->middleware('auth:sanctum');
 Route::post('/budget/createBudget', [BudgetController::class, 'createBudget'])->middleware('auth:sanctum');
+Route::post('/budget/approveBudget', [BudgetController::class, 'approveBudget'])->middleware('auth:sanctum');
 Route::get('/getBudget', [BudgetController::class, 'getBudget'])->middleware('auth:sanctum');
+Route::get('/budget/getBudgetById', [BudgetController::class, 'getBudgetById'])->middleware('auth:sanctum');
 Route::get('/$metadata', [BudgetController::class, 'metadata'])->middleware('auth:sanctum');
 Route::get('/getBudget2', [BudgetController::class, 'getBudget2'])->middleware('auth:sanctum');

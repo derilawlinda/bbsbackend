@@ -44,6 +44,24 @@ class RoleSeeder extends Seeder
                     'MR' => ['view','create', 'update'],
                 ]),
             ],
+            [
+                'name' => "Director",
+                'permissions' => json_encode([
+                    'User' => ['view'],
+                    'Budgeting' => ['view','create', 'update'],
+                    'AE' => ['view','create', 'update'],
+                    'MR' => ['view','create', 'update'],
+                ]),
+            ],
+            [
+                'name' => "Manager",
+                'permissions' => json_encode([
+                    'User' => ['view'],
+                    'Budgeting' => ['view','create', 'update'],
+                    'AE' => ['view','create', 'update'],
+                    'MR' => ['view','create', 'update'],
+                ]),
+            ]
         ];
 
         foreach ($roles as $role) {
