@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\MaterialRequestController;
 use App\Http\Controllers\AuthController;
 
 /*
@@ -24,9 +25,19 @@ Route::post('/register', [AuthController::class, 'register'])->middleware('auth:
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/checkToken', [AuthController::class, 'checkToken'])->middleware('auth:sanctum');
+
 Route::post('/budget/createBudget', [BudgetController::class, 'createBudget'])->middleware('auth:sanctum');
 Route::post('/budget/approveBudget', [BudgetController::class, 'approveBudget'])->middleware('auth:sanctum');
 Route::get('/getBudget', [BudgetController::class, 'getBudget'])->middleware('auth:sanctum');
 Route::get('/budget/getBudgetById', [BudgetController::class, 'getBudgetById'])->middleware('auth:sanctum');
+
+// Route::post('/budget/createBudget', [BudgetController::class, 'createBudget'])->middleware('auth:sanctum');
+// Route::post('/budget/approveBudget', [BudgetController::class, 'approveBudget'])->middleware('auth:sanctum');
+Route::get('/materialRequest/getMaterialRequests', [MaterialRequestController::class, 'getMaterialRequests'])->middleware('auth:sanctum');
+Route::post('/materialRequest/createMaterialRequest', [MaterialRequestController::class, 'createMaterialRequest'])->middleware('auth:sanctum');
+// Route::get('/budget/getBudgetById', [BudgetController::class, 'getBudgetById'])->middleware('auth:sanctum');
+
+
+
 Route::get('/$metadata', [BudgetController::class, 'metadata'])->middleware('auth:sanctum');
 Route::get('/getBudget2', [BudgetController::class, 'getBudget2'])->middleware('auth:sanctum');

@@ -4,9 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Response;
+use Session;
+use App\Libraries\SAPb1\SAPClient;
+use App\Libraries\SAPb1\Filters\Equal;
+use Illuminate\Support\Facades\Auth;
 
 class MaterialRequestController extends Controller
 {
+    private $sapsession;
+    private $sap;
+
     public function createMaterialRequest(Request $request)
     {
         $user = Auth::user();
@@ -18,12 +27,13 @@ class MaterialRequestController extends Controller
 
         $count = $BudgetReq->queryBuilder()->count();
         $request["Code"] = 50000001 + $count;
-        $request["U_CreatedBy"] = $user->id;
+        $request["U_CreatedBy"] = (int)$user->id;
+        $request["U_RequestorName"] = $user->name;
 
-        $result = $BudgetReq->create($request->all());
-        return $result;
+        // $result = $BudgetReq->create($request->all());
+        return $request->all();
     }
-    public function getMaterialRequest()
+    public function getMaterialRequests()
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
@@ -35,7 +45,7 @@ class MaterialRequestController extends Controller
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
-                ->where(new Equal("U_CreatedBy", (string) $user["id"]))
+                ->where(new Equal("U_CreatedBy", (int) $user["id"]))
                 ->findAll();
         }else{
             $result = $BudgetReq->queryBuilder()
@@ -84,49 +94,19 @@ class MaterialRequestController extends Controller
 
     }
 
-    public function getBudget2($skip=20)
+    public function rejectMR(Request $request)
     {
-        if(!Session::has('sapcookies')){
-            $this->getCookie();
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
         }
-        $cookie = Session::get('sapcookies');
-        $data = '';
-        $response = Http::withoutVerifying()
-        ->withOptions([
-            'cookies' => $cookie,
-            'verify'=>false
-        ])
-        ->withBody($data,'application/json')
-        ->withHeaders ([
-            'Content-Type' => 'application/json; odata.metadata=minimal',
-            'OData-Version' => '4.0'
-
-        ])->get('https://'.env('SAP_URL').':50000/b1s/v2/BudgetReq?$select=Code,Name,U_Project,U_Pillar,U_Classification,U_SubClass,U_SubClass2,U_Status&$skip='.$skip);
-
-        $content = $response->getBody();
-        $array = json_decode($content, true);
-
-        if(array_key_exists("@odata.context",$array)){
-           $array["@odata.context"] = stripslashes("http://localhost:8000/api/".'$metadata'."#BudgetReq");
-
-        }
-
-        if(array_key_exists("error",$array)){
-            $code = $array['error']['code'];
-            if($code == 301){ //if request timed out
-                $this->getCookie();
-                $this->getBudget();
-            }
-        }
-        $contents = json_encode($array,JSON_UNESCAPED_SLASHES);
-        $response = Response::make($contents, 200);
-
-        $response->withHeaders([
-            'Content-Type' => 'application/json; odata.metadata=minimal',
-            'OData-Version' => '4.0'
-
+        $user = Auth::user();
+        $budgets = $this->sap->getService('MaterialReq');
+        $code = $request->Code;
+        $result = $budgets->update($code, [
+            'U_Status' => 4
         ]);
-        return $response;
+        return $result;
+
     }
 
     public function metadata()
