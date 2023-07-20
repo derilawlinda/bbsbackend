@@ -124,7 +124,7 @@ class MaterialRequestController extends Controller
     {
         $config = [
             "https" => true,
-            "host" => "localhost",
+            "host" => env('SAP_URL'),
             "port" => 50000,
             "version" => 2,
             "sslOptions" => [
