@@ -23,15 +23,15 @@ class MaterialRequestController extends Controller
             $this->sap = $this->getSession();
         }
 
-        $BudgetReq = $this->sap->getService('MaterialReq');
+        $MaterialReq = $this->sap->getService('MaterialReq');
 
-        $count = $BudgetReq->queryBuilder()->count();
-        $request["Code"] = 50000001 + $count;
+        $count = $MaterialReq->queryBuilder()->count();
+        $request["Code"] = 50000010 + $count;
         $request["U_CreatedBy"] = (int)$user->id;
         $request["U_RequestorName"] = $user->name;
 
-        // $result = $BudgetReq->create($request->all());
-        return $request->all();
+        $result = $MaterialReq->create($request->all());
+        return $result;
     }
     public function getMaterialRequests()
     {
