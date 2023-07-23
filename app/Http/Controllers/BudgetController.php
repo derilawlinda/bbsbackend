@@ -46,7 +46,14 @@ class BudgetController extends Controller
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (string) $user["id"]))
                 ->findAll();
-        }else{
+        }elseif($user["role_id"] == 4){
+            $result = $BudgetReq->queryBuilder()
+                ->select('*')
+                ->orderBy('Code', 'desc')
+                ->where(new Equal("U_Status", 2))
+                ->findAll();
+        }
+        else{
             $result = $BudgetReq->queryBuilder()
             ->select('*')
             ->orderBy('Code', 'desc')

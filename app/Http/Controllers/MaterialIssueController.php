@@ -11,35 +11,35 @@ use App\Libraries\SAPb1\SAPClient;
 use App\Libraries\SAPb1\Filters\Equal;
 use Illuminate\Support\Facades\Auth;
 
-class MaterialRequestController extends Controller
+class MaterialIssueController extends Controller
 {
     private $sapsession;
     private $sap;
 
-    public function createMaterialRequest(Request $request)
+    public function createMaterialIssue(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
 
-        $MaterialReq = $this->sap->getService('MaterialReq');
+        $MaterialIssue = $this->sap->getService('MaterialIssue');
 
-        $count = $MaterialReq->queryBuilder()->count();
-        $request["Code"] = 60000001 + $count;
+        $count = $MaterialIssue->queryBuilder()->count();
+        $request["Code"] = 70000001 + $count;
         $request["U_CreatedBy"] = (int)$user->id;
         $request["U_RequestorName"] = $user->name;
 
-        $result = $MaterialReq->create($request->all());
+        $result = $MaterialIssue->create($request->all());
         return $result;
     }
-    public function getMaterialRequests()
+    public function getMaterialIssues()
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
-        $BudgetReq = $this->sap->getService('MaterialReq');
+        $BudgetReq = $this->sap->getService('MaterialIssue');
         $BudgetReq->headers(['OData-Version' => '4.0']);
         if ($user["role_id"] == 3) {
             $result = $BudgetReq->queryBuilder()
@@ -58,13 +58,13 @@ class MaterialRequestController extends Controller
         return $result;
     }
 
-    public function getMaterialRequestById(Request $request)
+    public function getMaterialIssueById(Request $request)
     {
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
 
-        $budgets = $this->sap->getService('MaterialReq');
+        $budgets = $this->sap->getService('MaterialIssue');
 
         $result = $budgets->queryBuilder()
             ->select('*')
@@ -73,13 +73,13 @@ class MaterialRequestController extends Controller
 
     }
 
-    public function approveMR(Request $request)
+    public function approveMI(Request $request)
     {
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
         $user = Auth::user();
-        $budgets = $this->sap->getService('MaterialReq');
+        $budgets = $this->sap->getService('MaterialIssue');
         $code = $request->Code;
         if ($user["role_id"] == 5) {
             $result = $budgets->update($code, [
@@ -94,13 +94,13 @@ class MaterialRequestController extends Controller
 
     }
 
-    public function rejectMR(Request $request)
+    public function rejectMI(Request $request)
     {
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
         $user = Auth::user();
-        $budgets = $this->sap->getService('MaterialReq');
+        $budgets = $this->sap->getService('MaterialIssue');
         $code = $request->Code;
         $result = $budgets->update($code, [
             'U_Status' => 4
@@ -114,7 +114,7 @@ class MaterialRequestController extends Controller
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
-        $BudgetReq = $this->sap->getService('BudgetReq');
+        $BudgetReq = $this->sap->getService('MaterialIssue');
         $metadata = $BudgetReq->getMetaData();
         return $metadata;
 
