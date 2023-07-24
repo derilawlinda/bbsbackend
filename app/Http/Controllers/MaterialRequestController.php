@@ -75,6 +75,16 @@ class MaterialRequestController extends Controller
 
     public function approveMR(Request $request)
     {
+        $json = json_encode($request->all());
+        $jsonString = str_replace(utf8_encode("U_ItemCode"),"ItemCode",$json);
+        $jsonString = str_replace(utf8_encode("U_Qty"),"Quantity",$jsonString);
+        $request_array = json_decode($jsonString,true);
+        $array_req = $request->all();
+        $code = $array_req["Code"];
+        $purchaseReqInput = array();
+        $purchaseReqInput["RequriedDate"] = $request_array["CreateDate"];
+        $purchaseReqInput["DocumentLines"] = $request_array["METERIALREQLINESCollection"];
+
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
@@ -85,10 +95,16 @@ class MaterialRequestController extends Controller
             $result = $budgets->update($code, [
                 'U_Status' => 2
             ]);
-        }else{
+
+        }
+        else{
             $result = $budgets->update($code, [
                 'U_Status' => 3
             ]);
+            if($result == 1){
+                $purchase_req = $this->sap->getService('PurchaseRequests');
+                $result = $purchase_req->create($purchaseReqInput);
+            }
         }
         return $result;
 
