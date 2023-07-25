@@ -75,20 +75,37 @@ class MaterialIssueController extends Controller
 
     public function approveMI(Request $request)
     {
+        $json = json_encode($request->all());
+        $jsonString = str_replace(utf8_encode("U_ItemCode"),"ItemCode",$json);
+        $jsonString = str_replace(utf8_encode("U_Qty"),"Quantity",$jsonString);
+        $jsonString = str_replace(utf8_encode("U_AccountCode"),"AccountCode",$jsonString);
+        $request_array = json_decode($jsonString,true);
+        $array_req = $request->all();
+        $code = $array_req["Code"];
+        $goodIssueInput = array();
+        $goodIssueInput["U_H_NO_BUDGET"] = $request_array["U_BudgetCode"];
+        $goodIssueInput["DocumentLines"] = $request_array["MATERIALISSUELINESCollection"];
+
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
         $user = Auth::user();
-        $budgets = $this->sap->getService('MaterialIssue');
+        $material_request = $this->sap->getService('MaterialIssue');
         $code = $request->Code;
         if ($user["role_id"] == 5) {
-            $result = $budgets->update($code, [
+            $result = $material_request->update($code, [
                 'U_Status' => 2
             ]);
-        }else{
-            $result = $budgets->update($code, [
+
+        }
+        else{
+            $result = $material_request->update($code, [
                 'U_Status' => 3
             ]);
+            if($result == 1){
+                $good_issue = $this->sap->getService('InventoryGenExits');
+                $result = $good_issue->create($goodIssueInput);
+            }
         }
         return $result;
 

@@ -45,6 +45,7 @@ Route::post('/materialRequest/approveMR', [MaterialRequestController::class, 'ap
 Route::get('/materialIssue/getMaterialIssues', [MaterialIssueController::class, 'getMaterialIssues'])->middleware('auth:sanctum');
 Route::post('/materialIssue/createMaterialIssue', [MaterialIssueController::class, 'createMaterialIssue'])->middleware('auth:sanctum');
 Route::get('/materialIssue/getMaterialIssueById', [MaterialIssueController::class, 'getMaterialIssueById'])->middleware('auth:sanctum');
+Route::post('/materialIssue/approveMI', [MaterialIssueController::class, 'approveMI'])->middleware('auth:sanctum');
 
 Route::get('/$metadata', [BudgetController::class, 'metadata'])->middleware('auth:sanctum');
 Route::get('/getBudget2', [BudgetController::class, 'getBudget2'])->middleware('auth:sanctum');
