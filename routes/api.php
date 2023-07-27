@@ -6,6 +6,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\MaterialRequestController;
 use App\Http\Controllers\MaterialIssueController;
+use App\Http\Controllers\AdvanceRequestController;
 use App\Http\Controllers\AuthController;
 
 /*
@@ -30,6 +31,7 @@ Route::post('/checkToken', [AuthController::class, 'checkToken'])->middleware('a
 Route::post('/budget/createBudget', [BudgetController::class, 'createBudget'])->middleware('auth:sanctum');
 Route::post('/budget/approveBudget', [BudgetController::class, 'approveBudget'])->middleware('auth:sanctum');
 Route::get('/getBudget', [BudgetController::class, 'getBudget'])->middleware('auth:sanctum');
+Route::get('/budget/getApprovedBudget', [BudgetController::class, 'getApprovedBudget'])->middleware('auth:sanctum');
 Route::get('/budget/getBudgetById', [BudgetController::class, 'getBudgetById'])->middleware('auth:sanctum');
 
 // Route::post('/budget/createBudget', [BudgetController::class, 'createBudget'])->middleware('auth:sanctum');
@@ -46,6 +48,11 @@ Route::get('/materialIssue/getMaterialIssues', [MaterialIssueController::class, 
 Route::post('/materialIssue/createMaterialIssue', [MaterialIssueController::class, 'createMaterialIssue'])->middleware('auth:sanctum');
 Route::get('/materialIssue/getMaterialIssueById', [MaterialIssueController::class, 'getMaterialIssueById'])->middleware('auth:sanctum');
 Route::post('/materialIssue/approveMI', [MaterialIssueController::class, 'approveMI'])->middleware('auth:sanctum');
+
+Route::get('/advanceRequest/getAdvanceRequests', [AdvanceRequestController::class, 'getAdvanceRequests'])->middleware('auth:sanctum');
+Route::get('/advanceRequest/getAdvanceRequestById', [AdvanceRequestController::class, 'getAdvanceRequestById'])->middleware('auth:sanctum');
+Route::post('/advanceRequest/createAdvanceRequest', [AdvanceRequestController::class, 'createAdvanceRequest'])->middleware('auth:sanctum');
+Route::post('/advanceRequest/approveAR', [AdvanceRequestController::class, 'approveAR'])->middleware('auth:sanctum');
 
 Route::get('/$metadata', [BudgetController::class, 'metadata'])->middleware('auth:sanctum');
 Route::get('/getBudget2', [BudgetController::class, 'getBudget2'])->middleware('auth:sanctum');

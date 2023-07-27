@@ -64,6 +64,24 @@ class BudgetController extends Controller
         return $result;
     }
 
+    public function getApprovedBudget()
+    {
+        $user = Auth::user();
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $BudgetReq = $this->sap->getService('BudgetReq');
+        $BudgetReq->headers(['OData-Version' => '4.0']);
+        $result = $BudgetReq->queryBuilder()
+            ->select('*')
+            ->orderBy('Code', 'desc')
+            ->where(new Equal("U_Status", 3))
+            ->findAll();
+
+
+        return $result;
+    }
+
     public function getBudgetById(Request $request)
     {
         if(is_null($this->sap)) {
