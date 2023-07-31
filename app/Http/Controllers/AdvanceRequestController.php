@@ -133,7 +133,7 @@ class AdvanceRequestController extends Controller
 
     }
 
-    public function rejectMI(Request $request)
+    public function rejectAR(Request $request)
     {
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
@@ -144,6 +144,51 @@ class AdvanceRequestController extends Controller
         $result = $budgets->update($code, [
             'U_Status' => 4
         ]);
+        return $result;
+
+    }
+
+    public function submitAdvanceRealization(Request $request)
+    {
+
+        $array_req = $request->all();
+        $code = $array_req["Code"];
+        $array_req["U_RealiStatus"] = 2;
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $advance_request = $this->sap->getService('AdvanceReq');
+        $result = $advance_request->update($code, $array_req);
+        return $result;
+
+        // $user = Auth::user();
+        // $budgets = $this->sap->getService('AdvanceReq');
+        // $code = $request->Code;
+        // $result = $budgets->update($code, [
+        //     'U_Status' => 4
+        // ]);
+        // return $result;
+
+    }
+
+    public function approveAdvanceRealization(Request $request)
+    {
+
+        $array_req = $request->all();
+        $code = $array_req["Code"];
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $advance_request = $this->sap->getService('AdvanceReq');
+        $result = $advance_request->update($code, $array_req);
+        if ($user["role_id"] == 5) {
+            $array_req["U_RealiStatus"] = 3;
+        }else{
+            $array_req["U_RealiStatus"] = 4;
+        }
+        $result = $budgets->update($code, $array_req);
         return $result;
 
     }
