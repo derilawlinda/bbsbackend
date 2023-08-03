@@ -133,6 +133,21 @@ class AdvanceRequestController extends Controller
 
     }
 
+    public function saveAR(Request $request)
+    {
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $AdvanceReq = $this->sap->getService('AdvanceReq');
+        $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $result = $AdvanceReq->update($code,$request->all(),false);
+        return $result;
+
+    }
+
     public function rejectAR(Request $request)
     {
         if(is_null($this->sap)) {
