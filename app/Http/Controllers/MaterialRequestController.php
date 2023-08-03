@@ -110,6 +110,22 @@ class MaterialRequestController extends Controller
 
     }
 
+    public function saveMR(Request $request)
+    {
+        $json = json_encode($request->all());
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $MaterialReq = $this->sap->getService('MaterialReq');
+        $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $result = $MaterialReq->update($code,$request->all(),false);
+        return $result;
+
+    }
+
     public function rejectMR(Request $request)
     {
         if(is_null($this->sap)) {

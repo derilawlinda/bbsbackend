@@ -111,6 +111,22 @@ class MaterialIssueController extends Controller
 
     }
 
+    public function saveMI(Request $request)
+    {
+        $json = json_encode($request->all());
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $MaterialIssue = $this->sap->getService('MaterialIssue');
+        $MaterialIssue->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $result = $MaterialIssue->update($code,$request->all(),false);
+        return $result;
+
+    }
+
     public function rejectMI(Request $request)
     {
         if(is_null($this->sap)) {

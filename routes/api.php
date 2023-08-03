@@ -36,16 +36,19 @@ Route::post('/budget/approveBudget', [BudgetController::class, 'approveBudget'])
 Route::get('/getBudget', [BudgetController::class, 'getBudget'])->middleware('auth:sanctum');
 Route::get('/budget/getApprovedBudget', [BudgetController::class, 'getApprovedBudget'])->middleware('auth:sanctum');
 Route::get('/budget/getBudgetById', [BudgetController::class, 'getBudgetById'])->middleware('auth:sanctum');
+Route::post('/budget/saveBudget', [BudgetController::class, 'saveBudget'])->middleware('auth:sanctum');
 
 Route::get('/materialRequest/getMaterialRequests', [MaterialRequestController::class, 'getMaterialRequests'])->middleware('auth:sanctum');
 Route::get('/materialRequest/getMaterialRequestById', [MaterialRequestController::class, 'getMaterialRequestById'])->middleware('auth:sanctum');
 Route::post('/materialRequest/createMaterialRequest', [MaterialRequestController::class, 'createMaterialRequest'])->middleware('auth:sanctum');
 Route::post('/materialRequest/approveMR', [MaterialRequestController::class, 'approveMR'])->middleware('auth:sanctum');
+Route::post('/materialRequest/saveMR', [MaterialRequestController::class, 'saveMR'])->middleware('auth:sanctum');
 
 Route::get('/materialIssue/getMaterialIssues', [MaterialIssueController::class, 'getMaterialIssues'])->middleware('auth:sanctum');
 Route::post('/materialIssue/createMaterialIssue', [MaterialIssueController::class, 'createMaterialIssue'])->middleware('auth:sanctum');
 Route::get('/materialIssue/getMaterialIssueById', [MaterialIssueController::class, 'getMaterialIssueById'])->middleware('auth:sanctum');
 Route::post('/materialIssue/approveMI', [MaterialIssueController::class, 'approveMI'])->middleware('auth:sanctum');
+Route::post('/materialIssue/saveMI', [MaterialIssueController::class, 'saveMI'])->middleware('auth:sanctum');
 
 Route::get('/advanceRequest/getAdvanceRequests', [AdvanceRequestController::class, 'getAdvanceRequests'])->middleware('auth:sanctum');
 Route::get('/advanceRequest/getAdvanceRequestById', [AdvanceRequestController::class, 'getAdvanceRequestById'])->middleware('auth:sanctum');

@@ -163,6 +163,21 @@ class BudgetController extends Controller
         return $response;
     }
 
+    public function saveBudget(Request $request)
+    {
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $BudgetReq = $this->sap->getService('BudgetReq');
+        $BudgetReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $result = $BudgetReq->update($code,$request->all(),false);
+        return $result;
+
+    }
+
     public function metadata()
     {
         if(is_null($this->sap)) {
