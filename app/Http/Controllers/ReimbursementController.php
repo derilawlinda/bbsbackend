@@ -51,7 +51,16 @@ class ReimbursementController extends Controller
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (int) $user["id"]))
                 ->findAll();
-        }else{
+        }
+        elseif($user["role_id"] == 4){
+            $result = $BudgetReq->queryBuilder()
+                ->select('*')
+                ->orderBy('Code', 'desc')
+                ->where(new Equal("U_Status", "2"))
+                ->orWhere(new Equal("U_Status", "3"))
+                ->findAll();
+        }
+        else{
             $result = $BudgetReq->queryBuilder()
             ->select('*')
             ->orderBy('Code', 'desc')
