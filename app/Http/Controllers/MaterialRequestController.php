@@ -143,7 +143,7 @@ class MaterialRequestController extends Controller
         $MaterialReq = $this->sap->getService('MaterialReq');
         $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
         $code = $request->Code;
-        $request["U_Statue"] = 1;
+        $request["U_Status"] = 1;
         $result = $MaterialReq->update($code,$request->all(),false);
         return $result;
 
