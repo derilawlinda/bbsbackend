@@ -37,12 +37,16 @@ Route::get('/getBudget', [BudgetController::class, 'getBudget'])->middleware('au
 Route::get('/budget/getApprovedBudget', [BudgetController::class, 'getApprovedBudget'])->middleware('auth:sanctum');
 Route::get('/budget/getBudgetById', [BudgetController::class, 'getBudgetById'])->middleware('auth:sanctum');
 Route::post('/budget/saveBudget', [BudgetController::class, 'saveBudget'])->middleware('auth:sanctum');
+Route::post('/budget/rejectBudget', [BudgetController::class, 'rejectBudget'])->middleware('auth:sanctum');
+Route::post('/budget/resubmitBudget', [BudgetController::class, 'resubmitBudget'])->middleware('auth:sanctum');
 
 Route::get('/materialRequest/getMaterialRequests', [MaterialRequestController::class, 'getMaterialRequests'])->middleware('auth:sanctum');
 Route::get('/materialRequest/getMaterialRequestById', [MaterialRequestController::class, 'getMaterialRequestById'])->middleware('auth:sanctum');
 Route::post('/materialRequest/createMaterialRequest', [MaterialRequestController::class, 'createMaterialRequest'])->middleware('auth:sanctum');
 Route::post('/materialRequest/approveMR', [MaterialRequestController::class, 'approveMR'])->middleware('auth:sanctum');
 Route::post('/materialRequest/saveMR', [MaterialRequestController::class, 'saveMR'])->middleware('auth:sanctum');
+Route::post('/materialRequest/rejectMR', [MaterialRequestController::class, 'rejectMR'])->middleware('auth:sanctum');
+Route::post('/materialRequest/resubmitMR', [MaterialRequestController::class, 'resubmitMR'])->middleware('auth:sanctum');
 
 Route::get('/materialIssue/getMaterialIssues', [MaterialIssueController::class, 'getMaterialIssues'])->middleware('auth:sanctum');
 Route::post('/materialIssue/createMaterialIssue', [MaterialIssueController::class, 'createMaterialIssue'])->middleware('auth:sanctum');

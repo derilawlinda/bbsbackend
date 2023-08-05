@@ -48,9 +48,10 @@ class ItemController extends Controller
         $result = $itemsQuery->queryBuilder()
             ->expand('Items($select=ItemCode,ItemName)')
             ->where(new InArray("InventoryAccount", $account_code_array))
-            ->orWhere(new InArray("CostAccount", $account_code_array))
+            ->orWhere(new InArray("ExpensesAccount", $account_code_array)) //ini harusnya ExpenseAccount
             ->findAll();
 
+        //JOIN DENGAN FAAccountDeterminations
 
         $results = json_decode(json_encode($result),true);
         $items = array();

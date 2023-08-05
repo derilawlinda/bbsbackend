@@ -118,50 +118,25 @@ class BudgetController extends Controller
 
     }
 
-    public function getBudget2($skip=20)
+    public function rejectBudget(Request $request)
     {
-        if(!Session::has('sapcookies')){
-            $this->getCookie();
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
         }
-        $cookie = Session::get('sapcookies');
-        $data = '';
-        $response = Http::withoutVerifying()
-        ->withOptions([
-            'cookies' => $cookie,
-            'verify'=>false
-        ])
-        ->withBody($data,'application/json')
-        ->withHeaders ([
-            'Content-Type' => 'application/json; odata.metadata=minimal',
-            'OData-Version' => '4.0'
+        $user = Auth::user();
+        $budgets = $this->sap->getService('BudgetReq');
+        $code = $request->Code;
+        $remarks = $request->Remarks;
 
-        ])->get('https://'.env('SAP_URL').':50000/b1s/v2/BudgetReq?$select=Code,Name,U_Project,U_Pillar,U_Classification,U_SubClass,U_SubClass2,U_Status&$skip='.$skip);
-
-        $content = $response->getBody();
-        $array = json_decode($content, true);
-
-        if(array_key_exists("@odata.context",$array)){
-           $array["@odata.context"] = stripslashes("http://localhost:8000/api/".'$metadata'."#BudgetReq");
-
-        }
-
-        if(array_key_exists("error",$array)){
-            $code = $array['error']['code'];
-            if($code == 301){ //if request timed out
-                $this->getCookie();
-                $this->getBudget();
-            }
-        }
-        $contents = json_encode($array,JSON_UNESCAPED_SLASHES);
-        $response = Response::make($contents, 200);
-
-        $response->withHeaders([
-            'Content-Type' => 'application/json; odata.metadata=minimal',
-            'OData-Version' => '4.0'
-
+        $result = $budgets->update($code, [
+            'U_Status' => 4,
+            'U_Remarks' => $remarks,
+            'U_RejectedBy' => $user->name
         ]);
-        return $response;
+        return $result;
+
     }
+
 
     public function saveBudget(Request $request)
     {
@@ -174,6 +149,27 @@ class BudgetController extends Controller
         $BudgetReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
         $code = $request->Code;
         $result = $BudgetReq->update($code,$request->all(),false);
+        return $result;
+
+    }
+
+    public function resubmitBudget(Request $request)
+    {
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $BudgetReq = $this->sap->getService('BudgetReq');
+        $BudgetReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $request["U_Status"] = 1;
+        $result = $BudgetReq->update($code,$request->all(),false);
+        if($result == 1){
+            $result = $BudgetReq->queryBuilder()
+            ->select('*')
+            ->find($code); // DocEntry value
+        }
         return $result;
 
     }

@@ -104,6 +104,12 @@ class MaterialRequestController extends Controller
             if($result == 1){
                 $purchase_req = $this->sap->getService('PurchaseRequests');
                 $result = $purchase_req->create($purchaseReqInput);
+
+                  // 'ProfitCenter' => $request_array["budgeting"]["U_Pillar"],
+                    // 'ProjectCode' => $request_array["budgeting"]["U_Project"],
+                    // "ProfitCenter2" => $request_array["budgeting"]["U_Classification"],
+                    // "ProfitCenter3" => $request_array["budgeting"]["U_SubClass"],
+                    // "ProfitCenter4" => $request_array["budgeting"]["U_SubClass2"],
             }
         }
         return $result;
@@ -126,6 +132,25 @@ class MaterialRequestController extends Controller
 
     }
 
+    public function resubmitMR(Request $request)
+    {
+        $json = json_encode($request->all());
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $MaterialReq = $this->sap->getService('MaterialReq');
+        $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $request["U_Statue"] = 1;
+        $result = $MaterialReq->update($code,$request->all(),false);
+        return $result;
+
+    }
+
+
+
     public function rejectMR(Request $request)
     {
         if(is_null($this->sap)) {
@@ -133,9 +158,12 @@ class MaterialRequestController extends Controller
         }
         $user = Auth::user();
         $budgets = $this->sap->getService('MaterialReq');
+        $remarks = $request->Remarks;
         $code = $request->Code;
         $result = $budgets->update($code, [
-            'U_Status' => 4
+            'U_Remarks' => $remarks,
+            'U_Status' => 4,
+            'U_RejectedBy' => $user->name
         ]);
         return $result;
 
