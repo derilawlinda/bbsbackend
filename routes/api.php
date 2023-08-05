@@ -53,6 +53,8 @@ Route::post('/materialIssue/createMaterialIssue', [MaterialIssueController::clas
 Route::get('/materialIssue/getMaterialIssueById', [MaterialIssueController::class, 'getMaterialIssueById'])->middleware('auth:sanctum');
 Route::post('/materialIssue/approveMI', [MaterialIssueController::class, 'approveMI'])->middleware('auth:sanctum');
 Route::post('/materialIssue/saveMI', [MaterialIssueController::class, 'saveMI'])->middleware('auth:sanctum');
+Route::post('/materialIssue/rejectMI', [MaterialIssueController::class, 'rejectMI'])->middleware('auth:sanctum');
+Route::post('/materialIssue/resubmitMI', [MaterialIssueController::class, 'resubmitMI'])->middleware('auth:sanctum');
 
 Route::get('/advanceRequest/getAdvanceRequests', [AdvanceRequestController::class, 'getAdvanceRequests'])->middleware('auth:sanctum');
 Route::get('/advanceRequest/getAdvanceRequestById', [AdvanceRequestController::class, 'getAdvanceRequestById'])->middleware('auth:sanctum');

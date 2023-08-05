@@ -127,16 +127,38 @@ class MaterialIssueController extends Controller
 
     }
 
+    public function resubmitMI(Request $request)
+    {
+        $json = json_encode($request->all());
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $MaterialIssue = $this->sap->getService('MaterialIssue');
+        $MaterialIssue->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $request["U_Status"] = 1;
+        $result = $MaterialIssue->update($code,$request->all(),false);
+        return $result;
+
+    }
+
+
+
     public function rejectMI(Request $request)
     {
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
         $user = Auth::user();
-        $budgets = $this->sap->getService('MaterialIssue');
+        $MaterialIssue = $this->sap->getService('MaterialIssue');
+        $remarks = $request->Remarks;
         $code = $request->Code;
-        $result = $budgets->update($code, [
-            'U_Status' => 4
+        $result = $MaterialIssue->update($code, [
+            'U_Remarks' => $remarks,
+            'U_Status' => 4,
+            'U_RejectedBy' => $user->name
         ]);
         return $result;
 
