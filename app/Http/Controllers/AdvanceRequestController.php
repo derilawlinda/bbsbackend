@@ -154,11 +154,31 @@ class AdvanceRequestController extends Controller
             $this->sap = $this->getSession();
         }
         $user = Auth::user();
-        $budgets = $this->sap->getService('AdvanceReq');
+        $AdvanceReq = $this->sap->getService('AdvanceReq');
         $code = $request->Code;
-        $result = $budgets->update($code, [
-            'U_Status' => 4
+        $remarks = $request->Remarks;
+        $result = $AdvanceReq->update($code, [
+            'U_Remarks' => $remarks,
+            'U_Status' => 4,
+            'U_RejectedBy' => $user->name
         ]);
+        return $result;
+
+    }
+
+    public function resubmitAR(Request $request)
+    {
+        $json = json_encode($request->all());
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $AdvanceReq = $this->sap->getService('AdvanceReq');
+        $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $request["U_Status"] = 1;
+        $result = $AdvanceReq->update($code,$request->all(),false);
         return $result;
 
     }
