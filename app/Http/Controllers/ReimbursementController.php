@@ -75,7 +75,6 @@ class ReimbursementController extends Controller
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
-
         $reimbursement = $this->sap->getService('ReimbursementReq');
 
         $result = $reimbursement->queryBuilder()
@@ -104,6 +103,37 @@ class ReimbursementController extends Controller
         }
         return $result;
 
+    }
+
+    public function saveReimbursement(Request $request)
+    {
+        $json = json_encode($request->all());
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $ReimbursementReq = $this->sap->getService('ReimbursementReq');
+        $ReimbursementReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $result = $ReimbursementReq->update($code,$request->all(),false);
+        return $result;
+
+    }
+
+    public function sapeReimbursement(Request $request)
+    {
+        $json = json_encode($request->all());
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $ReimbursementReq = $this->sap->getService('ReimbursementReq');
+        $ReimbursementReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $result = $ReimbursementReq->update($code,$request->all(),false);
+        return $result;
     }
 
     public function getSession()
