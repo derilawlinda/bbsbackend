@@ -39,16 +39,16 @@ class MaterialIssueController extends Controller
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
-        $BudgetReq = $this->sap->getService('MaterialIssue');
-        $BudgetReq->headers(['OData-Version' => '4.0']);
+        $MaterialIssueReq = $this->sap->getService('MaterialIssue');
+        $MaterialIssueReq->headers(['OData-Version' => '4.0']);
         if ($user["role_id"] == 3) {
-            $result = $BudgetReq->queryBuilder()
+            $result = $MaterialIssueReq->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (int) $user["id"]))
                 ->findAll();
         }else{
-            $result = $BudgetReq->queryBuilder()
+            $result = $MaterialIssueReq->queryBuilder()
             ->select('*')
             ->orderBy('Code', 'desc')
             ->findAll();
