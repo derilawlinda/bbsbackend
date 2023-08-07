@@ -166,6 +166,23 @@ class AdvanceRequestController extends Controller
 
     }
 
+    public function rejectAdvanceRealization(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $AdvanceReq = $this->sap->getService('AdvanceReq');
+        $code = $request->Code;
+        $remarks = $request->Remarks;
+        $result = $AdvanceReq->update($code, [
+            'U_RealizationRemarks' => $remarks,
+            'U_RealiStatus' => 5,
+            'U_RejectedBy' => $user->name
+        ]);
+        return $result;
+    }
+
     public function resubmitAR(Request $request)
     {
         $json = json_encode($request->all());
@@ -180,12 +197,26 @@ class AdvanceRequestController extends Controller
         $request["U_Status"] = 1;
         $result = $AdvanceReq->update($code,$request->all(),false);
         return $result;
+    }
 
+    public function resubmitRealization(Request $request)
+    {
+        $json = json_encode($request->all());
+
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $AdvanceReq = $this->sap->getService('AdvanceReq');
+        $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->Code;
+        $request["U_RealiStatus"] = 1;
+        $result = $AdvanceReq->update($code,$request->all(),false);
+        return $result;
     }
 
     public function submitAdvanceRealization(Request $request)
     {
-
         $array_req = $request->all();
         $code = $array_req["Code"];
         $array_req["U_RealiStatus"] = 2;
@@ -196,15 +227,6 @@ class AdvanceRequestController extends Controller
         $advance_request = $this->sap->getService('AdvanceReq');
         $result = $advance_request->update($code, $array_req);
         return $result;
-
-        // $user = Auth::user();
-        // $budgets = $this->sap->getService('AdvanceReq');
-        // $code = $request->Code;
-        // $result = $budgets->update($code, [
-        //     'U_Status' => 4
-        // ]);
-        // return $result;
-
     }
 
     public function approveAdvanceRealization(Request $request)

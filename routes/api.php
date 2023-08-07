@@ -64,6 +64,8 @@ Route::post('/advanceRequest/submitAdvanceRealization', [AdvanceRequestControlle
 Route::post('/advanceRequest/saveAR', [AdvanceRequestController::class, 'saveAR'])->middleware('auth:sanctum');
 Route::post('/advanceRequest/rejectAR', [AdvanceRequestController::class, 'rejectAR'])->middleware('auth:sanctum');
 Route::post('/advanceRequest/resubmitAR', [AdvanceRequestController::class, 'resubmitAR'])->middleware('auth:sanctum');
+Route::post('/advanceRequest/rejectAdvanceRealization', [AdvanceRequestController::class, 'rejectAdvanceRealization'])->middleware('auth:sanctum');
+Route::post('/advanceRequest/resubmitRealization', [AdvanceRequestController::class, 'resubmitRealization'])->middleware('auth:sanctum');
 
 Route::get('/coa/getCOAs', [COAController::class, 'getCOAs'])->middleware('auth:sanctum');
 Route::get('/coa/getCOAsByBudget', [COAController::class, 'getCOAsByBudget'])->middleware('auth:sanctum');
