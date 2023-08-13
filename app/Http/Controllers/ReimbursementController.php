@@ -56,8 +56,8 @@ class ReimbursementController extends Controller
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
-                ->where(new Equal("U_Status", "2"))
-                ->orWhere(new Equal("U_Status", "3"))
+                ->where(new Equal("U_Status", 2))
+                ->orWhere(new Equal("U_Status", 3))
                 ->findAll();
         }
         else{
@@ -148,7 +148,7 @@ class ReimbursementController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", "POS_29JUN");
+        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
         $this->sap = $sap;
         return $sap;
     }

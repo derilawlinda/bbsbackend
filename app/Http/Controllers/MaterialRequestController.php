@@ -81,35 +81,51 @@ class MaterialRequestController extends Controller
         $request_array = json_decode($jsonString,true);
         $array_req = $request->all();
         $code = $array_req["Code"];
-        $purchaseReqInput = array();
-        $purchaseReqInput["RequriedDate"] = $request_array["CreateDate"];
-        $purchaseReqInput["DocumentLines"] = $request_array["METERIALREQLINESCollection"];
+        $budgetCode = (string)$array_req["U_BudgetCode"];
 
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
         $user = Auth::user();
-        $budgets = $this->sap->getService('MaterialReq');
+        $budget = $this->sap->getService('BudgetReq');
+        $mrbudget = $budget->queryBuilder()
+            ->select('*')
+            ->find($budgetCode); // DocEntry value
+        $array_budget = json_decode(json_encode($mrbudget), true);
+
+
+        $MaterialReq = $this->sap->getService('MaterialReq');
         $code = $request->Code;
         if ($user["role_id"] == 5) {
-            $result = $budgets->update($code, [
+            $result = $MaterialReq->update($code, [
                 'U_Status' => 2
             ]);
 
         }
         else{
-            $result = $budgets->update($code, [
+            $result = $MaterialReq->update($code, [
                 'U_Status' => 3
             ]);
             if($result == 1){
+
+                for($i = 0; $i < count($request_array["MATERIALREQLINESCollection"]); ++$i) {
+                    $request_array["MATERIALREQLINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
+                }
+                $purchaseReqInput = array(
+                    "RequriedDate" => $request_array["CreateDate"],
+                    'DocumentLines' => $request_array["MATERIALREQLINESCollection"],
+                    "U_H_NO_MR" => $request_array["Code"],
+                    "U_H_NO_BUDGET" => $request_array["U_BudgetCode"],
+                    'Project' => $array_budget["U_ProjectCode"]
+                );
                 $purchase_req = $this->sap->getService('PurchaseRequests');
                 $result = $purchase_req->create($purchaseReqInput);
 
-                  // 'ProfitCenter' => $request_array["budgeting"]["U_Pillar"],
-                    // 'ProjectCode' => $request_array["budgeting"]["U_Project"],
-                    // "ProfitCenter2" => $request_array["budgeting"]["U_Classification"],
-                    // "ProfitCenter3" => $request_array["budgeting"]["U_SubClass"],
-                    // "ProfitCenter4" => $request_array["budgeting"]["U_SubClass2"],
             }
         }
         return $result;
@@ -192,7 +208,7 @@ class MaterialRequestController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", "POS_29JUN");
+        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
         $this->sap = $sap;
         return $sap;
     }

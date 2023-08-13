@@ -187,7 +187,7 @@ class MaterialIssueController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", "POS_29JUN");
+        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
         $this->sap = $sap;
         return $sap;
     }

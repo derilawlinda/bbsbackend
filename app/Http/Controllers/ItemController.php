@@ -51,7 +51,11 @@ class ItemController extends Controller
             ->orWhere(new InArray("ExpensesAccount", $account_code_array)) //ini harusnya ExpenseAccount
             ->findAll();
 
-        //JOIN DENGAN FAAccountDeterminations
+        $fixed_asset_accounts = $itemsQuery->queryBuilder()
+        ->expand('Items($select=ItemCode,ItemName)')
+        ->where(new InArray("InventoryAccount", $account_code_array))
+        ->orWhere(new InArray("ExpensesAccount", $account_code_array)) //ini harusnya ExpenseAccount
+        ->findAll();
 
         $results = json_decode(json_encode($result),true);
         $items = array();
@@ -102,7 +106,7 @@ class ItemController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", "POS_29JUN");
+        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
         $this->sap = $sap;
         return $sap;
     }

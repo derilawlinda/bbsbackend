@@ -11,6 +11,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\COAController;
 use App\Http\Controllers\ReimbursementController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProjectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -77,6 +78,8 @@ Route::post('/reimbursement/approveReimbursement', [ReimbursementController::cla
 Route::post('/reimbursement/saveReimbursement', [ReimbursementController::class, 'sapeReimbursement'])->middleware('auth:sanctum');
 
 Route::get('/items/getItemsByAccount', [ItemController::class, 'getItemsByAccount'])->middleware('auth:sanctum');
+
+Route::get('/project/getProjects', [ProjectController::class, 'getProjects'])->middleware('auth:sanctum');
 
 
 Route::get('/$metadata', [BudgetController::class, 'metadata'])->middleware('auth:sanctum');
