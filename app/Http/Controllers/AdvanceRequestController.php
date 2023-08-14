@@ -48,7 +48,7 @@ class AdvanceRequestController extends Controller
             $result = $AdvanceReq->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
-                ->where(new Equal("U_CreatedBy", (int) $user["id"]))
+                ->where(new Equal("U_CreatedBy", (string)$user["id"]))
                 ->findAll();
         }else{
             $result = $AdvanceReq->queryBuilder()
