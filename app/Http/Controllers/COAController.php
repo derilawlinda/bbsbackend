@@ -11,6 +11,7 @@ use App\Libraries\SAPb1\SAPClient;
 use App\Libraries\SAPb1\Filters\Equal;
 use App\Libraries\SAPb1\Filters\StartsWith;
 use App\Libraries\SAPb1\Filters\InArray;
+use App\Libraries\SAPb1\Filters\MoreThan;
 use Illuminate\Support\Facades\Auth;
 
 class COAController extends Controller
@@ -25,10 +26,17 @@ class COAController extends Controller
             $this->sap = $this->getSession();
         }
         $COAReq = $this->sap->getService('ChartOfAccounts');
-        $COAReq->headers(['Prefer' => 'odata.maxpagesize=50']);
+        $COAReq->headers(['Prefer' => 'odata.maxpagesize=500']);
         $result = $COAReq->queryBuilder()
-            ->select('*')
-            ->where(new StartsWith("Code", "6"))
+            ->select('Code,Name,AccountLevel')
+            ->where(new StartsWith("Code", "1"))
+            ->where(new MoreThan("AccountLevel", 1))
+            ->orWhere(new StartsWith("Code", "4"))
+            ->where(new MoreThan("AccountLevel", 1))
+            ->orWhere(new StartsWith("Code", "5"))
+            ->where(new MoreThan("AccountLevel", 1))
+            ->orWhere(new StartsWith("Code", "6"))
+            ->where(new MoreThan("AccountLevel", 1))
             ->orderBy('Code', 'desc')
             ->findAll();
 
