@@ -136,6 +136,24 @@ class ReimbursementController extends Controller
         return $result;
     }
 
+    public function rejectReimbursement(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $reimbursement = $this->sap->getService('ReimbursementReq');
+        $remarks = $request->Remarks;
+        $code = $request->Code;
+        $result = $reimbursement->update($code, [
+            'U_RejRemarks' => $remarks,
+            'U_Status' => 4,
+            'U_RejectedBy' => $user->name
+        ]);
+        return $result;
+
+    }
+
     public function getSession()
     {
         $config = [
