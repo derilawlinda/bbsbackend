@@ -28,6 +28,7 @@ class BudgetController extends Controller
         $count = $BudgetReq->queryBuilder()->count();
         $request["Code"] = 50000001 + $count;
         $request["U_CreatedBy"] = $user->id;
+        $request["U_RequestorName"] = $user->name;;
 
         $result = $BudgetReq->create($request->all());
         return $result;
