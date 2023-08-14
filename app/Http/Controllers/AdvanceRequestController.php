@@ -61,6 +61,36 @@ class AdvanceRequestController extends Controller
         return $result;
     }
 
+    public function getAdvanceRealizations()
+    {
+        $user = Auth::user();
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $AdvanceReq = $this->sap->getService('AdvanceReq');
+
+        // $result = $AdvanceReq->queryBuilder()
+        //         ->select('*')
+        //         ->findAll();
+        if ($user["role_id"] == 3) {
+            $result = $AdvanceReq->queryBuilder()
+                ->select('*')
+                ->orderBy('Code', 'desc')
+                ->where(new Equal("U_CreatedBy", (string)$user["id"]))
+                ->findAll();
+        }else{
+
+            $result = $AdvanceReq->queryBuilder()
+            ->select('*')
+            ->orderBy('Code', 'desc')
+            ->where(new Equal("U_Status", 3))
+            ->findAll();
+        }
+
+
+        return $result;
+    }
+
     public function getAdvanceRequestById(Request $request)
     {
         if(is_null($this->sap)) {
