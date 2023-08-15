@@ -44,6 +44,33 @@ class COAController extends Controller
         return $result;
     }
 
+    public function getCOAsByAR(Request $request)
+    {
+        $user = Auth::user();
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $ar_code = $request->ARCode;
+        $AdvanceReq = $this->sap->getService('AdvanceReq');
+        $AdvanceReq->headers(['Prefer' => 'odata.maxpagesize=100']);
+        $advancereqs =  $AdvanceReq->queryBuilder()->select('ADVANCEREQLINESCollection')
+                    ->find($ar_code);
+        $collection = json_decode(json_encode($advancereqs), true)["ADVANCEREQLINESCollection"];
+        $account_code_array = [];
+        for ($i = 0; $i < count($collection); $i++)
+        {
+            array_push($account_code_array, (string)$collection[$i]["U_AccountCode"]);
+        }
+        $COAReq = $this->sap->getService('ChartOfAccounts');
+        $COAReq->headers(['Prefer' => 'odata.maxpagesize=10']);
+        $result = $COAReq->queryBuilder()
+            ->select('Code,Name')
+            ->where(new InArray("Code", $account_code_array))
+            ->orderBy('Code', 'desc')
+            ->findAll();
+        return $result;
+    }
+
     public function getCOAsByBudget(Request $request)
     {
         $user = Auth::user();

@@ -50,7 +50,14 @@ class AdvanceRequestController extends Controller
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (string)$user["id"]))
                 ->findAll();
-        }else{
+        }elseif($user["role_id"] == 2){
+            $result = $AdvanceReq->queryBuilder()
+            ->select('*')
+            ->orderBy('Code', 'desc')
+            ->where(new Equal("U_Status", 3))
+            ->findAll();
+        }
+        else{
             $result = $AdvanceReq->queryBuilder()
             ->select('*')
             ->orderBy('Code', 'desc')
@@ -84,10 +91,28 @@ class AdvanceRequestController extends Controller
             ->select('*')
             ->orderBy('Code', 'desc')
             ->where(new Equal("U_Status", 3))
+            ->orWhere(new Equal("U_Status", 5))
             ->findAll();
         }
 
 
+        return $result;
+    }
+
+    public function transferAR(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+        $user = Auth::user();
+        $AdvanceReq = $this->sap->getService('AdvanceReq');
+        $code = $request->Code;
+        $disbursed_date = $request->DisbursedDate;
+        $result = $AdvanceReq->update($code, [
+            'U_DisbursedAt' => $disbursed_date,
+            'U_Status' => 5,
+            'U_TransferBy' => $user->name
+        ]);
         return $result;
     }
 
@@ -105,6 +130,8 @@ class AdvanceRequestController extends Controller
         return $result;
 
     }
+
+
 
     public function approveAR(Request $request)
     {

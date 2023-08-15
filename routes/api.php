@@ -68,9 +68,11 @@ Route::post('/advanceRequest/resubmitAR', [AdvanceRequestController::class, 'res
 Route::post('/advanceRequest/rejectAdvanceRealization', [AdvanceRequestController::class, 'rejectAdvanceRealization'])->middleware('auth:sanctum');
 Route::post('/advanceRequest/resubmitRealization', [AdvanceRequestController::class, 'resubmitRealization'])->middleware('auth:sanctum');
 Route::get('/advanceRequest/getAdvanceRealizations', [AdvanceRequestController::class, 'getAdvanceRealizations'])->middleware('auth:sanctum');
+Route::post('/advanceRequest/transferAR', [AdvanceRequestController::class, 'transferAR'])->middleware('auth:sanctum');
 
 Route::get('/coa/getCOAs', [COAController::class, 'getCOAs'])->middleware('auth:sanctum');
 Route::get('/coa/getCOAsByBudget', [COAController::class, 'getCOAsByBudget'])->middleware('auth:sanctum');
+Route::get('/coa/getCOAsByAR', [COAController::class, 'getCOAsByAR'])->middleware('auth:sanctum');
 
 Route::get('/reimbursement/getReimbursements', [ReimbursementController::class, 'getReimbursements'])->middleware('auth:sanctum');
 Route::get('/reimbursement/getReimbursementById', [ReimbursementController::class, 'getReimbursementById'])->middleware('auth:sanctum');
