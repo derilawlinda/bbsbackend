@@ -51,6 +51,13 @@ class ReimbursementController extends Controller
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (int) $user["id"]))
                 ->findAll();
+        }elseif($user["role_id"] == 2){
+            $result = $BudgetReq->queryBuilder()
+                ->select('*')
+                ->orderBy('Code', 'desc')
+                ->where(new Equal("U_Status", 3))
+                ->orWhere(new Equal("U_Status", 5))
+                ->findAll();
         }
         elseif($user["role_id"] == 4){
             $result = $BudgetReq->queryBuilder()
@@ -82,6 +89,87 @@ class ReimbursementController extends Controller
             ->find($request->code); // DocEntry value
         return $result;
 
+    }
+
+    public function transferReimbursement(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+
+        $user = Auth::user();
+
+        $array_req = $request->all();
+        $budgetCode = (string)$array_req["U_BudgetCode"];
+
+        $budget = $this->sap->getService('BudgetReq');
+        $arbudget = $budget->queryBuilder()
+            ->select('*')
+            ->find($budgetCode); // DocEntry value
+        $array_budget = json_decode(json_encode($arbudget), true);
+
+        try {
+            $outgoingPaymentInput = array();
+            $outgoingPaymentInput["PaymentAccounts"] = [];
+            $outgoingPaymentInput["TransferAccount"] = '11120.1001';
+            $outgoingPaymentInput["DocType"] = 'rAccount';
+            $outgoingPaymentInput["DocCurrency"] = 'IDR';
+            $outgoingPaymentInput["TransferSum"] = $array_req["U_TotalAmount"];
+            $outgoingPaymentInput["U_H_NO_REIMBURSE"] = $array_req["Code"];
+
+            for ($i = 0; $i < count($array_req["REIMBURSEMENTLINESCollection"]); $i++)
+            {
+
+                array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
+                    'AccountCode' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_AccountCode"],
+                    'SumPaid' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"],
+                    'ProfitCenter' => $array_budget["U_PillarCode"],
+                    'ProjectCode' => $array_budget["U_ProjectCode"],
+                    "ProfitCenter2" => $array_budget["U_ClassificationCode"],
+                    "ProfitCenter3" => $array_budget["U_SubClassCode"],
+                    "ProfitCenter4" => $array_budget["U_SubClass2Code"],
+
+                ]);
+            }
+
+            $outgoing_payment = $this->sap->getService('VendorPayments');
+            $outgoingResult = $outgoing_payment->create($outgoingPaymentInput);
+
+        }catch(Exception $e) {
+
+            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+
+        };
+
+
+        if($outgoingResult){
+
+            $outgoingArray = json_decode(json_encode($outgoingResult), true);
+            $ReimbursementReq = $this->sap->getService('ReimbursementReq');
+            $code = $request->Code;
+            $disbursed_date = $request->DisbursedDate;
+            $result = $ReimbursementReq->update($code, [
+                'U_DisbursedAt' => $array_req["DisbursedDate"],
+                'U_Status' => 5,
+                'U_TransferBy' => $user->name
+            ]);
+            if($result == 1){
+
+                $BudgetReq = $this->sap->getService('BudgetReq');
+                $result = $BudgetReq->update($budgetCode, [
+                    "BUDGETUSEDCollection" => [
+                        [
+                            "U_Amount" => $array_req["U_TotalAmount"],
+                            "U_Source" => "Reimbursement Request",
+                            "U_DocNum" => $array_req["Code"],
+                            "U_UsedBy" => $array_req["U_RequestorName"]
+                        ]
+                    ]
+                ]);
+
+            }
+        }
+        return $outgoingResult;
     }
 
     public function approveReimbursement(Request $request)

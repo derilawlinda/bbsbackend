@@ -83,6 +83,7 @@ Route::post('/reimbursement/createReimbursement', [ReimbursementController::clas
 Route::post('/reimbursement/approveReimbursement', [ReimbursementController::class, 'approveReimbursement'])->middleware('auth:sanctum');
 Route::post('/reimbursement/saveReimbursement', [ReimbursementController::class, 'sapeReimbursement'])->middleware('auth:sanctum');
 Route::post('/reimbursement/rejectReimbursement', [ReimbursementController::class, 'rejectReimbursement'])->middleware('auth:sanctum');
+Route::post('/reimbursement/transferReimbursement', [ReimbursementController::class, 'transferReimbursement'])->middleware('auth:sanctum');
 
 Route::get('/items/getItemsByAccount', [ItemController::class, 'getItemsByAccount'])->middleware('auth:sanctum');
 
