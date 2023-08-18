@@ -85,6 +85,14 @@ class AdvanceRequestController extends Controller
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (string)$user["id"]))
+                ->where(new Equal("U_Status", 5))
+                ->findAll();
+        }elseif ($user["role_id"] == 2) {
+            $result = $AdvanceReq->queryBuilder()
+                ->select('*')
+                ->orderBy('Code', 'desc')
+                ->where(new Equal("U_RealiStatus", 4))
+                ->orWhere(new Equal("U_RealiStatus", 6))
                 ->findAll();
         }else{
 
@@ -181,6 +189,115 @@ class AdvanceRequestController extends Controller
         return $outgoingResult;
     }
 
+    public function confirmAdvanceRealization(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession();
+        }
+
+        $user = Auth::user();
+        $array_req = $request->all();
+
+        $budgetCode = (string)$array_req["U_BudgetCode"];
+        $budget = $this->sap->getService('BudgetReq');
+        $arbudget = $budget->queryBuilder()
+            ->select('*')
+            ->find($budgetCode); // DocEntry value
+        $array_budget = json_decode(json_encode($arbudget), true);
+
+        if($array_req["U_DifferenceAmt"] > 0){
+
+
+            try {
+            $incomingPaymentInput = array();
+            $incomingPaymentInput["PaymentAccounts"] = [];
+            $incomingPaymentInput["TransferAccount"] = '11120.1001';
+            $incomingPaymentInput["DocType"] = 'rAccount';
+            $incomingPaymentInput["DocCurrency"] = 'IDR';
+            $incomingPaymentInput["TransferSum"] = $array_req["U_RealizationAmt"];
+            $incomingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
+            $incomingPaymentInput["Remarks"] = "Advance Realization ".$array_req["Code"];
+
+            array_push($incomingPaymentInput["PaymentAccounts"], (object)[
+                'AccountCode' => '11720.2000',
+                'SumPaid' => $array_req["U_RealizationAmt"],
+                'ProfitCenter' => $array_budget["U_PillarCode"],
+                'ProjectCode' => $array_budget["U_ProjectCode"],
+                "ProfitCenter2" => $array_budget["U_ClassificationCode"],
+                "ProfitCenter3" => $array_budget["U_SubClassCode"],
+                "ProfitCenter4" => $array_budget["U_SubClass2Code"]
+            ]);
+
+            $incoming_payment = $this->sap->getService('IncomingPayments');
+            $incomingResult = $incoming_payment->create($incomingPaymentInput);
+
+            if($incomingResult){
+
+                $BudgetReq = $this->sap->getService('BudgetReq');
+                $result = $BudgetReq->update($budgetCode, [
+                    "BUDGETUSEDCollection" => [
+                        [
+                            "U_Amount" => $array_req["U_DifferenceAmt"] * -1,
+                            "U_Source" => "Advance Request Return",
+                            "U_DocNum" => $array_req["Code"],
+                            "U_UsedBy" => $array_req["U_RequestorName"]
+                        ]
+                    ]
+                ]);
+
+            }
+
+            }catch(Exception $e) {
+
+                return response()->json(['message' => 'Error inserting data to SAP'], 500);
+
+            };
+
+
+        }
+
+        $journal_entry = $this->sap->getService('JournalEntries');
+        $journalEntryInput = array();
+        $journalEntryInput["JournalEntryLines"] = [];
+        $journalEntryInput["Memo"] = "Advance Realization ".$array_req["Code"];;
+
+        array_push($journalEntryInput["JournalEntryLines"], (object)[
+            'AccountCode' => '11120.1001', //BANK BCA
+            'Credit' => $array_req["U_RealizationAmt"],
+            'CostingCode' => $array_budget["U_PillarCode"],
+            'ProjectCode' => $array_budget["U_ProjectCode"],
+            'CostingCode2' => $array_budget["U_ClassificationCode"],
+            'CostingCode3' => $array_budget["U_SubClassCode"],
+            'CostingCode4' => $array_budget["U_SubClass2Code"],
+            'CashFlowAssignments' => [
+                [
+                    "AmountLC" => $array_req["U_RealizationAmt"]
+                ]
+            ]
+        ]);
+
+        for ($i = 0; $i < count($array_req["REALIZATIONREQLINESCollection"]); $i++)
+        {
+            array_push($journalEntryInput["JournalEntryLines"], (object)[
+                'AccountCode' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_AccountCode"],
+                'Debit'=> $array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"],
+                'CostingCode' => $array_budget["U_PillarCode"],
+                'ProjectCode' => $array_budget["U_ProjectCode"],
+                'CostingCode2' => $array_budget["U_ClassificationCode"],
+                'CostingCode3' => $array_budget["U_SubClassCode"],
+                'CostingCode4' => $array_budget["U_SubClass2Code"]
+            ]);
+        }
+
+        $result = $journal_entry->create($journalEntryInput);
+        $advance_request = $this->sap->getService('AdvanceReq');
+        $array_req["U_RealiStatus"] = 6;
+        $code = $array_req["Code"];
+        $result = $advance_request->update($code, $array_req);
+        return $array_req;
+
+    }
+
     public function getAdvanceRequestById(Request $request)
     {
         if(is_null($this->sap)) {
@@ -209,7 +326,9 @@ class AdvanceRequestController extends Controller
         $code = $request->Code;
 
         if($user["role_id"] == 4){
-
+            $result = $advance_request->update($code, [
+                'U_Status' => 3
+            ]);
         }
 
         elseif ($user["role_id"] == 5) {
@@ -218,15 +337,9 @@ class AdvanceRequestController extends Controller
             ]);
 
         }
-        else{
-            $result = $advance_request->update($code, [
-                'U_Status' => 3
-            ]);
-
-        }
 
 
-        return $outgoingPaymentInput;
+        return $result;
 
     }
 
@@ -323,12 +436,12 @@ class AdvanceRequestController extends Controller
         }
         $advance_request = $this->sap->getService('AdvanceReq');
         $result = $advance_request->update($code, $array_req);
-        return $result;
+        return $array_req;
     }
 
     public function approveAdvanceRealization(Request $request)
     {
-
+        $user = Auth::user();
         $array_req = $request->all();
         $code = $array_req["Code"];
 
@@ -342,7 +455,7 @@ class AdvanceRequestController extends Controller
         }else{
             $array_req["U_RealiStatus"] = 4;
         }
-        $result = $budgets->update($code, $array_req);
+        $result = $advance_request->update($code, $array_req);
         return $result;
 
     }
