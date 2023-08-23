@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Response;
 use Session;
 use App\Libraries\SAPb1\SAPClient;
 use App\Libraries\SAPb1\Filters\Equal;
+use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
+use App\Libraries\SAPb1\Filters\InArray;
 
 class BudgetController extends Controller
 {
@@ -33,36 +35,68 @@ class BudgetController extends Controller
         $result = $BudgetReq->create($request->all());
         return $result;
     }
-    public function getBudget()
+    public function getBudget(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
+        $search = "";
+        $status_array = [];
+        if($request->search){
+            $search = $request->search;
+        }
+
         $BudgetReq = $this->sap->getService('BudgetReq');
-        $BudgetReq->headers(['OData-Version' => '4.0']);
+        $BudgetReq->headers(['OData-Version' => '4.0',
+        "B1S-CaseInsensitive" => true,
+        'Prefer' => 'odata.maxpagesize=500']);
         if ($user["role_id"] == 3) {
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
-                ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (string) $user["id"]))
-                ->findAll();
+                ->where(new Contains("Code", $search))
+                ->orWhere(new Contains("Name",$search))
+                ->orderBy('Code', 'desc')
+                ->inlineCount();
         }elseif($user["role_id"] == 4){
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_Status", 2))
-                ->orWhere(new Equal("U_Status", 3))
-                ->orWhere(new Equal("U_Status", 4))
-                ->findAll();
+                ->inlineCount();
         }
         else{
             $result = $BudgetReq->queryBuilder()
             ->select('*')
+            ->where(new Equal("U_Status", 2))
+            ->where(new Contains("Code", $search))
+            ->orWhere(new Contains("Name",$search))
             ->orderBy('Code', 'desc')
-            ->findAll();
+            ->inlineCount();
         }
 
+        if($request->status){
+            $req_status_array = preg_split ("/\,/", $request->status);
+            foreach ($req_status_array as $value) {
+                array_push($status_array,(int)$value);
+            }
+            $result->where(new InArray("U_Status", $status_array));
+        }
+
+        if($request->top){
+            $top = $request->top;
+        }else{
+            $top = 50;
+        }
+
+        if($request->skip){
+            $skip = $request->skip;
+        }else{
+            $skip = 0;
+        }
+
+        $result = $result->limit($top,$skip)->findAll();
 
         return $result;
     }

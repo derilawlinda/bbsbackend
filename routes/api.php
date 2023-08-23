@@ -12,6 +12,7 @@ use App\Http\Controllers\COAController;
 use App\Http\Controllers\ReimbursementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\MainController;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,4 +92,5 @@ Route::get('/project/getProjects', [ProjectController::class, 'getProjects'])->m
 
 
 Route::get('/$metadata', [BudgetController::class, 'metadata'])->middleware('auth:sanctum');
+Route::get('/services', [MainController::class, 'services'])->middleware('auth:sanctum');
 Route::get('/getBudget2', [BudgetController::class, 'getBudget2'])->middleware('auth:sanctum');

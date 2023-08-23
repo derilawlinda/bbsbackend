@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Response;
 use Session;
 use App\Libraries\SAPb1\SAPClient;
 use App\Libraries\SAPb1\Filters\Equal;
+use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
 
 class MaterialRequestController extends Controller
@@ -33,26 +34,53 @@ class MaterialRequestController extends Controller
         $result = $MaterialReq->create($request->all());
         return $result;
     }
-    public function getMaterialRequests()
+    public function getMaterialRequests(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
             $this->sap = $this->getSession();
         }
-        $BudgetReq = $this->sap->getService('MaterialReq');
-        $BudgetReq->headers(['OData-Version' => '4.0']);
+        $search = "";
+        if($request->search){
+            $search = $request->search;
+        }
+
+        $MaterialReq = $this->sap->getService('MaterialReq');
+        $MaterialReq->headers(['OData-Version' => '4.0',
+        "B1S-CaseInsensitive" => true,
+        'Prefer' => 'odata.maxpagesize=500']);
         if ($user["role_id"] == 3) {
-            $result = $BudgetReq->queryBuilder()
+            $result = $MaterialReq->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (int) $user["id"]))
-                ->findAll();
+                ->where(new Contains("Code", $search))
+                ->orWhere(new Contains("Name",$search))
+                ->inlineCount();
+
         }else{
-            $result = $BudgetReq->queryBuilder()
+            $result = $MaterialReq->queryBuilder()
             ->select('*')
+            ->where(new Contains("Code", $search))
+            ->orWhere(new Contains("Name",$search))
             ->orderBy('Code', 'desc')
-            ->findAll();
+            ->inlineCount();
+
         }
+
+        if($request->top){
+            $top = $request->top;
+        }else{
+            $top = 20;
+        }
+
+        if($request->skip){
+            $skip = $request->skip;
+        }else{
+            $skip = 0;
+        }
+
+        $result = $result->limit($top,$skip)->findAll();
 
 
         return $result;
