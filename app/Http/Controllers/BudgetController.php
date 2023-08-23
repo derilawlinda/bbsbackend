@@ -43,9 +43,7 @@ class BudgetController extends Controller
         }
         $search = "";
         $status_array = [];
-        if($request->search){
-            $search = $request->search;
-        }
+
 
         $BudgetReq = $this->sap->getService('BudgetReq');
         $BudgetReq->headers(['OData-Version' => '4.0',
@@ -55,8 +53,6 @@ class BudgetController extends Controller
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
                 ->where(new Equal("U_CreatedBy", (string) $user["id"]))
-                ->where(new Contains("Code", $search))
-                ->orWhere(new Contains("Name",$search))
                 ->orderBy('Code', 'desc')
                 ->inlineCount();
         }elseif($user["role_id"] == 4){
@@ -70,10 +66,13 @@ class BudgetController extends Controller
             $result = $BudgetReq->queryBuilder()
             ->select('*')
             ->where(new Equal("U_Status", 2))
-            ->where(new Contains("Code", $search))
-            ->orWhere(new Contains("Name",$search))
             ->orderBy('Code', 'desc')
             ->inlineCount();
+        }
+        if($request->search){
+            $search = $request->search;
+            $result->where(new Contains("Code", $search))
+                    ->where(new Contains("Name",$search));
         }
 
         if($request->status){
