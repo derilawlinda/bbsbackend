@@ -25,7 +25,7 @@ class ProjectController extends Controller
             $this->sap = $this->getSession($request->company);
         }
         $Projects = $this->sap->getService('Projects');
-        $Projects->headers(['Prefer' => 'odata.maxpagesize=50']);
+        $Projects->headers(['Prefer' => 'odata.maxpagesize=200']);
         $result = $Projects->queryBuilder()
             ->select('Code,Name',)
             ->orderBy('Code', 'desc')
