@@ -20,25 +20,27 @@ class MaterialRequestController extends Controller
     public function createMaterialRequest(Request $request)
     {
         $user = Auth::user();
+
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
 
         $MaterialReq = $this->sap->getService('MaterialReq');
 
         $count = $MaterialReq->queryBuilder()->count();
-        $request["Code"] = 60000001 + $count;
-        $request["U_CreatedBy"] = (int)$user->id;
-        $request["U_RequestorName"] = $user->name;
 
-        $result = $MaterialReq->create($request->all());
+        $result = $MaterialReq->create($request->get('oProperty') + [
+            'Code' => 60000001 + $count,
+            'U_CreatedBy' => (int)$user->id,
+            'U_RequestorName' => $user->name
+        ]);
         return $result;
     }
     public function getMaterialRequests(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $search = "";
         if($request->search){
@@ -89,7 +91,7 @@ class MaterialRequestController extends Controller
     public function getMaterialRequestById(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
 
         $budgets = $this->sap->getService('MaterialReq');
@@ -112,7 +114,7 @@ class MaterialRequestController extends Controller
         $budgetCode = (string)$array_req["U_BudgetCode"];
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->U_Company);
         }
         $user = Auth::user();
         $budget = $this->sap->getService('BudgetReq');
@@ -165,7 +167,7 @@ class MaterialRequestController extends Controller
         $json = json_encode($request->all());
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->U_Company);
         }
         $user = Auth::user();
         $MaterialReq = $this->sap->getService('MaterialReq');
@@ -181,7 +183,7 @@ class MaterialRequestController extends Controller
         $json = json_encode($request->all());
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->U_Company);
         }
         $user = Auth::user();
         $MaterialReq = $this->sap->getService('MaterialReq');
@@ -198,7 +200,7 @@ class MaterialRequestController extends Controller
     public function rejectMR(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->U_Company);
         }
         $user = Auth::user();
         $budgets = $this->sap->getService('MaterialReq');
@@ -224,7 +226,7 @@ class MaterialRequestController extends Controller
 
     }
 
-    public function getSession()
+    public function getSession(string $company)
     {
         $config = [
             "https" => true,
@@ -236,7 +238,7 @@ class MaterialRequestController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
+        $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         $this->sap = $sap;
         return $sap;
     }

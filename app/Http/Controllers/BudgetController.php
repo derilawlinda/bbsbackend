@@ -99,11 +99,11 @@ class BudgetController extends Controller
         return $result;
     }
 
-    public function getApprovedBudget()
+    public function getApprovedBudget(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $BudgetReq = $this->sap->getService('BudgetReq');
         $BudgetReq->headers(['OData-Version' => '4.0']);
@@ -232,7 +232,7 @@ class BudgetController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "Admin@23", $company."_LIVE" );
+        $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE" );
         $this->sap = $sap;
         return $sap;
     }
