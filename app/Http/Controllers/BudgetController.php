@@ -192,7 +192,7 @@ class BudgetController extends Controller
     {
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->U_Company);
         }
         $user = Auth::user();
         $BudgetReq = $this->sap->getService('BudgetReq');
