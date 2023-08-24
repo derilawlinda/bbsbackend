@@ -120,7 +120,7 @@ class BudgetController extends Controller
     public function getBudgetById(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
 
         $budgets = $this->sap->getService('BudgetReq');
