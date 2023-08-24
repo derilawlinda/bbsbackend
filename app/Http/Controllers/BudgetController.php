@@ -135,7 +135,7 @@ class BudgetController extends Controller
     public function approveBudget(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $user = Auth::user();
         $budgets = $this->sap->getService('BudgetReq');
@@ -177,7 +177,7 @@ class BudgetController extends Controller
     {
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->U_Company);
         }
         $user = Auth::user();
         $BudgetReq = $this->sap->getService('BudgetReq');
