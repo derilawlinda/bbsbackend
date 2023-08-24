@@ -113,7 +113,7 @@ class COAController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
+        $sap = SAPClient::createSession($config, "manager", "Admin@23", "BBS_LIVE");
         $this->sap = $sap;
         return $sap;
     }
