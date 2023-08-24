@@ -18,11 +18,11 @@ class ProjectController extends Controller
     private $sapsession;
     private $sap;
 
-    public function getProjects()
+    public function getProjects(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $Projects = $this->sap->getService('Projects');
         $Projects->headers(['Prefer' => 'odata.maxpagesize=50']);
@@ -35,7 +35,7 @@ class ProjectController extends Controller
         return $result;
     }
 
-    public function getSession()
+    public function getSession(string $company)
     {
         $config = [
             "https" => true,
@@ -47,7 +47,7 @@ class ProjectController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
+        $sap = SAPClient::createSession($config, "manager", "Admin@23", $company."_LIVE");
         $this->sap = $sap;
         return $sap;
     }

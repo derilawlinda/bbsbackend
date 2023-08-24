@@ -22,7 +22,7 @@ class BudgetController extends Controller
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->U_Company);
         }
 
         $BudgetReq = $this->sap->getService('BudgetReq');
@@ -39,7 +39,7 @@ class BudgetController extends Controller
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $search = "";
         $status_array = [];
@@ -65,14 +65,13 @@ class BudgetController extends Controller
         else{
             $result = $BudgetReq->queryBuilder()
             ->select('*')
-            ->where(new Equal("U_Status", 2))
             ->orderBy('Code', 'desc')
             ->inlineCount();
         }
         if($request->search){
             $search = $request->search;
             $result->where(new Contains("Code", $search))
-                    ->where(new Contains("Name",$search));
+                    ->orWhere(new Contains("Name",$search));
         }
 
         if($request->status){
@@ -221,7 +220,7 @@ class BudgetController extends Controller
 
     }
 
-    public function getSession()
+    public function getSession(string $company)
     {
         $config = [
             "https" => true,
@@ -233,7 +232,7 @@ class BudgetController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
+        $sap = SAPClient::createSession($config, "manager", "Admin@23", $company."_LIVE" );
         $this->sap = $sap;
         return $sap;
     }
