@@ -156,7 +156,7 @@ class BudgetController extends Controller
     public function rejectBudget(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->Company);
         }
         $user = Auth::user();
         $budgets = $this->sap->getService('BudgetReq');
