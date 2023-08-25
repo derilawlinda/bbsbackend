@@ -142,11 +142,15 @@ class BudgetController extends Controller
         $code = $request->Code;
         if ($user["role_id"] == 5) {
             $result = $budgets->update($code, [
-                'U_Status' => 2
+                'U_Status' => 2,
+                'U_ManagerApp'=> $user->name,
+                'U_ManagerAppAt' => date("Y-m-d")
             ]);
         }else{
             $result = $budgets->update($code, [
-                'U_Status' => 3
+                'U_Status' => 3,
+                'U_DirectorApp'=> $user->name,
+                'U_DirectorAppAt' => date("Y-m-d")
             ]);
         }
         return $result;
