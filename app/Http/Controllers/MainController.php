@@ -10,6 +10,9 @@ use Session;
 use App\Libraries\SAPb1\SAPClient;
 use App\Libraries\SAPb1\Filters\Equal;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Filesystem\Filesystem;
+
 
 class MainController extends Controller
 {
@@ -28,6 +31,21 @@ class MainController extends Controller
         // $result = $mainReq->findAll();
         return $mainReq;
     }
+
+    public function saveJSONPillar(Request $request){
+
+        Storage::disk('json')->put('pillar_'.$request->company.'.json', json_encode($request->data));
+
+    }
+
+    public function getPillar(Request $request){
+
+        $this->json_path = Storage::disk('json')->get('pillar_'.$request->company.'.json');
+        $config_decoded = json_decode($this->json_path, true);
+        return json_encode($config_decoded);
+
+    }
+
 
 
     public function getSession()

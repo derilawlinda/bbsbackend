@@ -13,6 +13,7 @@ use App\Http\Controllers\ReimbursementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\MainController;
+use App\Http\Controllers\ProfitCenterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,9 +87,18 @@ Route::post('/reimbursement/saveReimbursement', [ReimbursementController::class,
 Route::post('/reimbursement/rejectReimbursement', [ReimbursementController::class, 'rejectReimbursement'])->middleware('auth:sanctum');
 Route::post('/reimbursement/transferReimbursement', [ReimbursementController::class, 'transferReimbursement'])->middleware('auth:sanctum');
 
+Route::get('/profitCenter/getPillars', [ProfitCenterController::class, 'getPillars'])->middleware('auth:sanctum');
+Route::get('/profitCenter/getClassifications', [ProfitCenterController::class, 'getClassifications'])->middleware('auth:sanctum');
+Route::get('/profitCenter/getSubClass', [ProfitCenterController::class, 'getSubClass'])->middleware('auth:sanctum');
+Route::get('/profitCenter/getSubClass2', [ProfitCenterController::class, 'getSubClass2'])->middleware('auth:sanctum');
+
+
 Route::get('/items/getItemsByAccount', [ItemController::class, 'getItemsByAccount'])->middleware('auth:sanctum');
 
 Route::get('/project/getProjects', [ProjectController::class, 'getProjects'])->middleware('auth:sanctum');
+
+Route::post('/main/saveJSONPillar', [MainController::class, 'saveJSONPillar'])->middleware('auth:sanctum');
+Route::get('/main/getPillar', [MainController::class, 'getPillar'])->middleware('auth:sanctum');
 
 
 Route::get('/$metadata', [BudgetController::class, 'metadata'])->middleware('auth:sanctum');
