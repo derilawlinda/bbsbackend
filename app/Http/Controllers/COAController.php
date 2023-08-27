@@ -19,11 +19,11 @@ class COAController extends Controller
     private $sapsession;
     private $sap;
 
-    public function getCOAs()
+    public function getCOAs(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $COAReq = $this->sap->getService('ChartOfAccounts');
         $COAReq->headers(['Prefer' => 'odata.maxpagesize=500']);
@@ -48,7 +48,7 @@ class COAController extends Controller
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $ar_code = $request->ARCode;
         $AdvanceReq = $this->sap->getService('AdvanceReq');
@@ -75,7 +75,7 @@ class COAController extends Controller
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $budget_code = $request->budgetCode;
         $BudgetReq = $this->sap->getService('BudgetReq');
@@ -101,7 +101,7 @@ class COAController extends Controller
     }
 
 
-    public function getSession()
+    public function getSession($company)
     {
         $config = [
             "https" => true,
@@ -113,7 +113,7 @@ class COAController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "Admin@23", "BBS_LIVE");
+        $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         $this->sap = $sap;
         return $sap;
     }

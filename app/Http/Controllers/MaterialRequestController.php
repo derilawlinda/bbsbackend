@@ -105,16 +105,15 @@ class MaterialRequestController extends Controller
 
     public function approveMR(Request $request)
     {
-        $json = json_encode($request->all());
+        $json = json_encode($request->get('oProperty'));
         $jsonString = str_replace(utf8_encode("U_ItemCode"),"ItemCode",$json);
         $jsonString = str_replace(utf8_encode("U_Qty"),"Quantity",$jsonString);
         $request_array = json_decode($jsonString,true);
-        $array_req = $request->all();
-        $code = $array_req["Code"];
-        $budgetCode = (string)$array_req["U_BudgetCode"];
+        $code = $request_array["Code"];
+        $budgetCode = (string)$request_array["U_BudgetCode"];
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->U_Company);
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $budget = $this->sap->getService('BudgetReq');
@@ -125,16 +124,20 @@ class MaterialRequestController extends Controller
 
 
         $MaterialReq = $this->sap->getService('MaterialReq');
-        $code = $request->Code;
+
         if ($user["role_id"] == 5) {
             $result = $MaterialReq->update($code, [
-                'U_Status' => 2
+                'U_Status' => 2,
+                'U_ManagerApp'=> $user->name,
+                'U_ManagerAppAt' => date("Y-m-d")
             ]);
 
         }
         else{
             $result = $MaterialReq->update($code, [
-                'U_Status' => 3
+                'U_Status' => 3,
+                'U_DirectorApp'=> $user->name,
+                'U_DirectorAppAt' => date("Y-m-d")
             ]);
             if($result == 1){
 
@@ -147,6 +150,7 @@ class MaterialRequestController extends Controller
                     $request_array["MATERIALREQLINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
                 }
                 $purchaseReqInput = array(
+                    "DocDate" => $request_array["U_DocDate"],
                     "RequriedDate" => $request_array["CreateDate"],
                     'DocumentLines' => $request_array["MATERIALREQLINESCollection"],
                     "U_H_NO_MR" => $request_array["Code"],
@@ -164,16 +168,14 @@ class MaterialRequestController extends Controller
 
     public function saveMR(Request $request)
     {
-        $json = json_encode($request->all());
-
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->U_Company);
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $MaterialReq = $this->sap->getService('MaterialReq');
         $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $result = $MaterialReq->update($code,$request->all(),false);
+        $code = $request->get('data')["Code"];
+        $result = $MaterialReq->update($code,$request->get('data'),false);
         return $result;
 
     }
@@ -212,17 +214,6 @@ class MaterialRequestController extends Controller
             'U_RejectedBy' => $user->name
         ]);
         return $result;
-
-    }
-
-    public function metadata()
-    {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
-        }
-        $BudgetReq = $this->sap->getService('BudgetReq');
-        $metadata = $BudgetReq->getMetaData();
-        return $metadata;
 
     }
 
