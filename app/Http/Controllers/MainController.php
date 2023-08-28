@@ -34,7 +34,7 @@ class MainController extends Controller
 
     public function saveJSONPillar(Request $request){
 
-        Storage::disk('json')->put('pillar_'.$request->company.'.json', json_encode($request->data));
+        Storage::disk('json')->put('pillar_'.$request->get('company').'.json', json_encode($request->get('data')));
 
     }
 

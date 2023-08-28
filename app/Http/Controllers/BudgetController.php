@@ -28,7 +28,7 @@ class BudgetController extends Controller
         $BudgetReq = $this->sap->getService('BudgetReq');
 
         $count = $BudgetReq->queryBuilder()->count();
-        $request["Code"] = 50000001 + $count;
+        $request["Code"] = 50000003 + $count;
         $request["U_CreatedBy"] = $user->id;
         $request["U_RequestorName"] = $user->name;;
 

@@ -2,7 +2,6 @@
 /public/build
 /public/hot
 /public/storage
-/public/json
 /storage/*.key
 /vendor
 .env
@@ -17,3 +16,5 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/public
+
