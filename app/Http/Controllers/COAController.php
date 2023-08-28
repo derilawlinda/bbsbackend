@@ -90,12 +90,46 @@ class COAController extends Controller
         }
 
         $COAReq = $this->sap->getService('ChartOfAccounts');
-        $COAReq->headers(['Prefer' => 'odata.maxpagesize=10']);
+        $COAReq->headers(['Prefer' => 'odata.maxpagesize=50']);
         $result = $COAReq->queryBuilder()
             ->select('Code,Name')
             ->where(new InArray("Code", $account_code_array))
             ->orderBy('Code', 'desc')
             ->findAll();
+
+        return $result;
+    }
+
+    public function getCOAsByBudgetForMI(Request $request)
+    {
+        $user = Auth::user();
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->company);
+        }
+        $budget_code = $request->budgetCode;
+        $BudgetReq = $this->sap->getService('BudgetReq');
+        $BudgetReq->headers(['Prefer' => 'odata.maxpagesize=100']);
+        $budgets =  $BudgetReq->queryBuilder()->select('BUDGETREQLINESCollection')
+                    ->find($budget_code);
+        $collection = json_decode(json_encode($budgets), true)["BUDGETREQLINESCollection"];
+        $account_code_array = [];
+        for ($i = 0; $i < count($collection); $i++)
+        {
+            array_push($account_code_array, (string)$collection[$i]["U_AccountCode"]);
+        }
+
+        $COAReq = $this->sap->getService('ChartOfAccounts');
+        $COAReq->headers(['Prefer' => 'odata.maxpagesize=50']);
+        $result = $COAReq->queryBuilder()
+            ->select('Code,Name')
+            ->where(new StartsWith("Code", "1"))
+            ->orWhere(new StartsWith("Code", "4"))
+            ->orWhere(new StartsWith("Code", "5"))
+            ->orWhere(new InArray("Code", ["60200.0400","60700.0200","60700.0500","60600.0100"]));
+        $result = $result->where(new MoreThan("AccountLevel", 1))
+                         ->where(new InArray("Code", $account_code_array))
+                         ->orderBy('Code', 'desc')
+                         ->findAll();
 
         return $result;
     }

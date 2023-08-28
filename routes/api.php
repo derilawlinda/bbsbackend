@@ -77,6 +77,7 @@ Route::post('/advanceRequest/confirmAdvanceRealization', [AdvanceRequestControll
 
 Route::get('/coa/getCOAs', [COAController::class, 'getCOAs'])->middleware('auth:sanctum');
 Route::get('/coa/getCOAsByBudget', [COAController::class, 'getCOAsByBudget'])->middleware('auth:sanctum');
+Route::get('/coa/getCOAsByBudgetForMI', [COAController::class, 'getCOAsByBudgetForMI'])->middleware('auth:sanctum');
 Route::get('/coa/getCOAsByAR', [COAController::class, 'getCOAsByAR'])->middleware('auth:sanctum');
 
 Route::get('/reimbursement/getReimbursements', [ReimbursementController::class, 'getReimbursements'])->middleware('auth:sanctum');
