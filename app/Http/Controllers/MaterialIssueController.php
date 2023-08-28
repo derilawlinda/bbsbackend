@@ -20,24 +20,25 @@ class MaterialIssueController extends Controller
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
 
         $MaterialIssue = $this->sap->getService('MaterialIssue');
 
         $count = $MaterialIssue->queryBuilder()->count();
-        $request["Code"] = 70000001 + $count;
-        $request["U_CreatedBy"] = (int)$user->id;
-        $request["U_RequestorName"] = $user->name;
 
-        $result = $MaterialIssue->create($request->all());
+        $result = $MaterialIssue->create($request->get('oProperty') + [
+            'Code' => 70000001 + $count,
+            'U_CreatedBy' => (int)$user->id,
+            'U_RequestorName' => $user->name
+        ]);
         return $result;
     }
-    public function getMaterialIssues()
+    public function getMaterialIssues(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $MaterialIssueReq = $this->sap->getService('MaterialIssue');
         $MaterialIssueReq->headers(['OData-Version' => '4.0']);
@@ -61,7 +62,7 @@ class MaterialIssueController extends Controller
     public function getMaterialIssueById(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
 
         $budgets = $this->sap->getService('MaterialIssue');
@@ -75,34 +76,58 @@ class MaterialIssueController extends Controller
 
     public function approveMI(Request $request)
     {
-        $json = json_encode($request->all());
+        $json = json_encode($request->get('oProperty'));
         $jsonString = str_replace(utf8_encode("U_ItemCode"),"ItemCode",$json);
         $jsonString = str_replace(utf8_encode("U_Qty"),"Quantity",$jsonString);
         $jsonString = str_replace(utf8_encode("U_AccountCode"),"AccountCode",$jsonString);
         $request_array = json_decode($jsonString,true);
-        $array_req = $request->all();
-        $code = $array_req["Code"];
-        $goodIssueInput = array();
-        $goodIssueInput["U_H_NO_BUDGET"] = $request_array["U_BudgetCode"];
-        $goodIssueInput["DocumentLines"] = $request_array["MATERIALISSUELINESCollection"];
-
+        $code = $request_array["Code"];
+        $budgetCode = (string)$request_array["U_BudgetCode"];
+        // $goodIssueInput = array();
+        // $goodIssueInput["DocDate"] = $request_array["U_DocDate"];
+        // $goodIssueInput["U_H_NO_BUDGET"] = $request_array["U_BudgetCode"];
+        // $goodIssueInput["DocumentLines"] = $request_array["MATERIALISSUELINESCollection"];
+        $mrbudget = $budget->queryBuilder()
+            ->select('*')
+            ->find($budgetCode); // DocEntry value
+         $array_budget = json_decode(json_encode($mrbudget), true);
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $user = Auth::user();
         $material_request = $this->sap->getService('MaterialIssue');
-        $code = $request->Code;
+
         if ($user["role_id"] == 5) {
             $result = $material_request->update($code, [
-                'U_Status' => 2
+                'U_Status' => 2,
+                'U_ManagerApp'=> $user->name,
+                'U_ManagerAppAt' => date("Y-m-d")
             ]);
 
         }
         else{
             $result = $material_request->update($code, [
-                'U_Status' => 3
+                'U_Status' => 3,
+                'U_DirectorApp'=> $user->name,
+                'U_DirectorAppAt' => date("Y-m-d")
             ]);
             if($result == 1){
+                for($i = 0; $i < count($request_array["MATERIALISSUEINESCollection"]); ++$i) {
+                    $request_array["MATERIALISSUEINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
+                    $request_array["MATERIALISSUEINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
+                    $request_array["MATERIALISSUEINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
+                    $request_array["MATERIALISSUEINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
+                    $request_array["MATERIALISSUEINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
+                    $request_array["MATERIALISSUEINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
+                }
+                $goodIssueInput = array(
+                    "DocDate" => $request_array["U_DocDate"],
+                    "RequriedDate" => $request_array["CreateDate"],
+                    'DocumentLines' => $request_array["MATERIALISSUEINESCollection"],
+                    "U_H_NO_BUDGET" => $request_array["U_BudgetCode"],
+                    'Project' => $array_budget["U_ProjectCode"]
+                );
+
                 $good_issue = $this->sap->getService('InventoryGenExits');
                 $result = $good_issue->create($goodIssueInput);
             }
@@ -113,33 +138,32 @@ class MaterialIssueController extends Controller
 
     public function saveMI(Request $request)
     {
-        $json = json_encode($request->all());
-
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $MaterialIssue = $this->sap->getService('MaterialIssue');
         $MaterialIssue->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $result = $MaterialIssue->update($code,$request->all(),false);
+        $code = $request->get('data')["Code"];
+        $result = $MaterialIssue->update($code,$request->get('data'),false);
         return $result;
 
     }
 
     public function resubmitMI(Request $request)
     {
-        $json = json_encode($request->all());
-
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $MaterialIssue = $this->sap->getService('MaterialIssue');
         $MaterialIssue->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $request["U_Status"] = 1;
-        $result = $MaterialIssue->update($code,$request->all(),false);
+        $code = $request->get('data')["Code"];
+
+        $inputArray = $request->get('data');
+        $inputArray["U_Status"] = 1;
+
+        $result = $MaterialIssue->update($code,$inputArray,false);
         return $result;
 
     }
@@ -149,7 +173,7 @@ class MaterialIssueController extends Controller
     public function rejectMI(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $user = Auth::user();
         $MaterialIssue = $this->sap->getService('MaterialIssue');
@@ -164,18 +188,8 @@ class MaterialIssueController extends Controller
 
     }
 
-    public function metadata()
-    {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
-        }
-        $BudgetReq = $this->sap->getService('MaterialIssue');
-        $metadata = $BudgetReq->getMetaData();
-        return $metadata;
 
-    }
-
-    public function getSession()
+    public function getSession($company)
     {
         $config = [
             "https" => true,
@@ -187,7 +201,7 @@ class MaterialIssueController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
+        $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         $this->sap = $sap;
         return $sap;
     }

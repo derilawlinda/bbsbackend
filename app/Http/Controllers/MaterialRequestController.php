@@ -42,32 +42,22 @@ class MaterialRequestController extends Controller
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->company);
         }
-        $search = "";
-        if($request->search){
-            $search = $request->search;
-        }
-
         $MaterialReq = $this->sap->getService('MaterialReq');
         $MaterialReq->headers(['OData-Version' => '4.0',
         "B1S-CaseInsensitive" => true,
         'Prefer' => 'odata.maxpagesize=500']);
+        $result = $MaterialReq->queryBuilder()
+                    ->select('*')
+                    ->orderBy('Code', 'desc');
+        if($request->search){
+
+            $result = $result->where(new Contains("Code", $request->search))
+                             ->orWhere(new Contains("Name",$request->search));
+
+        }
+
         if ($user["role_id"] == 3) {
-            $result = $MaterialReq->queryBuilder()
-                ->select('*')
-                ->orderBy('Code', 'desc')
-                ->where(new Equal("U_CreatedBy", (int) $user["id"]))
-                ->where(new Contains("Code", $search))
-                ->orWhere(new Contains("Name",$search))
-                ->inlineCount();
-
-        }else{
-            $result = $MaterialReq->queryBuilder()
-            ->select('*')
-            ->where(new Contains("Code", $search))
-            ->orWhere(new Contains("Name",$search))
-            ->orderBy('Code', 'desc')
-            ->inlineCount();
-
+         $result = $result->where(new Equal("U_CreatedBy", (int) $user["id"]));
         }
 
         if($request->top){
@@ -82,7 +72,7 @@ class MaterialRequestController extends Controller
             $skip = 0;
         }
 
-        $result = $result->limit($top,$skip)->findAll();
+        $result = $result->limit($top,$skip)->inlineCount()->findAll();
 
 
         return $result;
@@ -182,17 +172,17 @@ class MaterialRequestController extends Controller
 
     public function resubmitMR(Request $request)
     {
-        $json = json_encode($request->all());
-
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->U_Company);
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $MaterialReq = $this->sap->getService('MaterialReq');
         $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $request["U_Status"] = 1;
-        $result = $MaterialReq->update($code,$request->all(),false);
+        $code = $request->get('data')["Code"];
+
+        $inputArray = $request->get('data');
+        $inputArray["U_Status"] = 1;
+        $result = $MaterialReq->update($code,$inputArray,false);
         return $result;
 
     }
@@ -202,7 +192,7 @@ class MaterialRequestController extends Controller
     public function rejectMR(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->U_Company);
+            $this->sap = $this->getSession($request->company);
         }
         $user = Auth::user();
         $budgets = $this->sap->getService('MaterialReq');
