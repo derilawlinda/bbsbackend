@@ -106,7 +106,8 @@ class BudgetController extends Controller
             $this->sap = $this->getSession($request->company);
         }
         $BudgetReq = $this->sap->getService('BudgetReq');
-        $BudgetReq->headers(['OData-Version' => '4.0']);
+        $BudgetReq->headers(['OData-Version' => '4.0',
+        'Prefer' => 'odata.maxpagesize=500']);
         $result = $BudgetReq->queryBuilder()
             ->select('*')
             ->orderBy('Code', 'desc')
