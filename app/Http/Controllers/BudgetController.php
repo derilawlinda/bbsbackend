@@ -60,6 +60,7 @@ class BudgetController extends Controller
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_Status", 2))
+                ->orWhere(new Equal("U_Status", 3))
                 ->inlineCount();
         }
         else{

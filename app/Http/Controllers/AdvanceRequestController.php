@@ -20,30 +20,25 @@ class AdvanceRequestController extends Controller
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
-
         $AdvanceRequest = $this->sap->getService('AdvanceReq');
-
         $count = $AdvanceRequest->queryBuilder()->count();
-        $request["Code"] = 80000001 + $count;
-        $request["U_CreatedBy"] = (int)$user->id;
-        $request["U_RequestorName"] = $user->name;
-
-        $result = $AdvanceRequest->create($request->all());
+        $result = $AdvanceRequest->create($request->get('oProperty') + [
+            'Code' => 80000001 + $count,
+            'U_CreatedBy' => (int)$user->id,
+            'U_RequestorName' => $user->name
+        ]);
         return $result;
     }
-    public function getAdvanceRequests()
+    public function getAdvanceRequests(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $AdvanceReq = $this->sap->getService('AdvanceReq');
 
-        // $result = $AdvanceReq->queryBuilder()
-        //         ->select('*')
-        //         ->findAll();
         if ($user["role_id"] == 3) {
             $result = $AdvanceReq->queryBuilder()
                 ->select('*')
@@ -69,11 +64,11 @@ class AdvanceRequestController extends Controller
         return $result;
     }
 
-    public function getAdvanceRealizations()
+    public function getAdvanceRealizations(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $AdvanceReq = $this->sap->getService('AdvanceReq');
 
@@ -111,12 +106,13 @@ class AdvanceRequestController extends Controller
     public function transferAR(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
 
         $user = Auth::user();
 
-        $array_req = $request->all();
+        $array_req = $request->get('oProperty');
+        $code = $array_req["Code"];
         $budgetCode = (string)$array_req["U_BudgetCode"];
 
         $budget = $this->sap->getService('BudgetReq');
@@ -163,8 +159,6 @@ class AdvanceRequestController extends Controller
 
             $outgoingArray = json_decode(json_encode($outgoingResult), true);
             $AdvanceReq = $this->sap->getService('AdvanceReq');
-            $code = $request->Code;
-            $disbursed_date = $request->DisbursedDate;
             $result = $AdvanceReq->update($code, [
                 'U_DisbursedAt' => $array_req["DisbursedDate"],
                 'U_Status' => 5,
@@ -192,11 +186,11 @@ class AdvanceRequestController extends Controller
     public function confirmAdvanceRealization(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
 
         $user = Auth::user();
-        $array_req = $request->all();
+        $array_req = $request->get('oProperty');
 
         $budgetCode = (string)$array_req["U_BudgetCode"];
         $budget = $this->sap->getService('BudgetReq');
@@ -301,7 +295,7 @@ class AdvanceRequestController extends Controller
     public function getAdvanceRequestById(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
 
         $budgets = $this->sap->getService('AdvanceReq');
@@ -319,21 +313,25 @@ class AdvanceRequestController extends Controller
     {
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $user = Auth::user();
         $advance_request = $this->sap->getService('AdvanceReq');
-        $code = $request->Code;
+        $code = $request->get('oProperty')["Code"];
 
         if($user["role_id"] == 4){
             $result = $advance_request->update($code, [
-                'U_Status' => 3
+                'U_Status' => 3,
+                'U_DirectorApp'=> $user->name,
+                'U_DirectorAppAt' => date("Y-m-d")
             ]);
         }
 
         elseif ($user["role_id"] == 5) {
             $result = $advance_request->update($code, [
-                'U_Status' => 2
+                'U_Status' => 2,
+                'U_ManagerApp'=> $user->name,
+                'U_ManagerAppAt' => date("Y-m-d")
             ]);
 
         }
@@ -347,13 +345,13 @@ class AdvanceRequestController extends Controller
     {
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $AdvanceReq = $this->sap->getService('AdvanceReq');
         $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $result = $AdvanceReq->update($code,$request->all(),false);
+        $code = $request->get('data')["Code"];
+        $result = $AdvanceReq->update($code,$request->get('data'),false);
         return $result;
 
     }
@@ -361,7 +359,7 @@ class AdvanceRequestController extends Controller
     public function rejectAR(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $user = Auth::user();
         $AdvanceReq = $this->sap->getService('AdvanceReq');
@@ -379,7 +377,7 @@ class AdvanceRequestController extends Controller
     public function rejectAdvanceRealization(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $user = Auth::user();
         $AdvanceReq = $this->sap->getService('AdvanceReq');
@@ -395,17 +393,16 @@ class AdvanceRequestController extends Controller
 
     public function resubmitAR(Request $request)
     {
-        $json = json_encode($request->all());
-
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $AdvanceReq = $this->sap->getService('AdvanceReq');
         $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $request["U_Status"] = 1;
-        $result = $AdvanceReq->update($code,$request->all(),false);
+        $inputArray = $request->get('data');
+        $code = $inputArray["Code"];
+        $inputArray["U_Status"] = 1;
+        $result = $AdvanceReq->update($code,$inputArray,false);
         return $result;
     }
 
@@ -414,25 +411,26 @@ class AdvanceRequestController extends Controller
         $json = json_encode($request->all());
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $AdvanceReq = $this->sap->getService('AdvanceReq');
         $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $request["U_RealiStatus"] = 1;
-        $result = $AdvanceReq->update($code,$request->all(),false);
+        $code = $request->get('data')["Code"];
+        $inputArray = $request->get('data');
+        $inputArray["U_RealiStatus"] = 1;
+        $result = $AdvanceReq->update($code,$inputArray,false);
         return $result;
     }
 
     public function submitAdvanceRealization(Request $request)
     {
-        $array_req = $request->all();
+        $array_req = $request->get('oProperty');
         $code = $array_req["Code"];
         $array_req["U_RealiStatus"] = 2;
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('oProperty'));
         }
         $advance_request = $this->sap->getService('AdvanceReq');
         $result = $advance_request->update($code, $array_req);
@@ -442,20 +440,27 @@ class AdvanceRequestController extends Controller
     public function approveAdvanceRealization(Request $request)
     {
         $user = Auth::user();
-        $array_req = $request->all();
-        $code = $array_req["Code"];
+        $code = $request->get('Code');
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
+
         $advance_request = $this->sap->getService('AdvanceReq');
-        $result = $advance_request->update($code, $array_req);
+
         if ($user["role_id"] == 5) {
-            $array_req["U_RealiStatus"] = 3;
+            $result = $advance_request->update($code, [
+                'U_RealiStatus' => 3,
+                'U_ManagerRealApp'=> $user->name,
+                'U_ManagerRealAppAt' => date("Y-m-d")
+            ]);
         }else{
-            $array_req["U_RealiStatus"] = 4;
+            $result = $advance_request->update($code, [
+                'U_RealiStatus' => 4,
+                'U_DirectorRealApp'=> $user->name,
+                'U_DirectorRealAppAt' => date("Y-m-d")
+            ]);
         }
-        $result = $advance_request->update($code, $array_req);
         return $result;
 
     }
@@ -471,7 +476,7 @@ class AdvanceRequestController extends Controller
 
     }
 
-    public function getSession()
+    public function getSession($company)
     {
         $config = [
             "https" => true,
@@ -483,7 +488,7 @@ class AdvanceRequestController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
+        $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         $this->sap = $sap;
         return $sap;
     }
