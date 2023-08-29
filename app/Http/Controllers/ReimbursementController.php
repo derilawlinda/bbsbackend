@@ -241,7 +241,7 @@ class ReimbursementController extends Controller
 
     }
 
-    public function getSession()
+    public function getSession($company)
     {
         $config = [
             "https" => true,
