@@ -184,11 +184,15 @@ class ReimbursementController extends Controller
         $code = $request->get('oProperty')["Code"];
         if ($user["role_id"] == 5) {
             $result = $reimbursement->update($code, [
-                'U_Status' => 2
+                'U_Status' => 2,
+                'U_ManagerApp'=> $user->name,
+                'U_ManagerAppAt' => date("Y-m-d")
             ]);
         }else{
             $result = $reimbursement->update($code, [
-                'U_Status' => 3
+                'U_Status' => 3,
+                'U_DirectorApp'=> $user->name,
+                'U_DirectorAppAt' => date("Y-m-d")
             ]);
         }
         return $result;
@@ -237,6 +241,23 @@ class ReimbursementController extends Controller
             'U_Status' => 4,
             'U_RejectedBy' => $user->name
         ]);
+        return $result;
+
+    }
+
+    public function resubmitReimbursement(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->get('company'));
+        }
+        $user = Auth::user();
+        $MaterialReq = $this->sap->getService('ReimbursementReq');
+        $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+        $code = $request->get('data')["Code"];
+
+        $inputArray = $request->get('data');
+        $inputArray["U_Status"] = 1;
+        $result = $MaterialReq->update($code,$inputArray,false);
         return $result;
 
     }
