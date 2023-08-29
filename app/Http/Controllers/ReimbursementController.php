@@ -23,25 +23,27 @@ class ReimbursementController extends Controller
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
 
         $Reimbursement = $this->sap->getService('ReimbursementReq');
 
         $count = $Reimbursement->queryBuilder()->count();
-        $request["Code"] = 90000001 + $count;
-        $request["U_CreatedBy"] = (int)$user->id;
-        $request["U_RequestorName"] = $user->name;
 
-        $result = $Reimbursement->create($request->all());
+
+        $result = $Reimbursement->create($request->get('oProperty') + [
+            'Code' => 90000001 + $count,
+            'U_CreatedBy' => (int)$user->id,
+            'U_RequestorName' => $user->name
+        ]);
         return $result;
     }
 
-    public function getReimbursements()
+    public function getReimbursements(Request $request)
     {
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $BudgetReq = $this->sap->getService('ReimbursementReq');
         $BudgetReq->headers(['OData-Version' => '4.0']);
@@ -80,7 +82,7 @@ class ReimbursementController extends Controller
     public function getReimbursementById(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $reimbursement = $this->sap->getService('ReimbursementReq');
 
@@ -94,12 +96,12 @@ class ReimbursementController extends Controller
     public function transferReimbursement(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
 
         $user = Auth::user();
 
-        $array_req = $request->all();
+        $array_req = $request->get('oProperty');
         $budgetCode = (string)$array_req["U_BudgetCode"];
 
         $budget = $this->sap->getService('BudgetReq');
@@ -146,8 +148,8 @@ class ReimbursementController extends Controller
 
             $outgoingArray = json_decode(json_encode($outgoingResult), true);
             $ReimbursementReq = $this->sap->getService('ReimbursementReq');
-            $code = $request->Code;
-            $disbursed_date = $request->DisbursedDate;
+            $code = $array_req["Code"];
+            $disbursed_date = $array_req["DisbursedDate"];
             $result = $ReimbursementReq->update($code, [
                 'U_DisbursedAt' => $array_req["DisbursedDate"],
                 'U_Status' => 5,
@@ -175,11 +177,11 @@ class ReimbursementController extends Controller
     public function approveReimbursement(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $reimbursement = $this->sap->getService('ReimbursementReq');
-        $code = $request->Code;
+        $code = $request->get('oProperty')["Code"];
         if ($user["role_id"] == 5) {
             $result = $reimbursement->update($code, [
                 'U_Status' => 2
@@ -195,39 +197,36 @@ class ReimbursementController extends Controller
 
     public function saveReimbursement(Request $request)
     {
-        $json = json_encode($request->all());
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $ReimbursementReq = $this->sap->getService('ReimbursementReq');
         $ReimbursementReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $result = $ReimbursementReq->update($code,$request->all(),false);
+        $code = $request->get('data')["Code"];
+        $result = $ReimbursementReq->update($code,$request->get('data'),false);
         return $result;
 
     }
 
     public function sapeReimbursement(Request $request)
     {
-        $json = json_encode($request->all());
-
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
         $ReimbursementReq = $this->sap->getService('ReimbursementReq');
         $ReimbursementReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $result = $ReimbursementReq->update($code,$request->all(),false);
+        $code = $request->get('data')["Code"];
+        $result = $ReimbursementReq->update($code,$request->get('data'),false);
         return $result;
     }
 
     public function rejectReimbursement(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
         $user = Auth::user();
         $reimbursement = $this->sap->getService('ReimbursementReq');
@@ -254,7 +253,7 @@ class ReimbursementController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
+        $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         $this->sap = $sap;
         return $sap;
     }

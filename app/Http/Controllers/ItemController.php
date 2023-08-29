@@ -24,7 +24,7 @@ class ItemController extends Controller
 
         $user = Auth::user();
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession();
+            $this->sap = $this->getSession($request->company);
         }
 
         $account_code = (string) $request->accountCode;
@@ -94,7 +94,7 @@ class ItemController extends Controller
         return json_encode($items);
     }
 
-    public function getSession()
+    public function getSession($company)
     {
         $config = [
             "https" => true,
@@ -106,7 +106,7 @@ class ItemController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
+        $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         $this->sap = $sap;
         return $sap;
     }
