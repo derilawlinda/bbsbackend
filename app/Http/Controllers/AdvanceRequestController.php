@@ -401,7 +401,7 @@ class AdvanceRequestController extends Controller
         $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
         $inputArray = $request->get('data');
         $code = $inputArray["Code"];
-        $inputArray["U_Status"] = 1;
+        $inputArray["U_Status"] = 2;
         $result = $AdvanceReq->update($code,$inputArray,false);
         return $result;
     }
@@ -430,7 +430,7 @@ class AdvanceRequestController extends Controller
         $array_req["U_RealiStatus"] = 2;
 
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('oProperty'));
+            $this->sap = $this->getSession($request->get('company'));
         }
         $advance_request = $this->sap->getService('AdvanceReq');
         $result = $advance_request->update($code, $array_req);
