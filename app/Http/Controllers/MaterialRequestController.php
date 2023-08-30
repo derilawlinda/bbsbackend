@@ -121,6 +121,11 @@ class MaterialRequestController extends Controller
 
         $MaterialReq = $this->sap->getService('MaterialReq');
 
+        $docdate = date("Y-m-d");
+        if($request_array["U_DocDate"] != ''){
+            $docdate = $request_array["U_DocDate"];
+        }
+
         if ($user["role_id"] == 5) {
             $result = $MaterialReq->update($code, [
                 'U_Status' => 2,
@@ -129,32 +134,35 @@ class MaterialRequestController extends Controller
             ]);
 
         }
-        else{
-            $result = $MaterialReq->update($code, [
-                'U_Status' => 3,
-                'U_DirectorApp'=> $user->name,
-                'U_DirectorAppAt' => date("Y-m-d")
-            ]);
-            if($result == 1){
 
-                for($i = 0; $i < count($request_array["MATERIALREQLINESCollection"]); ++$i) {
-                    $request_array["MATERIALREQLINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
-                    $request_array["MATERIALREQLINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
-                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
-                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
-                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
-                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
-                }
-                $purchaseReqInput = array(
-                    "DocDate" => $request_array["U_DocDate"],
-                    "RequriedDate" => $request_array["CreateDate"],
-                    'DocumentLines' => $request_array["MATERIALREQLINESCollection"],
-                    "U_H_NO_MR" => $request_array["Code"],
-                    "U_H_NO_BUDGET" => $request_array["U_BudgetCode"],
-                    'Project' => $array_budget["U_ProjectCode"]
-                );
-                $purchase_req = $this->sap->getService('PurchaseRequests');
-                $result = $purchase_req->create($purchaseReqInput);
+        else{
+
+            for($i = 0; $i < count($request_array["MATERIALREQLINESCollection"]); ++$i) {
+                $request_array["MATERIALREQLINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
+                $request_array["MATERIALREQLINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
+                $request_array["MATERIALREQLINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
+                $request_array["MATERIALREQLINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
+                $request_array["MATERIALREQLINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
+                $request_array["MATERIALREQLINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
+            }
+            $purchaseReqInput = array(
+                "DocDate" => $docdate,
+                "RequriedDate" => $request_array["CreateDate"],
+                'DocumentLines' => $request_array["MATERIALREQLINESCollection"],
+                "U_H_NO_MR" => $request_array["Code"],
+                "U_H_NO_BUDGET" => $request_array["U_BudgetCode"],
+                'Project' => $array_budget["U_ProjectCode"]
+            );
+            $purchase_req = $this->sap->getService('PurchaseRequests');
+            $result = $purchase_req->create($purchaseReqInput);
+
+
+            if($result){
+                $result = $MaterialReq->update($code, [
+                    'U_Status' => 3,
+                    'U_DirectorApp'=> $user->name,
+                    'U_DirectorAppAt' => date("Y-m-d")
+                ]);
 
             }
         }
