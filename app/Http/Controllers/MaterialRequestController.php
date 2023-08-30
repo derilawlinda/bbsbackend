@@ -69,7 +69,7 @@ class MaterialRequestController extends Controller
         if($request->top){
             $top = $request->top;
         }else{
-            $top = 20;
+            $top = 1000000;
         }
 
         if($request->skip){
