@@ -47,8 +47,7 @@ class MaterialRequestController extends Controller
         "B1S-CaseInsensitive" => true,
         'Prefer' => 'odata.maxpagesize=500']);
         $result = $MaterialReq->queryBuilder()
-                    ->select('*')
-                    ->orderBy('Code', 'desc');
+                    ->select('*');
         if($request->search){
 
             $result = $result->where(new Contains("Code", $request->search))
@@ -78,7 +77,7 @@ class MaterialRequestController extends Controller
             $skip = 0;
         }
 
-        $result = $result->limit($top,$skip)->inlineCount()->findAll();
+        $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
 
 
         return $result;
@@ -140,10 +139,12 @@ class MaterialRequestController extends Controller
             for($i = 0; $i < count($request_array["MATERIALREQLINESCollection"]); ++$i) {
                 $request_array["MATERIALREQLINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
                 $request_array["MATERIALREQLINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
+                $request_array["MATERIALREQLINESCollection"][$i]['U_H_COA'] = $request_array["U_AccountCode"];
                 $request_array["MATERIALREQLINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
                 $request_array["MATERIALREQLINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
                 $request_array["MATERIALREQLINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
                 $request_array["MATERIALREQLINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
+
             }
             $purchaseReqInput = array(
                 "DocDate" => $docdate,

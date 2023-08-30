@@ -42,6 +42,8 @@ Route::get('/budget/getBudgetById', [BudgetController::class, 'getBudgetById'])-
 Route::post('/budget/saveBudget', [BudgetController::class, 'saveBudget'])->middleware('auth:sanctum');
 Route::post('/budget/rejectBudget', [BudgetController::class, 'rejectBudget'])->middleware('auth:sanctum');
 Route::post('/budget/resubmitBudget', [BudgetController::class, 'resubmitBudget'])->middleware('auth:sanctum');
+Route::post('/budget/closeBudget', [BudgetController::class, 'closeBudget'])->middleware('auth:sanctum');
+Route::post('/budget/cancelBudget', [BudgetController::class, 'cancelBudget'])->middleware('auth:sanctum');
 
 Route::get('/materialRequest/getMaterialRequests', [MaterialRequestController::class, 'getMaterialRequests'])->middleware('auth:sanctum');
 Route::get('/materialRequest/getMaterialRequestById', [MaterialRequestController::class, 'getMaterialRequestById'])->middleware('auth:sanctum');

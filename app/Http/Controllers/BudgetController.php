@@ -178,6 +178,43 @@ class BudgetController extends Controller
 
     }
 
+    public function closeBudget(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->Company);
+        }
+        $user = Auth::user();
+        $budgets = $this->sap->getService('BudgetReq');
+        $code = $request->Code;
+
+        $result = $budgets->update($code, [
+            'U_Status' => 5,
+            'U_ClosedBy'=> $user->name,
+            'U_ClosedAt' => date("Y-m-d")
+
+        ]);
+        return $result;
+
+    }
+
+    public function cancelBudget(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->Company);
+        }
+        $user = Auth::user();
+        $budgets = $this->sap->getService('BudgetReq');
+        $code = $request->Code;
+
+        $result = $budgets->update($code, [
+            'U_Status' => 99,
+            'U_CancelledBy'=> $user->name,
+            'U_CancelledAt' => date("Y-m-d")
+        ]);
+        return $result;
+
+    }
+
 
     public function saveBudget(Request $request)
     {
