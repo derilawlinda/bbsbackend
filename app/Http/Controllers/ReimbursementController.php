@@ -45,16 +45,17 @@ class ReimbursementController extends Controller
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->company);
         }
-        $BudgetReq = $this->sap->getService('ReimbursementReq');
-        $BudgetReq->headers(['OData-Version' => '4.0']);
+        $Reimbursement = $this->sap->getService('ReimbursementReq');
+        $Reimbursement->headers(['OData-Version' => '4.0',
+        'Prefer' => 'odata.maxpagesize=500']);
         if ($user["role_id"] == 3) {
-            $result = $BudgetReq->queryBuilder()
+            $result = $Reimbursement->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (int) $user["id"]))
                 ->findAll();
         }elseif($user["role_id"] == 2){
-            $result = $BudgetReq->queryBuilder()
+            $result = $Reimbursement->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_Status", 3))
@@ -62,7 +63,7 @@ class ReimbursementController extends Controller
                 ->findAll();
         }
         elseif($user["role_id"] == 4){
-            $result = $BudgetReq->queryBuilder()
+            $result = $Reimbursement->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_Status", 2))
@@ -70,7 +71,7 @@ class ReimbursementController extends Controller
                 ->findAll();
         }
         else{
-            $result = $BudgetReq->queryBuilder()
+            $result = $Reimbursement->queryBuilder()
             ->select('*')
             ->orderBy('Code', 'desc')
             ->findAll();
