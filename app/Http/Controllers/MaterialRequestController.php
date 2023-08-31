@@ -150,6 +150,7 @@ class MaterialRequestController extends Controller
             }
             $purchaseReqInput = array(
                 "DocDate" => $docdate,
+                "Comments" => $request_array["Name"],
                 "RequriedDate" => $request_array["CreateDate"],
                 'DocumentLines' => $request_array["MATERIALREQLINESCollection"],
                 "U_H_NO_MR" => $request_array["Code"],
