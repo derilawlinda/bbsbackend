@@ -208,13 +208,14 @@ class AdvanceRequestController extends Controller
             $incomingPaymentInput["TransferAccount"] = '11120.1001';
             $incomingPaymentInput["DocType"] = 'rAccount';
             $incomingPaymentInput["DocCurrency"] = 'IDR';
+            $incomingPaymentInput["DocDate"] = 'IDR';
             $incomingPaymentInput["TransferSum"] = $array_req["U_RealizationAmt"];
             $incomingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
             $incomingPaymentInput["Remarks"] = "Advance Realization ".$array_req["Code"];
 
             array_push($incomingPaymentInput["PaymentAccounts"], (object)[
                 'AccountCode' => '11720.2000',
-                'SumPaid' => $array_req["U_RealizationAmt"],
+                'SumPaid' => $array_req["U_DifferenceAmt"],
                 'ProfitCenter' => $array_budget["U_PillarCode"],
                 'ProjectCode' => $array_budget["U_ProjectCode"],
                 "ProfitCenter2" => $array_budget["U_ClassificationCode"],
