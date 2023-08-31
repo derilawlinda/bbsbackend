@@ -138,8 +138,9 @@ class MaterialRequestController extends Controller
 
             for($i = 0; $i < count($request_array["MATERIALREQLINESCollection"]); ++$i) {
                 $request_array["MATERIALREQLINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
+                $request_array["MATERIALREQLINESCollection"][$i]['U_H_KET'] = $request_array["MATERIALREQLINESCollection"][$i]['U_Description'];
                 $request_array["MATERIALREQLINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
-                $request_array["MATERIALREQLINESCollection"][$i]['U_H_COA'] = $request_array["U_AccountCode"];
+                $request_array["MATERIALREQLINESCollection"][$i]['U_H_COA'] = $request_array["MATERIALREQLINESCollection"][$i]['U_AccountCode'];
                 $request_array["MATERIALREQLINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
                 $request_array["MATERIALREQLINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
                 $request_array["MATERIALREQLINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
