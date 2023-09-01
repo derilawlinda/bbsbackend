@@ -55,23 +55,20 @@ class ReimbursementController extends Controller
             $result = $Reimbursement->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
-                ->where(new Equal("U_CreatedBy", (int) $user["id"]))
-                ->findAll();
+                ->where(new Equal("U_CreatedBy", (int) $user["id"]));
         }elseif($user["role_id"] == 2){
             $result = $Reimbursement->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_Status", 3))
-                ->orWhere(new Equal("U_Status", 5))
-                ->findAll();
+                ->orWhere(new Equal("U_Status", 5));
         }
         elseif($user["role_id"] == 4){
             $result = $Reimbursement->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
                 ->where(new Equal("U_Status", 2))
-                ->orWhere(new Equal("U_Status", 3))
-                ->findAll();
+                ->orWhere(new Equal("U_Status", 3));
         }
         else{
             $result = $Reimbursement->queryBuilder()
