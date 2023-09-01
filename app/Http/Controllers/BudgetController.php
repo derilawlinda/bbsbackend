@@ -86,7 +86,7 @@ class BudgetController extends Controller
         if($request->top){
             $top = $request->top;
         }else{
-            $top = 50;
+            $top = 100;
         }
 
         if($request->skip){

@@ -122,10 +122,7 @@ class COAController extends Controller
         $COAReq->headers(['Prefer' => 'odata.maxpagesize=50']);
         $result = $COAReq->queryBuilder()
             ->select('Code,Name')
-            ->where(new StartsWith("Code", "1"))
-            ->orWhere(new StartsWith("Code", "4"))
-            ->orWhere(new StartsWith("Code", "5"))
-            ->orWhere(new InArray("Code", ["60200.0400","60700.0200","60700.0500","60600.0100"]));
+            ->where(new InArray("Code", ["60200.0400","60700.0200","60700.0500","60600.0100"]));
         $result = $result->where(new MoreThan("AccountLevel", 1))
                          ->where(new InArray("Code", $account_code_array))
                          ->orderBy('Code', 'desc')
