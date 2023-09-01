@@ -123,7 +123,11 @@ class COAController extends Controller
         $result = $COAReq->queryBuilder()
             ->select('Code,Name')
             ->where(new StartsWith("Code", "1"))
-            ->orWhere(new InArray("Code", ["60200.0400","60700.0200","60700.0500","60600.0100"]));
+            ->where(new MoreThan("AccountLevel", 1))
+            ->orWhere(new StartsWith("Code", "5"))
+            ->where(new MoreThan("AccountLevel", 1))
+            ->orWhere(new InArray("Code", ["60200.0400","60700.0200","60700.0500","60600.0100"]))
+            ->where(new InArray("Code", $account_code_array));
         $result = $result->where(new MoreThan("AccountLevel", 1))
                          ->where(new InArray("Code", $account_code_array))
                          ->orderBy('Code', 'desc')
