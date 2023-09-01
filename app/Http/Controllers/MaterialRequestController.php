@@ -11,6 +11,7 @@ use App\Libraries\SAPb1\SAPClient;
 use App\Libraries\SAPb1\Filters\Equal;
 use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
+use App\Libraries\SAPb1\Filters\InArray;
 
 class MaterialRequestController extends Controller
 {
@@ -48,6 +49,9 @@ class MaterialRequestController extends Controller
         'Prefer' => 'odata.maxpagesize=500']);
         $result = $MaterialReq->queryBuilder()
                     ->select('*');
+        $search = "";
+        $status_array = [];
+
         if($request->search){
 
             $result = $result->where(new Contains("Code", $request->search))
@@ -63,6 +67,20 @@ class MaterialRequestController extends Controller
                 ->orWhere(new Equal("U_Status", 4))
                 ->orWhere(new Equal("U_Status", 5))
                 ->inlineCount();
+        }
+
+        if($request->search){
+            $search = $request->search;
+            $result->where(new Contains("Code", $search))
+                    ->orWhere(new Contains("Name",$search));
+        }
+
+        if($request->status){
+            $req_status_array = preg_split ("/\,/", $request->status);
+            foreach ($req_status_array as $value) {
+                array_push($status_array,(int)$value);
+            }
+            $result->where(new InArray("U_Status", $status_array));
         }
 
         if($request->top){
