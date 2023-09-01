@@ -94,21 +94,22 @@ class ItemController extends Controller
         return json_encode($items);
     }
 
-    public function getItemsByAccount(Request $request) {
+    // public function getItemsByAccount(Request $request) {
 
-        $user = Auth::user();
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
-        }
+    //     $user = Auth::user();
+    //     if(is_null($this->sap)) {
+    //         $this->sap = $this->getSession($request->company);
+    //     }
 
-        $itemsQuery = $this->sap->getService('Items');
-        $itemsQuery->headers(['Prefer' => 'odata.maxpagesize=50']);
-        $result = $itemsQuery->queryBuilder()
-            ->where(new InArray("InventoryAccount", 'Y'))
-            ->findAll();
+    //     $itemsQuery = $this->sap->getService('Items');
+    //     $itemsQuery->headers(['Prefer' => 'odata.maxpagesize=50']);
+    //     $result = $itemsQuery->queryBuilder()
+    //         ->where(new InArray("InventoryAccount", 'Y'))
+    //         ->findAll();
 
-        return $result;
-    }
+
+    //     return $result;
+    // }
 
     public function getSession($company)
     {

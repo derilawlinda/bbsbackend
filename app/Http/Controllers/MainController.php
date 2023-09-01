@@ -40,7 +40,7 @@ class MainController extends Controller
 
     public function getPillar(Request $request){
 
-        $this->json_path = Storage::disk('json')->get('pillar_'.$request->company.'.json');
+        $this->json_path = Storage::disk('storage')->get('pillar_'.$request->company.'.json');
         $config_decoded = json_decode($this->json_path, true);
         return json_encode($config_decoded);
 
