@@ -45,6 +45,9 @@ class ReimbursementController extends Controller
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->company);
         }
+        $search = "";
+        $status_array = [];
+
         $Reimbursement = $this->sap->getService('ReimbursementReq');
         $Reimbursement->headers(['OData-Version' => '4.0',
         'Prefer' => 'odata.maxpagesize=500']);
@@ -72,10 +75,35 @@ class ReimbursementController extends Controller
         }
         else{
             $result = $Reimbursement->queryBuilder()
-            ->select('*')
-            ->orderBy('Code', 'desc')
-            ->findAll();
+            ->select('*');
         }
+        if($request->search){
+            $search = $request->search;
+            $result->where(new Contains("Code", $search))
+                    ->orWhere(new Contains("Name",$search));
+        }
+
+        if($request->status){
+            $req_status_array = preg_split ("/\,/", $request->status);
+            foreach ($req_status_array as $value) {
+                array_push($status_array,(int)$value);
+            }
+            $result->where(new InArray("U_Status", $status_array));
+        }
+
+        if($request->top){
+            $top = $request->top;
+        }else{
+            $top = 1000000;
+        }
+
+        if($request->skip){
+            $skip = $request->skip;
+        }else{
+            $skip = 0;
+        }
+
+        $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
 
         return $result;
     }

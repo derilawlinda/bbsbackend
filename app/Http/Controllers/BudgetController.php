@@ -11,6 +11,7 @@ use App\Libraries\SAPb1\Filters\Equal;
 use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
 use App\Libraries\SAPb1\Filters\InArray;
+use PDF;
 
 class BudgetController extends Controller
 {
@@ -52,22 +53,16 @@ class BudgetController extends Controller
         if ($user["role_id"] == 3) {
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
-                ->where(new Equal("U_CreatedBy", (string) $user["id"]))
-                ->orderBy('Code', 'desc')
-                ->inlineCount();
+                ->where(new Equal("U_CreatedBy", (string) $user["id"]));
         }elseif($user["role_id"] == 4){
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
-                ->orderBy('Code', 'desc')
                 ->where(new Equal("U_Status", 2))
-                ->orWhere(new Equal("U_Status", 3))
-                ->inlineCount();
+                ->orWhere(new Equal("U_Status", 3));
         }
         else{
             $result = $BudgetReq->queryBuilder()
-            ->select('*')
-            ->orderBy('Code', 'desc')
-            ->inlineCount();
+            ->select('*');
         }
         if($request->search){
             $search = $request->search;
@@ -95,7 +90,7 @@ class BudgetController extends Controller
             $skip = 0;
         }
 
-        $result = $result->limit($top,$skip)->findAll();
+        $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
 
         return $result;
     }
@@ -120,6 +115,21 @@ class BudgetController extends Controller
     }
 
     public function getBudgetById(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->company);
+        }
+
+        $budgets = $this->sap->getService('BudgetReq');
+
+        $result = $budgets->queryBuilder()
+            ->select('*')
+            ->find($request->code); // DocEntry value
+        return $result;
+
+    }
+
+    public function printBudget(Request $request)
     {
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->company);
