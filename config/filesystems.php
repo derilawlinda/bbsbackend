@@ -60,6 +60,12 @@ return [
             'root' => public_path('json'),
             'visibility' => 'public',
             'url' => env('APP_URL').'\/json\/',
+        ],
+        'storage' => [
+            'driver' => 'local',
+            'root' => public_path('storage'),
+            'visibility' => 'public',
+            'url' => env('APP_URL').'\/storage\/',
         ]
 
     ],
