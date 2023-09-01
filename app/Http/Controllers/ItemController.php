@@ -44,7 +44,7 @@ class ItemController extends Controller
         // ->where(new Raw("ChartOfAccounts/Code eq '11520.0000'"));
 
         $itemsQuery = $this->sap->getService('ItemGroups');
-        $itemsQuery->headers(['Prefer' => 'odata.maxpagesize=1000']);
+        $itemsQuery->headers(['Prefer' => 'odata.maxpagesize=100000']);
         $result = $itemsQuery->queryBuilder()
             ->expand('Items($select=ItemCode,ItemName)')
             ->where(new InArray("InventoryAccount", $account_code_array))
