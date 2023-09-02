@@ -13,8 +13,8 @@ class UserSeeder2 extends Seeder
     {
         $users = [
             [
-                'name' => 'Maheza Prasetya',
-                'email' => 'maheza.prasetya@unitedcreative.co.id',
+                'name' => 'Efin Safitri',
+                'email' => 'Efin.safitri@baliutd.com',
                 'password' => Hash::make('BaliUnited1234'),
                 'role_id' => Role::where('name', 'Staff')->first()->id,
             ]
