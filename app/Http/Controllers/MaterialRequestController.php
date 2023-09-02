@@ -62,7 +62,7 @@ class MaterialRequestController extends Controller
         if ($user["role_id"] == 3) {
             $result = $result->where(new Equal("U_CreatedBy", (int) $user["id"]));
         }elseif($user["role_id"] == 4){
-            if(!$request->search){
+            if(!$request->search || count($status_array) == 0){
                 $result = $result->where(new Equal("U_Status", 2))
                 ->orWhere(new Equal("U_Status", 3))
                 ->orWhere(new Equal("U_Status", 4))
@@ -70,7 +70,7 @@ class MaterialRequestController extends Controller
             }
 
         }elseif($user["role_id"] == 5){
-            if(!$request->search){
+            if(!$request->search || count($status_array) == 0){
                 $result = $result->where(new Equal("U_Status", 1))
                 ->orWhere(new Equal("U_Status", 2));
             }
