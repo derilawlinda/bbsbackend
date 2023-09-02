@@ -66,11 +66,6 @@ class MaterialRequestController extends Controller
                 ->orWhere(new Equal("U_Status", 3))
                 ->orWhere(new Equal("U_Status", 4))
                 ->orWhere(new Equal("U_Status", 5));
-        }elseif($user["role_id"] == 5){
-            $result = $result->where(new Equal("U_Status", 2))
-                ->orWhere(new Equal("U_Status", 3))
-                ->orWhere(new Equal("U_Status", 4))
-                ->orWhere(new Equal("U_Status", 5));
         }
 
         if($request->search){
