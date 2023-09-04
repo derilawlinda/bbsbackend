@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Response;
 use Session;
 use App\Libraries\SAPb1\SAPClient;
 use App\Libraries\SAPb1\Filters\Equal;
+use App\Libraries\SAPb1\Filters\InArray;
+use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
 
 class MaterialIssueController extends Controller
@@ -40,21 +42,61 @@ class MaterialIssueController extends Controller
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->company);
         }
-        $MaterialIssueReq = $this->sap->getService('MaterialIssue');
-        $MaterialIssueReq->headers(['OData-Version' => '4.0']);
+        $MaterialIssue = $this->sap->getService('MaterialIssue');
+        $MaterialIssue->headers(['OData-Version' => '4.0',
+        "B1S-CaseInsensitive" => true,
+        'Prefer' => 'odata.maxpagesize=500']);
+
+        $search = "";
+        $status_array = [];
+
+
         if ($user["role_id"] == 3) {
-            $result = $MaterialIssueReq->queryBuilder()
+            $result = $MaterialIssue->queryBuilder()
+            ->select('*')->where(new Equal("U_CreatedBy", (int) $user["id"]));
+        }elseif($user["role_id"] == 4){
+            $result = $MaterialIssue->queryBuilder()
                 ->select('*')
-                ->orderBy('Code', 'desc')
-                ->where(new Equal("U_CreatedBy", (int) $user["id"]))
-                ->findAll();
+                ->where(new Equal("U_Status", 2))
+                ->orWhere(new Equal("U_Status", 3))
+                ->orWhere(new Equal("U_Status", 4));
+        }elseif($user["role_id"] == 5){
+            $result = $MaterialIssue->queryBuilder()->select('*')->where(new Equal("U_Status", 1))
+                    ->orWhere(new Equal("U_Status", 2))
+                    ->orWhere(new Equal("U_Status", 4));
+
         }else{
-            $result = $MaterialIssueReq->queryBuilder()
-            ->select('*')
-            ->orderBy('Code', 'desc')
-            ->findAll();
+            $result = $MaterialIssue->queryBuilder()
+            ->select('*');
         }
 
+        if($request->search){
+            $search = $request->search;
+            $result->where(new Contains("Code", $search))
+                    ->orWhere(new Contains("Name",$search));
+        }
+
+        if($request->status){
+            $req_status_array = preg_split ("/\,/", $request->status);
+            foreach ($req_status_array as $value) {
+                array_push($status_array,(int)$value);
+            }
+            $result->where(new InArray("U_Status", $status_array));
+        }
+
+        if($request->top){
+            $top = $request->top;
+        }else{
+            $top = 500;
+        }
+
+        if($request->skip){
+            $skip = $request->skip;
+        }else{
+            $skip = 0;
+        }
+
+        $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
 
         return $result;
     }

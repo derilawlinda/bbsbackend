@@ -61,8 +61,7 @@ class MaterialRequestController extends Controller
                 ->where(new Equal("U_Status", 2))
                 ->orWhere(new Equal("U_Status", 3));
         }elseif($user["role_id"] == 5){
-            $result = $MaterialReq->queryBuilder()->where(new Equal("U_Status", 1))
-                    ->orWhere(new Equal("U_Status", 2));
+            $result = $MaterialReq->queryBuilder()->select('*');
 
         }else{
             $result = $MaterialReq->queryBuilder()
