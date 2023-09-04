@@ -12,6 +12,7 @@ use App\Libraries\SAPb1\SAPClient;
 use App\Libraries\SAPb1\Filters\Equal;
 use App\Libraries\SAPb1\Filters\StartsWith;
 use App\Libraries\SAPb1\Filters\InArray;
+use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
 
 class ReimbursementController extends Controller

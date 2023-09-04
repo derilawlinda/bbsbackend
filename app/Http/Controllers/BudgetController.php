@@ -132,16 +132,19 @@ class BudgetController extends Controller
     public function printBudget(Request $request)
     {
         if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+            $this->sap = $this->getSession($request->get("U_Company"));
         }
 
         $budgets = $this->sap->getService('BudgetReq');
 
         $result = $budgets->queryBuilder()
             ->select('*')
-            ->find($request->code); // DocEntry value
-        $pdf = PDF::loadview('budget_pdf',['result'=>$result]);
+            ->find($request->get("Code")); // DocEntry value
+        $array_result = json_decode(json_encode($result), true);
+        $pdf = PDF::loadview('budget_pdf',['Code'=>$array_result["Code"]]);
         return $pdf->download('budgetrequest');
+        // return $result;
+
 
     }
 
