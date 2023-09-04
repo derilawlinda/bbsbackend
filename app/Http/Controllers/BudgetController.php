@@ -140,7 +140,8 @@ class BudgetController extends Controller
         $result = $budgets->queryBuilder()
             ->select('*')
             ->find($request->code); // DocEntry value
-        return $result;
+        $pdf = PDF::loadview('budget_pdf',['result'=>$result]);
+        return $pdf->download('budgetrequest');
 
     }
 

@@ -23,6 +23,8 @@ class AdvanceRequestController extends Controller
             $this->sap = $this->getSession($request->get('company'));
         }
         $AdvanceRequest = $this->sap->getService('AdvanceReq');
+        $AdvanceRequest->headers(['OData-Version' => '4.0',
+        'Prefer' => 'odata.maxpagesize=1000']);
         $count = $AdvanceRequest->queryBuilder()->count();
         $result = $AdvanceRequest->create($request->get('oProperty') + [
             'Code' => 80000001 + $count,
@@ -71,6 +73,8 @@ class AdvanceRequestController extends Controller
             $this->sap = $this->getSession($request->company);
         }
         $AdvanceReq = $this->sap->getService('AdvanceReq');
+        $AdvanceReq->headers(['OData-Version' => '4.0',
+        'Prefer' => 'odata.maxpagesize=1000']);
 
         // $result = $AdvanceReq->queryBuilder()
         //         ->select('*')
