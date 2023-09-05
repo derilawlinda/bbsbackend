@@ -140,7 +140,7 @@ class ReimbursementController extends Controller
         try {
             $outgoingPaymentInput = array();
             $outgoingPaymentInput["PaymentAccounts"] = [];
-            $outgoingPaymentInput["TransferAccount"] = '11120.1001';
+            $outgoingPaymentInput["TransferAccount"] = $array_req["U_TransferFrom"];
             $outgoingPaymentInput["DocType"] = 'rAccount';
             $outgoingPaymentInput["DocCurrency"] = 'IDR';
             $outgoingPaymentInput["TransferSum"] = $array_req["U_TotalAmount"];

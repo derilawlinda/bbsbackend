@@ -272,7 +272,7 @@ class AdvanceRequestController extends Controller
             $incomingPaymentInput = array();
             $incomingPaymentInput["PaymentAccounts"] = [];
             $incomingPaymentInput["ReferenceDate"] = $array_req["U_RealizationDate"];
-            $incomingPaymentInput["TransferAccount"] = '11120.1001';
+            $incomingPaymentInput["TransferAccount"] = $array_req["U_TransferFrom"];
             $incomingPaymentInput["DocType"] = 'rAccount';
             $incomingPaymentInput["DocCurrency"] = 'IDR';
             $incomingPaymentInput["TransferSum"] = $array_req["U_RealizationAmt"];

@@ -140,6 +140,23 @@ class COAController extends Controller
         return $result;
     }
 
+    public function getCOAsForTransfer(Request $request)
+    {
+        $user = Auth::user();
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->company);
+        }
+
+        $COAReq = $this->sap->getService('ChartOfAccounts');
+        $COAReq->headers(['Prefer' => 'odata.maxpagesize=50']);
+        $result = $COAReq->queryBuilder()
+            ->select("Code,Name")
+            ->where(new Equal("U_H_BANK_TRF", "YES"))
+            ->findAll();
+
+        return $result;
+    }
+
 
     public function getSession($company)
     {
