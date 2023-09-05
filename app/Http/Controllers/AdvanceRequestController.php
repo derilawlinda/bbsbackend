@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Response;
 use Session;
 use App\Libraries\SAPb1\SAPClient;
 use App\Libraries\SAPb1\Filters\Equal;
+use App\Libraries\SAPb1\Filters\InArray;
+use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
 
 class AdvanceRequestController extends Controller
@@ -40,27 +42,56 @@ class AdvanceRequestController extends Controller
             $this->sap = $this->getSession($request->company);
         }
         $AdvanceReq = $this->sap->getService('AdvanceReq');
+        $AdvanceReq->headers(['OData-Version' => '4.0',
+        "B1S-CaseInsensitive" => true,
+        'Prefer' => 'odata.maxpagesize=500']);
+
+        $search = "";
+        $status_array = [];
 
         if ($user["role_id"] == 3) {
             $result = $AdvanceReq->queryBuilder()
                 ->select('*')
-                ->orderBy('Code', 'desc')
-                ->where(new Equal("U_CreatedBy", (string)$user["id"]))
-                ->findAll();
+                ->where(new Equal("U_CreatedBy", (string)$user["id"]));
         }elseif($user["role_id"] == 2){
             $result = $AdvanceReq->queryBuilder()
             ->select('*')
-            ->orderBy('Code', 'desc')
             ->where(new Equal("U_Status", 3))
-            ->orWhere(new Equal("U_Status", 5))
-            ->findAll();
+            ->orWhere(new Equal("U_Status", 5));
         }
         else{
             $result = $AdvanceReq->queryBuilder()
-            ->select('*')
-            ->orderBy('Code', 'desc')
-            ->findAll();
+            ->select('*');
         }
+
+        if($request->search){
+            $search = $request->search;
+            $result->where(new Contains("Code", $search))
+                    ->orWhere(new Contains("Name",$search));
+        }
+
+        if($request->status){
+            $req_status_array = preg_split ("/\,/", $request->status);
+            foreach ($req_status_array as $value) {
+                array_push($status_array,(int)$value);
+            }
+            $result->where(new InArray("U_Status", $status_array));
+        }
+
+        if($request->top){
+            $top = $request->top;
+        }else{
+            $top = 500;
+        }
+
+        if($request->skip){
+            $skip = $request->skip;
+        }else{
+            $skip = 0;
+        }
+
+        $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
+
 
 
         return $result;
@@ -74,38 +105,68 @@ class AdvanceRequestController extends Controller
         }
         $AdvanceReq = $this->sap->getService('AdvanceReq');
         $AdvanceReq->headers(['OData-Version' => '4.0',
-        'Prefer' => 'odata.maxpagesize=1000']);
+        "B1S-CaseInsensitive" => true,
+        'Prefer' => 'odata.maxpagesize=500']);
 
-        // $result = $AdvanceReq->queryBuilder()
-        //         ->select('*')
-        //         ->findAll();
+        $search = "";
+        $status_array = [];
+
         if ($user["role_id"] == 3) {
             $result = $AdvanceReq->queryBuilder()
                 ->select('*')
-                ->orderBy('Code', 'desc')
                 ->where(new Equal("U_CreatedBy", (string)$user["id"]))
-                ->where(new Equal("U_Status", 5))
-                ->findAll();
+                ->where(new Equal("U_Status", 5));
         }elseif ($user["role_id"] == 2) {
             $result = $AdvanceReq->queryBuilder()
                 ->select('*')
-                ->orderBy('Code', 'desc')
                 ->where(new Equal("U_RealiStatus", 4))
-                ->orWhere(new Equal("U_RealiStatus", 6))
-                ->findAll();
+                ->orWhere(new Equal("U_RealiStatus", 6));
         }else{
 
             $result = $AdvanceReq->queryBuilder()
             ->select('*')
-            ->orderBy('Code', 'desc')
             ->where(new Equal("U_Status", 3))
-            ->orWhere(new Equal("U_Status", 5))
-            ->findAll();
+            ->orWhere(new Equal("U_Status", 5));
         }
 
+        if($request->search){
+            $search = $request->search;
+            $result->where(new Contains("Code", $search))
+                    ->orWhere(new Contains("Name",$search));
+        }
+
+        if($request->status){
+            $req_status_array = preg_split ("/\,/", $request->status);
+            foreach ($req_status_array as $value) {
+                array_push($status_array,(int)$value);
+            }
+            $result->where(new InArray("U_RealiStatus", $status_array));
+        }
+
+        if($request->top){
+            $top = $request->top;
+        }else{
+            $top = 500;
+        }
+
+        if($request->skip){
+            $skip = $request->skip;
+        }else{
+            $skip = 0;
+        }
+
+        $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
 
         return $result;
     }
+
+    // function searchString($result){
+
+    //     $result = $result->where(new Contains("Code", $search))
+    //     ->orWhere(new Contains("Name",$search));
+
+    //     return $result;
+    // }
 
     public function transferAR(Request $request)
     {
