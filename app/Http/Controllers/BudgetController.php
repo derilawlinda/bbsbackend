@@ -141,8 +141,9 @@ class BudgetController extends Controller
             ->select('*')
             ->find($request->get("Code")); // DocEntry value
         $array_result = json_decode(json_encode($result), true);
-        $pdf = PDF::loadview('budget_pdf',['Code'=>$array_result["Code"]]);
-        return $pdf->download('budgetrequest');
+        $pdf = PDF::loadview('budget_pdf',['Code'=>$array_result["Code"]])
+        ->setPaper('A4', 'portrait');;
+        return $pdf->stream();
         // return $result;
 
 

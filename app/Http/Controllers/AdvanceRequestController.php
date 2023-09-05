@@ -193,6 +193,7 @@ class AdvanceRequestController extends Controller
             $outgoingPaymentInput["DocType"] = 'rAccount';
             $outgoingPaymentInput["DocCurrency"] = 'IDR';
             $outgoingPaymentInput["TransferSum"] = $array_req["U_Amount"];
+            $outgoingPaymentInput["DocDate"] = $array_req["U_DisbursedAt"];
             $outgoingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
 
             for ($i = 0; $i < count($array_req["ADVANCEREQLINESCollection"]); $i++)
@@ -273,7 +274,7 @@ class AdvanceRequestController extends Controller
             $incomingPaymentInput["TransferAccount"] = '11120.1001';
             $incomingPaymentInput["DocType"] = 'rAccount';
             $incomingPaymentInput["DocCurrency"] = 'IDR';
-            $incomingPaymentInput["DocDate"] = 'IDR';
+            $incomingPaymentInput["DocDate"] = $array_req["U_RealizationDate"];;
             $incomingPaymentInput["TransferSum"] = $array_req["U_RealizationAmt"];
             $incomingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
             $incomingPaymentInput["Remarks"] = "Advance Realization ".$array_req["Code"];

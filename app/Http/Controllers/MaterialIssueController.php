@@ -118,6 +118,10 @@ class MaterialIssueController extends Controller
 
     public function approveMI(Request $request)
     {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->company);
+        }
+
         $json = json_encode($request->get('oProperty'));
         $jsonString = str_replace(utf8_encode("U_ItemCode"),"ItemCode",$json);
         $jsonString = str_replace(utf8_encode("U_Qty"),"Quantity",$jsonString);
@@ -129,6 +133,7 @@ class MaterialIssueController extends Controller
         // $goodIssueInput["DocDate"] = $request_array["U_DocDate"];
         // $goodIssueInput["U_H_NO_BUDGET"] = $request_array["U_BudgetCode"];
         // $goodIssueInput["DocumentLines"] = $request_array["MATERIALISSUELINESCollection"];
+        $budget = $this->sap->getService('BudgetReq');
         $mrbudget = $budget->queryBuilder()
             ->select('*')
             ->find($budgetCode); // DocEntry value
@@ -148,31 +153,33 @@ class MaterialIssueController extends Controller
 
         }
         else{
-            $result = $material_request->update($code, [
-                'U_Status' => 3,
-                'U_DirectorApp'=> $user->name,
-                'U_DirectorAppAt' => date("Y-m-d")
-            ]);
-            if($result == 1){
-                for($i = 0; $i < count($request_array["MATERIALISSUEINESCollection"]); ++$i) {
-                    $request_array["MATERIALISSUEINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
-                    $request_array["MATERIALISSUEINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
-                    $request_array["MATERIALISSUEINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
-                    $request_array["MATERIALISSUEINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
-                    $request_array["MATERIALISSUEINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
-                    $request_array["MATERIALISSUEINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
-                }
-                $goodIssueInput = array(
-                    "DocDate" => $request_array["U_DocDate"],
-                    "RequriedDate" => $request_array["CreateDate"],
-                    'DocumentLines' => $request_array["MATERIALISSUEINESCollection"],
-                    "U_H_NO_BUDGET" => $request_array["U_BudgetCode"],
-                    'Project' => $array_budget["U_ProjectCode"]
-                );
 
-                $good_issue = $this->sap->getService('InventoryGenExits');
-                $result = $good_issue->create($goodIssueInput);
+            for($i = 0; $i < count($request_array["MATERIALISSUELINESCollection"]); ++$i) {
+                $request_array["MATERIALISSUELINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
+                $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
+                $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
+                $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
+                $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
+                $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
             }
+            $goodIssueInput = array(
+                "DocDate" => $request_array["U_DocDate"],
+                "RequriedDate" => $request_array["CreateDate"],
+                'DocumentLines' => $request_array["MATERIALISSUELINESCollection"],
+                "U_H_NO_BUDGET" => $request_array["U_BudgetCode"],
+                'Project' => $array_budget["U_ProjectCode"]
+            );
+
+            $good_issue = $this->sap->getService('InventoryGenExits');
+            $result = $good_issue->create($goodIssueInput);
+            if($result){
+                $result = $material_request->update($code, [
+                    'U_Status' => 3,
+                    'U_DirectorApp'=> $user->name,
+                    'U_DirectorAppAt' => date("Y-m-d")
+                ]);
+            }
+
         }
         return $result;
 

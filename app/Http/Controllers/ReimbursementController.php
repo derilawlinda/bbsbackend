@@ -145,6 +145,7 @@ class ReimbursementController extends Controller
             $outgoingPaymentInput["DocCurrency"] = 'IDR';
             $outgoingPaymentInput["TransferSum"] = $array_req["U_TotalAmount"];
             $outgoingPaymentInput["U_H_NO_REIMBURSE"] = $array_req["Code"];
+            $outgoingPaymentInput["DocDate"] = $array_req["U_DisbursedAt"];
 
             for ($i = 0; $i < count($array_req["REIMBURSEMENTLINESCollection"]); $i++)
             {
