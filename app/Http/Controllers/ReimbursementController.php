@@ -208,7 +208,7 @@ class ReimbursementController extends Controller
                 $result = $BudgetReq->update($budgetCode, [
                     "BUDGETUSEDCollection" => [
                         [
-                            "U_Amount" => $array_req["U_TotalAmount"],
+                            "U_Amount" => floatval($array_req["U_TotalAmount"]) + floatval($bank_adm),
                             "U_Source" => "Reimbursement Request",
                             "U_DocNum" => $array_req["Code"],
                             "U_UsedBy" => $array_req["U_RequestorName"]
