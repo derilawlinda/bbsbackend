@@ -160,13 +160,7 @@ class AdvanceRequestController extends Controller
         return $result;
     }
 
-    // function searchString($result){
 
-    //     $result = $result->where(new Contains("Code", $search))
-    //     ->orWhere(new Contains("Name",$search));
-
-    //     return $result;
-    // }
 
     public function transferAR(Request $request)
     {
@@ -186,6 +180,12 @@ class AdvanceRequestController extends Controller
             ->find($budgetCode); // DocEntry value
         $array_budget = json_decode(json_encode($arbudget), true);
 
+        $bank_adm = 0;
+
+        if($array_req["U_BankAdm"]){
+            $bank_adm = $array_req["U_BankAdm"];
+        }
+
         try {
             $outgoingPaymentInput = array();
             $outgoingPaymentInput["PaymentAccounts"] = [];
@@ -196,12 +196,25 @@ class AdvanceRequestController extends Controller
             $outgoingPaymentInput["DocDate"] = $array_req["U_DisbursedAt"];
             $outgoingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
 
+            array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
+                'AccountCode' => '80100.0100',
+                'SumPaid' => floatval($bank_adm),
+                'Decription' => 'Bank Admin',
+                'ProfitCenter' => $array_budget["U_PillarCode"],
+                'ProjectCode' => $array_budget["U_ProjectCode"],
+                "ProfitCenter2" => $array_budget["U_ClassificationCode"],
+                "ProfitCenter3" => $array_budget["U_SubClassCode"],
+                "ProfitCenter4" => $array_budget["U_SubClass2Code"],
+
+            ]);
+
             for ($i = 0; $i < count($array_req["ADVANCEREQLINESCollection"]); $i++)
             {
 
                 array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
                     'AccountCode' => '11720.2000',
                     'SumPaid' => $array_req["ADVANCEREQLINESCollection"][$i]["U_Amount"],
+                    'Decription' => $array_req["ADVANCEREQLINESCollection"][$i]["U_Description"],
                     'ProfitCenter' => $array_budget["U_PillarCode"],
                     'ProjectCode' => $array_budget["U_ProjectCode"],
                     "ProfitCenter2" => $array_budget["U_ClassificationCode"],
@@ -236,7 +249,7 @@ class AdvanceRequestController extends Controller
                 $result = $BudgetReq->update($budgetCode, [
                     "BUDGETUSEDCollection" => [
                         [
-                            "U_Amount" => $array_req["U_Amount"],
+                            "U_Amount" => floatval($array_req["U_Amount"]) + floatval($bank_adm),
                             "U_Source" => "Advance Request",
                             "U_DocNum" => $array_req["Code"],
                             "U_UsedBy" => $array_req["U_RequestorName"]

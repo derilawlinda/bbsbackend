@@ -141,13 +141,26 @@ class BudgetController extends Controller
             ->select('*')
             ->find($request->get("Code")); // DocEntry value
         $array_result = json_decode(json_encode($result), true);
-        $pdf = PDF::loadview('budget_pdf',['Code'=>$array_result["Code"]])
-        ->setPaper('A4', 'portrait');;
-        return $pdf->stream();
+        $pdf = PDF::loadview('budget_pdf',['Code'=>$array_result["Code"]])->setPaper('A4', 'portrait');
+        // $fileName =  time().'.'. 'pdf' ;
+        // $pdf->save(public_path() . '/' . $fileName);
+        // $pdf = public_path($fileName);
+        // return response()->download($pdf);
+        return base64_encode($pdf->stream());
+
+        // return $pdf->stream("dompdf_out.pdf", array("Attachment" => false));
         // return $result;
 
 
     }
+
+    public function print()
+    {
+        return view('budget_pdf',['Code'=>'1213233']);
+
+    }
+
+
 
     public function approveBudget(Request $request)
     {
