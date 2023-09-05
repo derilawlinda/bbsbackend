@@ -192,7 +192,7 @@ class AdvanceRequestController extends Controller
             $outgoingPaymentInput["TransferAccount"] = '11120.1001';
             $outgoingPaymentInput["DocType"] = 'rAccount';
             $outgoingPaymentInput["DocCurrency"] = 'IDR';
-            $outgoingPaymentInput["TransferSum"] = $array_req["U_Amount"];
+            $outgoingPaymentInput["TransferSum"] = floatval($array_req["U_Amount"]) + floatval($bank_adm);
             $outgoingPaymentInput["DocDate"] = $array_req["U_DisbursedAt"];
             $outgoingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
 

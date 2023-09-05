@@ -149,7 +149,7 @@ class ReimbursementController extends Controller
             $outgoingPaymentInput["TransferAccount"] = $array_req["U_TransferFrom"];
             $outgoingPaymentInput["DocType"] = 'rAccount';
             $outgoingPaymentInput["DocCurrency"] = 'IDR';
-            $outgoingPaymentInput["TransferSum"] = $array_req["U_TotalAmount"];
+            $outgoingPaymentInput["TransferSum"] = floatval($array_req["U_TotalAmount"]) + floatval($bank_adm);
             $outgoingPaymentInput["U_H_NO_REIMBURSE"] = $array_req["Code"];
             $outgoingPaymentInput["DocDate"] = $array_req["U_DisbursedAt"];
 
