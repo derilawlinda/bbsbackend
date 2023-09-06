@@ -28,6 +28,26 @@ class BudgetController extends Controller
 
         $BudgetReq = $this->sap->getService('BudgetReq');
 
+        // $existing_budget = $BudgetReq->queryBuilder()->select('Code')
+        //                    ->where("U_PillarCode",$request->U_PillarCode)
+        //                    ->where("U_ClassificationCode",$request->U_ClassificationCode)
+        //                    ->where("U_SubClassCode",$request->U_SubClassCode)
+        //                    ->where("U_SubClass2Code",$request->U_SubClass2Code)
+        //                    ->findAll();
+        // if(count($existing_budget) > 0){
+        //     $array_accounts = [];
+        //     foreach ($request["BUDGETREQLINESCollection"] as $value) {
+        //         array_push($array_accounts, $value["U_AccountCode"]);
+        //     };
+        //     $BudgetReqLines = $this->sap->getService('BudgetReq');
+        //     $existing_account = $BudgetReq->queryBuilder()->select('*')
+        //                         ->where()
+        //                         ->where(new InArray("U_AccountCode", $array_accounts))
+
+
+        // }
+
+
         $count = $BudgetReq->queryBuilder()->count();
         $request["Code"] = 50000003 + $count;
         $request["U_CreatedBy"] = $user->id;
