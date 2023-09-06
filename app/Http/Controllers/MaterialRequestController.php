@@ -61,7 +61,8 @@ class MaterialRequestController extends Controller
                 ->where(new Equal("U_Status", 2))
                 ->orWhere(new Equal("U_Status", 3));
         }elseif($user["role_id"] == 5){
-            $result = $MaterialReq->queryBuilder()->select('*');
+            $result = $MaterialReq->queryBuilder()->select('*')->where(new Equal("U_Status", 1))
+                    ->orWhere(new Equal("U_Status", 2));
 
         }else{
             $result = $MaterialReq->queryBuilder()
@@ -255,7 +256,11 @@ class MaterialRequestController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
+        if(env('ENVIRONMENT') == 'prod'){
+            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
+        }else{
+            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_KKB");
+        }
         $this->sap = $sap;
         return $sap;
     }

@@ -47,7 +47,11 @@ class ProjectController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "Admin@23", $company."_LIVE");
+        if(env('ENVIRONMENT') == "prod"){
+            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
+        }else{
+            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_KKB");
+        }
         $this->sap = $sap;
         return $sap;
     }
