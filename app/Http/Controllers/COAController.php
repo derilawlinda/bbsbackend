@@ -122,7 +122,7 @@ class COAController extends Controller
         }
 
         $COAReq = $this->sap->getService('ChartOfAccounts');
-        $COAReq->headers(['Prefer' => 'odata.maxpagesize=200']);
+        $COAReq->headers(['Prefer' => 'odata.maxpagesize=1000']);
         $result = $COAReq->queryBuilder()
             ->select('Code,Name')
             ->where(new StartsWith("Code", "1"))
