@@ -129,10 +129,7 @@ class MaterialIssueController extends Controller
         $request_array = json_decode($jsonString,true);
         $code = $request_array["Code"];
         $budgetCode = (string)$request_array["U_BudgetCode"];
-        // $goodIssueInput = array();
-        // $goodIssueInput["DocDate"] = $request_array["U_DocDate"];
-        // $goodIssueInput["U_H_NO_BUDGET"] = $request_array["U_BudgetCode"];
-        // $goodIssueInput["DocumentLines"] = $request_array["MATERIALISSUELINESCollection"];
+
         $budget = $this->sap->getService('BudgetReq');
         $mrbudget = $budget->queryBuilder()
             ->select('*')
@@ -157,6 +154,9 @@ class MaterialIssueController extends Controller
             for($i = 0; $i < count($request_array["MATERIALISSUELINESCollection"]); ++$i) {
                 $request_array["MATERIALISSUELINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
                 $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
+                $request_array["MATERIALISSUELINESCollection"][$i]['U_H_KET'] = $request_array["MATERIALISSUELINESCollection"][$i]['U_Description'];
+                $request_array["MATERIALISSUELINESCollection"][$i]['U_COA'] = $request_array["MATERIALISSUELINESCollection"][$i]['U_AccountCode'];
+                $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_MR'] = $request_array["Code"];
                 $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
                 $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
                 $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
