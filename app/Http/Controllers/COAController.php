@@ -111,7 +111,7 @@ class COAController extends Controller
         }
         $budget_code = $request->budgetCode;
         $BudgetReq = $this->sap->getService('BudgetReq');
-        $BudgetReq->headers(['Prefer' => 'odata.maxpagesize=100']);
+        $BudgetReq->headers(['Prefer' => 'odata.maxpagesize=200']);
         $budgets =  $BudgetReq->queryBuilder()->select('BUDGETREQLINESCollection')
                     ->find($budget_code);
         $collection = json_decode(json_encode($budgets), true)["BUDGETREQLINESCollection"];
@@ -122,7 +122,7 @@ class COAController extends Controller
         }
 
         $COAReq = $this->sap->getService('ChartOfAccounts');
-        $COAReq->headers(['Prefer' => 'odata.maxpagesize=50']);
+        $COAReq->headers(['Prefer' => 'odata.maxpagesize=200']);
         $result = $COAReq->queryBuilder()
             ->select('Code,Name')
             ->where(new StartsWith("Code", "1"))
