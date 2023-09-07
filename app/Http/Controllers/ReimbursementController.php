@@ -153,17 +153,21 @@ class ReimbursementController extends Controller
             $outgoingPaymentInput["U_H_NO_REIMBURSE"] = $array_req["Code"];
             $outgoingPaymentInput["DocDate"] = $array_req["U_DisbursedAt"];
 
-            array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
-                'AccountCode' => '80100.0100',
-                'Decription' => 'Bank Admin',
-                'SumPaid' => floatval($bank_adm),
-                'ProfitCenter' => $array_budget["U_PillarCode"],
-                'ProjectCode' => $array_budget["U_ProjectCode"],
-                "ProfitCenter2" => $array_budget["U_ClassificationCode"],
-                "ProfitCenter3" => $array_budget["U_SubClassCode"],
-                "ProfitCenter4" => $array_budget["U_SubClass2Code"],
+            if($bank_adm > 0){
+                array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
+                    'AccountCode' => '80100.0100',
+                    'Decription' => 'Bank Admin',
+                    'SumPaid' => floatval($bank_adm),
+                    'ProfitCenter' => $array_budget["U_PillarCode"],
+                    'ProjectCode' => $array_budget["U_ProjectCode"],
+                    "ProfitCenter2" => $array_budget["U_ClassificationCode"],
+                    "ProfitCenter3" => $array_budget["U_SubClassCode"],
+                    "ProfitCenter4" => $array_budget["U_SubClass2Code"],
 
-            ]);
+                ]);
+
+            }
+
 
             for ($i = 0; $i < count($array_req["REIMBURSEMENTLINESCollection"]); $i++)
             {
@@ -324,7 +328,7 @@ class ReimbursementController extends Controller
         if(env('ENVIRONMENT') == "prod"){
             $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         }else{
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_KKB");
+            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_DERIL");
         }
         $this->sap = $sap;
         return $sap;

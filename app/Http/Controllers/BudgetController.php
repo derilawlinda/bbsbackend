@@ -161,32 +161,13 @@ class BudgetController extends Controller
             ->select('*')
             ->find($request->get("Code")); // DocEntry value
         $array_result = json_decode(json_encode($result), true);
-        $pdf = PDF::loadview('budget_pdf',['Code'=>$array_result["Code"]])->setPaper('A4', 'portrait');
-        $fileName =  time().'.'. 'pdf' ;
-        $pdf->save(public_path() . '/' . $fileName);
-        $myfile = fopen(public_path() . '/' . $fileName, "r") or die("Unable to open file!");
-        $fileSize = filesize(public_path() . '/' . $fileName);
-        header("HTTP/1.1 200 OK");
-        header("Pragma: public");
-        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-
-        header("Cache-Control: private", false);
-
-        header("Content-type: application/pdf");
-        header("Content-Disposition: attachment; filename=\"temporaryPdf.pdf\"");
-
-        header("Content-Transfer-Encoding: binary");
-        header("Content-Length: " . $fileSize);
-
-        echo fread($myfile, $fileSize);
-
-        // echo fread($myfile, $fileSize);
-        // $pdf = public_path($fileName);
-        // return response()->download($pdf);
-        // return base64_encode($pdf->stream());
-
-        // return $pdf->stream("dompdf_out.pdf", array("Attachment" => false));
-        // return $result;
+        $pdf = PDF::loadview('budget_pdf',['Code'=>$array_result["Code"]]);
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->render();
+        $pdf->stream('transport.pdf', [
+            'compress' => false,
+        ]);
+        echo $pdf;
 
 
     }
@@ -343,7 +324,7 @@ class BudgetController extends Controller
         if(env('ENVIRONMENT') == "prod"){
             $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         }else{
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_KKB");
+            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_DERIL");
         }
         $this->sap = $sap;
         return $sap;

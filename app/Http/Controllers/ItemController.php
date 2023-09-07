@@ -126,7 +126,7 @@ class ItemController extends Controller
         if(env('ENVIRONMENT') == "prod"){
             $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         }else{
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_KKB");
+            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_DERIL");
         }
         $this->sap = $sap;
         return $sap;

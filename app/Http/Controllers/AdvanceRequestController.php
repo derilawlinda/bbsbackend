@@ -196,17 +196,19 @@ class AdvanceRequestController extends Controller
             $outgoingPaymentInput["DocDate"] = $array_req["U_DisbursedAt"];
             $outgoingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
 
-            array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
-                'AccountCode' => '80100.0100',
-                'SumPaid' => floatval($bank_adm),
-                'Decription' => 'Bank Admin',
-                'ProfitCenter' => $array_budget["U_PillarCode"],
-                'ProjectCode' => $array_budget["U_ProjectCode"],
-                "ProfitCenter2" => $array_budget["U_ClassificationCode"],
-                "ProfitCenter3" => $array_budget["U_SubClassCode"],
-                "ProfitCenter4" => $array_budget["U_SubClass2Code"],
+            if($bank_adm > 0){
+                array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
+                    'AccountCode' => '80100.0100',
+                    'SumPaid' => floatval($bank_adm),
+                    'Decription' => 'Bank Admin',
+                    'ProfitCenter' => $array_budget["U_PillarCode"],
+                    'ProjectCode' => $array_budget["U_ProjectCode"],
+                    "ProfitCenter2" => $array_budget["U_ClassificationCode"],
+                    "ProfitCenter3" => $array_budget["U_SubClassCode"],
+                    "ProfitCenter4" => $array_budget["U_SubClass2Code"],
 
-            ]);
+                ]);
+            }
 
             for ($i = 0; $i < count($array_req["ADVANCEREQLINESCollection"]); $i++)
             {
@@ -571,7 +573,7 @@ class AdvanceRequestController extends Controller
         if(env('ENVIRONMENT') == "prod"){
             $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
         }else{
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_KKB");
+            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_DERIL");
         }
         $this->sap = $sap;
         return $sap;

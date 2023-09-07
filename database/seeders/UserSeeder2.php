@@ -18,15 +18,15 @@ class UserSeeder2 extends Seeder
             //     'password' => Hash::make('BaliUnited1234'),
             //     'role_id' => Role::where('name', 'Finance')->first()->id,
             // ],
+            // [
+            //     'name' => 'Heri Gunawan',
+            //     'email' => 'Heriigun25@gmail.com',
+            //     'password' => Hash::make('BaliUnited1234'),
+            //     'role_id' => Role::where('name', 'Manager')->first()->id,
+            // ],
             [
-                'name' => 'Heri Gunawan',
-                'email' => 'Heriigun25@gmail.com',
-                'password' => Hash::make('BaliUnited1234'),
-                'role_id' => Role::where('name', 'Manager')->first()->id,
-            ],
-            [
-                'name' => 'Viky Rumaniogi',
-                'email' => 'Viky.rumaniogi@unitedcreative.co.id',
+                'name' => 'Rosa Staff',
+                'email' => 'rosapriskila1108@gmail.com',
                 'password' => Hash::make('BaliUnited1234'),
                 'role_id' => Role::where('name', 'Staff')->first()->id,
             ]

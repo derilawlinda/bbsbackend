@@ -3,6 +3,8 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Validation\ValidationException;
+use App\Libraries\SAPb1\SAPException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -43,8 +45,56 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
+
+        $this->renderable(function (ValidationException $exception, $request) {
+            if (!$request->wantsJson()) {
+                return null; // Laravel handles as usual
+            }
+
+            throw CustomValidationException::withMessages(
+                $exception->validator->getMessageBag()->getMessages()
+            );
+        });
+
         $this->reportable(function (Throwable $e) {
             //
+
         });
     }
+
+    /**
+     * Render an exception into an HTTP response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Exception  $e
+     * @return \Illuminate\Http\Response
+     */
+    public function render($request, Throwable $exception)
+    {
+        if ($request->wantsJson()) {
+            return parent::prepareJsonResponse($request, $exception);
+        }
+
+        return parent::render($request, $exception);
+    }
+    /**
+     * Convert a validation exception into a JSON response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Validation\ValidationException  $exception
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function invalidJson($request, ValidationException $exception)
+    {
+        // You can return json response with your custom form
+        return response()->json([
+            'success' => false,
+            'data' => [
+                'code' => $exception->status,
+                'message' => $exception->getMessage(),
+                'errors' => $exception->errors()
+            ]
+        ], $exception->status);
+    }
+
 }
