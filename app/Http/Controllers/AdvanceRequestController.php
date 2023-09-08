@@ -570,10 +570,8 @@ class AdvanceRequestController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        if(env('ENVIRONMENT') == "prod"){
+        if($company != 'TEST_DERIL'){
             $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
-        }else{
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_DERIL");
         }
         $this->sap = $sap;
         return $sap;
