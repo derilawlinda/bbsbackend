@@ -132,7 +132,7 @@ class MaterialRequestController extends Controller
             $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
-        try{
+        // try{
             $budget = $this->sap->getService('BudgetReq');
             $mrbudget = $budget->queryBuilder()
                 ->select('*')
@@ -182,7 +182,6 @@ class MaterialRequestController extends Controller
                 $purchase_req = $this->sap->getService('PurchaseRequests');
                 $result = $purchase_req->create($purchaseReqInput);
 
-                return $result;
 
 
 
@@ -194,12 +193,15 @@ class MaterialRequestController extends Controller
                     ]);
 
                 }
+
+                return $result;
+
             }
 
-        }
-        catch(Exception $e){
-            throw new \Exception('adasdasdas', 500);
-        }
+        // }
+        // catch(Exception $e){
+        //     throw new \Exception('adasdasdas', 500);
+        // }
 
 
 
