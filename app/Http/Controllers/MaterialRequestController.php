@@ -119,87 +119,87 @@ class MaterialRequestController extends Controller
 
     public function approveMR(Request $request)
     {
-        throw new Exception('adasdasdas', 500);
+        // throw new Exception('adasdasdas', 500);
 
-        // $json = json_encode($request->get('oProperty'));
-        // $jsonString = str_replace(utf8_encode("U_ItemCode"),"ItemCode",$json);
-        // $jsonString = str_replace(utf8_encode("U_Qty"),"Quantity",$jsonString);
-        // $request_array = json_decode($jsonString,true);
-        // $code = $request_array["Code"];
-        // $budgetCode = (string)$request_array["U_BudgetCode"];
+        $json = json_encode($request->get('oProperty'));
+        $jsonString = str_replace(utf8_encode("U_ItemCode"),"ItemCode",$json);
+        $jsonString = str_replace(utf8_encode("U_Qty"),"Quantity",$jsonString);
+        $request_array = json_decode($jsonString,true);
+        $code = $request_array["Code"];
+        $budgetCode = (string)$request_array["U_BudgetCode"];
 
-        // if(is_null($this->sap)) {
-        //     $this->sap = $this->getSession($request->get('company'));
-        // }
-        // $user = Auth::user();
-        // try{
-        //     $budget = $this->sap->getService('BudgetReq');
-        //     $mrbudget = $budget->queryBuilder()
-        //         ->select('*')
-        //         ->find($budgetCode); // DocEntry value
-        //     $array_budget = json_decode(json_encode($mrbudget), true);
-
-
-        //     $MaterialReq = $this->sap->getService('MaterialReq');
-
-        //     $docdate = date("Y-m-d");
-        //     if($request_array["U_DocDate"] != ''){
-        //         $docdate = $request_array["U_DocDate"];
-        //     }
-
-        //     if ($user["role_id"] == 5) {
-        //         $result = $MaterialReq->update($code, [
-        //             'U_Status' => 2,
-        //             'U_ManagerApp'=> $user->name,
-        //             'U_ManagerAppAt' => date("Y-m-d")
-        //         ]);
-
-        //     }
-
-        //     else{
-
-        //         for($i = 0; $i < count($request_array["MATERIALREQLINESCollection"]); ++$i) {
-        //             $request_array["MATERIALREQLINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
-        //             $request_array["MATERIALREQLINESCollection"][$i]['U_H_KET'] = $request_array["MATERIALREQLINESCollection"][$i]['U_Description'];
-        //             $request_array["MATERIALREQLINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
-        //             $request_array["MATERIALREQLINESCollection"][$i]['U_H_COA'] = $request_array["MATERIALREQLINESCollection"][$i]['U_AccountCode'];
-        //             $request_array["MATERIALREQLINESCollection"][$i]['U_H_NO_MR'] = $request_array["Code"];
-        //             $request_array["MATERIALREQLINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
-        //             $request_array["MATERIALREQLINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
-        //             $request_array["MATERIALREQLINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
-        //             $request_array["MATERIALREQLINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
-
-        //         }
-        //         $purchaseReqInput = array(
-        //             "DocDate" => $docdate,
-        //             "Comments" => $request_array["Name"],
-        //             "RequriedDate" => $request_array["CreateDate"],
-        //             'DocumentLines' => $request_array["MATERIALREQLINESCollection"],
-        //             "U_H_NO_MR" => $request_array["Code"],
-        //             "U_H_NO_BUDGET" => $request_array["U_BudgetCode"],
-        //             'Project' => $array_budget["U_ProjectCode"]
-        //         );
-        //         $purchase_req = $this->sap->getService('PurchaseRequests');
-        //         $result = $purchase_req->create($purchaseReqInput);
-
-        //         return $result;
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->get('company'));
+        }
+        $user = Auth::user();
+        try{
+            $budget = $this->sap->getService('BudgetReq');
+            $mrbudget = $budget->queryBuilder()
+                ->select('*')
+                ->find($budgetCode); // DocEntry value
+            $array_budget = json_decode(json_encode($mrbudget), true);
 
 
+            $MaterialReq = $this->sap->getService('MaterialReq');
 
-        //         // if($result){
-        //         //     $result = $MaterialReq->update($code, [
-        //         //         'U_Status' => 3,
-        //         //         'U_DirectorApp'=> $user->name,
-        //         //         'U_DirectorAppAt' => date("Y-m-d")
-        //         //     ]);
+            $docdate = date("Y-m-d");
+            if($request_array["U_DocDate"] != ''){
+                $docdate = $request_array["U_DocDate"];
+            }
 
-        //         // }
-        //     }
+            if ($user["role_id"] == 5) {
+                $result = $MaterialReq->update($code, [
+                    'U_Status' => 2,
+                    'U_ManagerApp'=> $user->name,
+                    'U_ManagerAppAt' => date("Y-m-d")
+                ]);
 
-        // }
-        // catch(Exception $e){
-        //     throw new \Exception('adasdasdas', 500);
-        // }
+            }
+
+            else{
+
+                for($i = 0; $i < count($request_array["MATERIALREQLINESCollection"]); ++$i) {
+                    $request_array["MATERIALREQLINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['U_H_KET'] = $request_array["MATERIALREQLINESCollection"][$i]['U_Description'];
+                    $request_array["MATERIALREQLINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['U_H_COA'] = $request_array["MATERIALREQLINESCollection"][$i]['U_AccountCode'];
+                    $request_array["MATERIALREQLINESCollection"][$i]['U_H_NO_MR'] = $request_array["Code"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
+                    $request_array["MATERIALREQLINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
+
+                }
+                $purchaseReqInput = array(
+                    "DocDate" => $docdate,
+                    "Comments" => $request_array["Name"],
+                    "RequriedDate" => $request_array["CreateDate"],
+                    'DocumentLines' => $request_array["MATERIALREQLINESCollection"],
+                    "U_H_NO_MR" => $request_array["Code"],
+                    "U_H_NO_BUDGET" => $request_array["U_BudgetCode"],
+                    'Project' => $array_budget["U_ProjectCode"]
+                );
+                $purchase_req = $this->sap->getService('PurchaseRequests');
+                $result = $purchase_req->create($purchaseReqInput);
+
+                return $result;
+
+
+
+                if($result){
+                    $result = $MaterialReq->update($code, [
+                        'U_Status' => 3,
+                        'U_DirectorApp'=> $user->name,
+                        'U_DirectorAppAt' => date("Y-m-d")
+                    ]);
+
+                }
+            }
+
+        }
+        catch(Exception $e){
+            throw new \Exception('adasdasdas', 500);
+        }
 
 
 
