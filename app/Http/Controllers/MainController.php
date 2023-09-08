@@ -60,8 +60,17 @@ class MainController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        $sap = SAPClient::createSession($config, "manager", "1234", env('SAP_DB'));
-        $this->sap = $sap;
-        return $sap;
+        try{
+            if($company != 'TEST_DERIL'){
+                $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
+            }else{
+                $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company);
+            }
+            $this->sap = $sap;
+            return $sap;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
     }
 }

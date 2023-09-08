@@ -53,10 +53,11 @@ class MaterialRequestController extends Controller
     public function getMaterialRequests(Request $request)
     {
         $user = Auth::user();
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
-        }
+
         try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
             $MaterialReq = $this->sap->getService('MaterialReq');
             $MaterialReq->headers(['OData-Version' => '4.0',
             "B1S-CaseInsensitive" => true,
@@ -200,10 +201,6 @@ class MaterialRequestController extends Controller
                 $purchase_req = $this->sap->getService('PurchaseRequests');
                 $result = $purchase_req->create($purchaseReqInput);
 
-                return $result;
-
-
-
                 if($result){
                     $result = $MaterialReq->update($code, [
                         'U_Status' => 3,
@@ -212,6 +209,9 @@ class MaterialRequestController extends Controller
                     ]);
 
                 }
+
+                return $result;
+
             }
 
         }
