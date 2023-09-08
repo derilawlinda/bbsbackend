@@ -47,12 +47,17 @@ class ProjectController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        if(env('ENVIRONMENT') == "prod"){
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
-        }else{
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_DERIL");
+        try{
+            if($company != 'TEST_DERIL'){
+                $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
+            }else{
+                $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company);
+            }
+            $this->sap = $sap;
+            return $sap;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $this->sap = $sap;
-        return $sap;
     }
 }

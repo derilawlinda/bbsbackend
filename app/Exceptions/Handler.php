@@ -6,6 +6,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
 use App\Libraries\SAPb1\SAPException;
 use Throwable;
+use App\Exceptions\CustomValidationException;
 
 class Handler extends ExceptionHandler
 {
@@ -46,7 +47,7 @@ class Handler extends ExceptionHandler
     public function register()
     {
 
-        $this->renderable(function (ValidationException $exception, $request) {
+        $this->renderable(function (Exception $exception, $request) {
             if (!$request->wantsJson()) {
                 return null; // Laravel handles as usual
             }

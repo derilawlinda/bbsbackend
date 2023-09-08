@@ -12,6 +12,10 @@ use App\Libraries\SAPb1\Filters\Equal;
 use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
 use App\Libraries\SAPb1\Filters\InArray;
+use App\Exceptions\CustomValidationException;
+
+use Exception;
+use Throwable;
 
 class MaterialRequestController extends Controller
 {
@@ -20,106 +24,121 @@ class MaterialRequestController extends Controller
 
     public function createMaterialRequest(Request $request)
     {
+
+
         $user = Auth::user();
 
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->get('company'));
         }
 
-        $MaterialReq = $this->sap->getService('MaterialReq');
+        try{
+            $MaterialReq = $this->sap->getService('MaterialReq');
 
-        $count = $MaterialReq->queryBuilder()->count();
+            $count = $MaterialReq->queryBuilder()->count();
 
-        $result = $MaterialReq->create($request->get('oProperty') + [
-            'Code' => 60000001 + $count,
-            'U_CreatedBy' => (int)$user->id,
-            'U_RequestorName' => $user->name
-        ]);
-        return $result;
+            $result = $MaterialReq->create($request->get('oProperty') + [
+                'Code' => 60000001 + $count,
+                'U_CreatedBy' => (int)$user->id,
+                'U_RequestorName' => $user->name
+            ]);
+            return $result;
+
+        }
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        };
+
     }
     public function getMaterialRequests(Request $request)
     {
         $user = Auth::user();
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
-        }
-        $MaterialReq = $this->sap->getService('MaterialReq');
-        $MaterialReq->headers(['OData-Version' => '4.0',
-        "B1S-CaseInsensitive" => true,
-        'Prefer' => 'odata.maxpagesize=500']);
 
-        $search = "";
-        $status_array = [];
-
-
-        if ($user["role_id"] == 3) {
-            $result = $MaterialReq->queryBuilder()
-            ->select('*')->where(new Equal("U_CreatedBy", (int) $user["id"]));
-        }elseif($user["role_id"] == 4){
-            $result = $MaterialReq->queryBuilder()
-                ->select('*')
-                ->where(new Equal("U_Status", 2))
-                ->orWhere(new Equal("U_Status", 3));
-        }elseif($user["role_id"] == 5){
-            $result = $MaterialReq->queryBuilder()->select('*')->where(new Equal("U_Status", 1))
-                    ->orWhere(new Equal("U_Status", 2));
-
-        }else{
-            $result = $MaterialReq->queryBuilder()
-            ->select('*');
-        }
-
-        if($request->search){
-            $search = $request->search;
-            $result->where(new Contains("Code", $search))
-                    ->orWhere(new Contains("Name",$search));
-        }
-
-        if($request->status){
-            $req_status_array = preg_split ("/\,/", $request->status);
-            foreach ($req_status_array as $value) {
-                array_push($status_array,(int)$value);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
             }
-            $result->where(new InArray("U_Status", $status_array));
+            $MaterialReq = $this->sap->getService('MaterialReq');
+            $MaterialReq->headers(['OData-Version' => '4.0',
+            "B1S-CaseInsensitive" => true,
+            'Prefer' => 'odata.maxpagesize=500']);
+            $search = "";
+            $status_array = [];
+            if ($user["role_id"] == 3) {
+                $result = $MaterialReq->queryBuilder()
+                ->select('*')->where(new Equal("U_CreatedBy", (int) $user["id"]));
+            }elseif($user["role_id"] == 4){
+                $result = $MaterialReq->queryBuilder()
+                    ->select('*')
+                    ->where(new Equal("U_Status", 2))
+                    ->orWhere(new Equal("U_Status", 3));
+            }elseif($user["role_id"] == 5){
+                $result = $MaterialReq->queryBuilder()->select('*')->where(new Equal("U_Status", 1))
+                        ->orWhere(new Equal("U_Status", 2));
+
+            }else{
+                $result = $MaterialReq->queryBuilder()
+                ->select('*');
+            }
+
+            if($request->search){
+                $search = $request->search;
+                $result->where(new Contains("Code", $search))
+                        ->orWhere(new Contains("Name",$search));
+            }
+
+            if($request->status){
+                $req_status_array = preg_split ("/\,/", $request->status);
+                foreach ($req_status_array as $value) {
+                    array_push($status_array,(int)$value);
+                }
+                $result->where(new InArray("U_Status", $status_array));
+            }
+
+            if($request->top){
+                $top = $request->top;
+            }else{
+                $top = 500;
+            }
+
+            if($request->skip){
+                $skip = $request->skip;
+            }else{
+                $skip = 0;
+            }
+
+            $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
+            return $result;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
 
-        if($request->top){
-            $top = $request->top;
-        }else{
-            $top = 500;
-        }
-
-        if($request->skip){
-            $skip = $request->skip;
-        }else{
-            $skip = 0;
-        }
-
-        $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
-
-
-
-        return $result;
     }
 
     public function getMaterialRequestById(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
+
+            $budgets = $this->sap->getService('MaterialReq');
+
+            $result = $budgets->queryBuilder()
+                ->select('*')
+                ->find($request->code); // DocEntry value
+            return $result;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
 
-        $budgets = $this->sap->getService('MaterialReq');
-
-        $result = $budgets->queryBuilder()
-            ->select('*')
-            ->find($request->code); // DocEntry value
-        return $result;
 
     }
 
     public function approveMR(Request $request)
     {
-        // throw new Exception('adasdasdas', 500);
 
         $json = json_encode($request->get('oProperty'));
         $jsonString = str_replace(utf8_encode("U_ItemCode"),"ItemCode",$json);
@@ -132,7 +151,7 @@ class MaterialRequestController extends Controller
             $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
-        // try{
+        try{
             $budget = $this->sap->getService('BudgetReq');
             $mrbudget = $budget->queryBuilder()
                 ->select('*')
@@ -182,9 +201,6 @@ class MaterialRequestController extends Controller
                 $purchase_req = $this->sap->getService('PurchaseRequests');
                 $result = $purchase_req->create($purchaseReqInput);
 
-
-
-
                 if($result){
                     $result = $MaterialReq->update($code, [
                         'U_Status' => 3,
@@ -198,14 +214,12 @@ class MaterialRequestController extends Controller
 
             }
 
-        // }
-        // catch(Exception $e){
-        //     throw new \Exception('adasdasdas', 500);
-        // }
 
+        }
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
 
-
-
+        }
     }
 
     public function saveMR(Request $request)
@@ -214,12 +228,16 @@ class MaterialRequestController extends Controller
             $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
-        $MaterialReq = $this->sap->getService('MaterialReq');
-        $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->get('data')["Code"];
-        $result = $MaterialReq->update($code,$request->get('data'),false);
-        return $result;
-
+        try{
+            $MaterialReq = $this->sap->getService('MaterialReq');
+            $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $code = $request->get('data')["Code"];
+            $result = $MaterialReq->update($code,$request->get('data'),false);
+            return $result;
+        }
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
     }
 
     public function resubmitMR(Request $request)
@@ -228,34 +246,45 @@ class MaterialRequestController extends Controller
             $this->sap = $this->getSession($request->get('company'));
         }
         $user = Auth::user();
-        $MaterialReq = $this->sap->getService('MaterialReq');
-        $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->get('data')["Code"];
 
-        $inputArray = $request->get('data');
-        $inputArray["U_Status"] = 1;
-        $result = $MaterialReq->update($code,$inputArray,false);
-        return $result;
+        try{
 
+            $MaterialReq = $this->sap->getService('MaterialReq');
+            $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $code = $request->get('data')["Code"];
+            $inputArray = $request->get('data');
+            $inputArray["U_Status"] = 1;
+            $result = $MaterialReq->update($code,$inputArray,false);
+            return $result;
+
+        } catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
     }
 
 
 
     public function rejectMR(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
+            $user = Auth::user();
+            $budgets = $this->sap->getService('MaterialReq');
+            $remarks = $request->Remarks;
+            $code = $request->Code;
+            $result = $budgets->update($code, [
+                'U_Remarks' => $remarks,
+                'U_Status' => 4,
+                'U_RejectedBy' => $user->name
+            ]);
+            return $result;
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $user = Auth::user();
-        $budgets = $this->sap->getService('MaterialReq');
-        $remarks = $request->Remarks;
-        $code = $request->Code;
-        $result = $budgets->update($code, [
-            'U_Remarks' => $remarks,
-            'U_Status' => 4,
-            'U_RejectedBy' => $user->name
-        ]);
-        return $result;
+
 
     }
 
@@ -271,12 +300,18 @@ class MaterialRequestController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        if(env('ENVIRONMENT') == 'prod'){
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
-        }else{
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_DERIL");
+        try{
+            if($company != 'TEST_DERIL'){
+                $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
+            }else{
+                $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company);
+            }
+            $this->sap = $sap;
+            return $sap;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $this->sap = $sap;
-        return $sap;
+
     }
 }

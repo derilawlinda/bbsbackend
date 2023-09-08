@@ -121,17 +121,23 @@ class BudgetController extends Controller
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->company);
         }
-        $BudgetReq = $this->sap->getService('BudgetReq');
-        $BudgetReq->headers(['OData-Version' => '4.0',
-        'Prefer' => 'odata.maxpagesize=500']);
-        $result = $BudgetReq->queryBuilder()
-            ->select('*')
-            ->orderBy('Code', 'desc')
-            ->where(new Equal("U_Status", 3))
-            ->findAll();
+        try{
+
+            $BudgetReq = $this->sap->getService('BudgetReq');
+            $BudgetReq->headers(['OData-Version' => '4.0',
+            'Prefer' => 'odata.maxpagesize=500']);
+            $result = $BudgetReq->queryBuilder()
+                ->select('*')
+                ->orderBy('Code', 'desc')
+                ->where(new Equal("U_Status", 3))
+                ->findAll();
 
 
-        return $result;
+            return $result;
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
+
     }
 
     public function getBudgetById(Request $request)
@@ -321,12 +327,17 @@ class BudgetController extends Controller
                 "verify_peer_name"=>false
             ]
         ];
-        if(env('ENVIRONMENT') == "prod"){
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
-        }else{
-            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), "TEST_DERIL");
+        try{
+            if($company != 'TEST_DERIL'){
+                $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
+            }else{
+                $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company);
+            }
+            $this->sap = $sap;
+            return $sap;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $this->sap = $sap;
-        return $sap;
     }
 }
