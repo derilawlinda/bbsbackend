@@ -47,15 +47,9 @@ class ItemController extends Controller
         $itemsQuery->headers(['Prefer' => 'odata.maxpagesize=100000']);
         $result = $itemsQuery->queryBuilder()
             ->expand('Items($select=ItemCode,ItemName)')
-            ->where(new InArray("InventoryAccount", $account_code_array))
-            ->orWhere(new InArray("ExpensesAccount", $account_code_array)) //ini harusnya ExpenseAccount
+            ->where([new InArray("InventoryAccount", $account_code_array),'or',
+            new InArray("ExpensesAccount", $account_code_array)])
             ->findAll();
-
-        $fixed_asset_accounts = $itemsQuery->queryBuilder()
-        ->expand('Items($select=ItemCode,ItemName)')
-        ->where(new InArray("InventoryAccount", $account_code_array))
-        ->orWhere(new InArray("ExpensesAccount", $account_code_array)) //ini harusnya ExpenseAccount
-        ->findAll();
 
         $results = json_decode(json_encode($result),true);
         $items = array();
@@ -75,21 +69,6 @@ class ItemController extends Controller
                 ]);
             }
         }
-        // for ($i = 0; $i < count($results["value"]); $i++)
-        // {
-        //     for()
-
-        //     array_push($items, (object)[
-        //         'ItemCode2' => $results["value"][$i]["Items"]["ItemCode"],
-        //         'ItemName2' => $results["value"][$i]["Items"]["ItemName"],
-        //         // 'ProfitCenter' => $request_array["budgeting"]["U_Pillar"],
-        //         // 'ProjectCode' => $request_array["budgeting"]["U_Project"],
-        //         // "ProfitCenter2" => $request_array["budgeting"]["U_Classification"],
-        //         // "ProfitCenter3" => $request_array["budgeting"]["U_SubClass"],
-        //         // "ProfitCenter4" => $request_array["budgeting"]["U_SubClass2"],
-
-        //     ]);
-        // }
 
         return json_encode($items);
     }

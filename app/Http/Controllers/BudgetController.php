@@ -28,30 +28,10 @@ class BudgetController extends Controller
 
         $BudgetReq = $this->sap->getService('BudgetReq');
 
-        // $existing_budget = $BudgetReq->queryBuilder()->select('Code')
-        //                    ->where("U_PillarCode",$request->U_PillarCode)
-        //                    ->where("U_ClassificationCode",$request->U_ClassificationCode)
-        //                    ->where("U_SubClassCode",$request->U_SubClassCode)
-        //                    ->where("U_SubClass2Code",$request->U_SubClass2Code)
-        //                    ->findAll();
-        // if(count($existing_budget) > 0){
-        //     $array_accounts = [];
-        //     foreach ($request["BUDGETREQLINESCollection"] as $value) {
-        //         array_push($array_accounts, $value["U_AccountCode"]);
-        //     };
-        //     $BudgetReqLines = $this->sap->getService('BudgetReq');
-        //     $existing_account = $BudgetReq->queryBuilder()->select('*')
-        //                         ->where()
-        //                         ->where(new InArray("U_AccountCode", $array_accounts))
-
-
-        // }
-
-
-        $count = $BudgetReq->queryBuilder()->count();
-        $request["Code"] = 50000003 + $count;
+        $maxcode = $BudgetReq->queryBuilder()->maxcode();
+        $request["Code"] = $maxcode + 1;
         $request["U_CreatedBy"] = $user->id;
-        $request["U_RequestorName"] = $user->name;;
+        $request["U_RequestorName"] = $user->name;
 
         $result = $BudgetReq->create($request->all());
         return $result;
@@ -73,12 +53,11 @@ class BudgetController extends Controller
         if ($user["role_id"] == 3) {
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
-                ->where(new Equal("U_CreatedBy", (string) $user["id"]));
+                ->where(new Equal(["U_CreatedBy", (string) $user["id"]]));
         }elseif($user["role_id"] == 4){
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
-                ->where(new Equal("U_Status", 2))
-                ->orWhere(new Equal("U_Status", 3));
+                ->where([new Equal("U_Status", 2),'or',new Equal("U_Status", 3)]);
         }
         else{
             $result = $BudgetReq->queryBuilder()
@@ -86,8 +65,7 @@ class BudgetController extends Controller
         }
         if($request->search){
             $search = $request->search;
-            $result->where(new Contains("Code", $search))
-                    ->orWhere(new Contains("Name",$search));
+            $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);
         }
 
         if($request->status){
@@ -95,7 +73,7 @@ class BudgetController extends Controller
             foreach ($req_status_array as $value) {
                 array_push($status_array,(int)$value);
             }
-            $result->where(new InArray("U_Status", $status_array));
+            $result->where([new InArray("U_Status", $status_array)]);
         }
 
         if($request->top){
@@ -129,7 +107,7 @@ class BudgetController extends Controller
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
-                ->where(new Equal("U_Status", 3))
+                ->where([new Equal("U_Status", 3)])
                 ->findAll();
 
 

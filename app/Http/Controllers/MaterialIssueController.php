@@ -61,30 +61,21 @@ class MaterialIssueController extends Controller
             $search = "";
             $status_array = [];
 
+            $result = $MaterialIssue->queryBuilder()->select('*');
+
 
             if ($user["role_id"] == 3) {
-                $result = $MaterialIssue->queryBuilder()
-                ->select('*')->where(new Equal("U_CreatedBy", (int) $user["id"]));
+                $result = $result->where([new Equal("U_CreatedBy", (int) $user["id"])]);
             }elseif($user["role_id"] == 4){
-                $result = $MaterialIssue->queryBuilder()
-                    ->select('*')
-                    ->where(new Equal("U_Status", 2))
-                    ->orWhere(new Equal("U_Status", 3))
-                    ->orWhere(new Equal("U_Status", 4));
+                $result = $result->where([new Equal("U_Status", 2),'or',new Equal("U_Status", 3),'or',new Equal("U_Status", 4)]);
             }elseif($user["role_id"] == 5){
-                $result = $MaterialIssue->queryBuilder()->select('*')->where(new Equal("U_Status", 1))
-                        ->orWhere(new Equal("U_Status", 2))
-                        ->orWhere(new Equal("U_Status", 4));
+                $result = $result->where([new Equal("U_Status", 1),'or',new Equal("U_Status", 2),'or',new Equal("U_Status", 4)]);
 
-            }else{
-                $result = $MaterialIssue->queryBuilder()
-                ->select('*');
             }
 
             if($request->search){
                 $search = $request->search;
-                $result->where(new Contains("Code", $search))
-                        ->orWhere(new Contains("Name",$search));
+                $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);
             }
 
             if($request->status){
@@ -92,7 +83,7 @@ class MaterialIssueController extends Controller
                 foreach ($req_status_array as $value) {
                     array_push($status_array,(int)$value);
                 }
-                $result->where(new InArray("U_Status", $status_array));
+                $result->where([new InArray("U_Status", $status_array)]);
             }
 
             if($request->top){

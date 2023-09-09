@@ -68,9 +68,8 @@ class Query{
      * Adds a SAPb1\Filter to filter the results. This method performs an
      * AND operation.
      */
-    public function where(Filters\Filter $filter) : Query{
-        $filter->setOperator('and');
-        $this->filters[] = $filter;
+    public function where(array $filters) : Query{
+        $this->filters[] = ['and',$filters];
         return $this;
     }
 
@@ -78,9 +77,8 @@ class Query{
      * Adds a SAPb1\Filter to filter the results. This method performs an
      * OR operation.
      */
-    public function orWhere(Filters\Filter $filter) : Query{
-        $filter->setOperator('or');
-        $this->filters[] = $filter;
+    public function orWhere(array $filters) : Query{
+        $this->filters[] = ['or',$filters];
         return $this;
     }
 
@@ -100,10 +98,13 @@ class Query{
     }
 
      /**
-     * Returns a count of the result.
+     * Returns max code of the result.
      */
     public function maxcode() : int{
-        return $this->doRequest('/$count');
+        $this->query['apply'] = 'aggregate(Code with max as MaxCode)';
+        $req = $this->doRequest();
+        $array = json_decode(json_encode($req), true);
+        return $array["value"][0]["MaxCode"];
     }
 
 
@@ -136,20 +137,38 @@ class Query{
             $requestQuery .= '$' . $name . '=' . rawurlencode($value) . '&';
         }
 
+        // return response()->json(array('status'=>'error', 'msg'=>urldecode($requestQuery)), 500);
+
+
+        $op = '';
+
         // Append the filters to the query string.
         if(count($this->filters) > 0){
-            $requestQuery .= '$filter=';
 
+            $requestQuery .= '$filter=';
             // Iterate over the filters collection.
             foreach($this->filters as $idx => $filter){
                 // Append the filter operator (AND,OR) after the first filter has
                 // been appened to the $requestQuery.
-                $op = ($idx > 0) ? ' ' . $filter->getOperator() . ' ' : '';
-
-                // Call the execute method on each filter.
-                $requestQuery .= rawurlencode($op . $filter->execute());
+                if($idx > 0){
+                    $requestQuery .= rawurlencode(' '.$filter[0].' ');
+                }else{
+                    $requestQuery .= '';
+                }
+                $requestQuery .= rawurlencode(' ( ');
+                foreach($filter[1] as $ix => $f){
+                    if($ix % 2 == 0){
+                        $op = $f->getOperator();
+                        $requestQuery .= rawurlencode(' '.$op . $f->execute().' ');
+                    }else{
+                        $requestQuery .= rawurlencode(' '.$f.' ');
+                    }
+                }
+                $requestQuery .= rawurlencode(' ) ');
             }
-        }
+        };
+
+
 
         // Execute the service API with the query string.
         $request = new Request($this->config->getServiceUrl($this->serviceName . $action) . $requestQuery, $this->config->getSSLOptions());
@@ -159,6 +178,7 @@ class Query{
         // Set the SAP B1 session data.
         $request->setCookies($this->session);
         $response = $request->getResponse();
+
 
         // Check if the response code is successful.
         if($response->getStatusCode() === 200){
