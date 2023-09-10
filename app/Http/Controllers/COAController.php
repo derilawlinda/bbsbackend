@@ -34,8 +34,8 @@ class COAController extends Controller
                 new StartsWith("Code", "5"),'or',
                 new StartsWith("Code", "6")]
             )
-            ->where(new MoreThan("AccountLevel", 1))
-            ->where(new Equal("ActiveAccount", 'Y'))
+            ->where([new MoreThan("AccountLevel", 1)])
+            ->where([new Equal("ActiveAccount", 'Y')])
             ->orderBy('Code', 'desc')
             ->findAll();
 
@@ -125,9 +125,9 @@ class COAController extends Controller
             ->select('Code,Name')
             ->where([new StartsWith("Code", "1"),'or',new StartsWith("Code", "5"),
             'or',new InArray("Code", ["60200.0400","60700.0200","60700.0500","60600.0100"])])
-            ->where(new MoreThan("AccountLevel", 1))
-            ->where(new InArray("Code", $account_code_array))
-            ->where(new Equal("ActiveAccount", 'Y'))
+            ->where([new MoreThan("AccountLevel", 1)])
+            ->where([new InArray("Code", $account_code_array)])
+            ->where([new Equal("ActiveAccount", 'Y')])
             ->orderBy('Code', 'desc')
             ->findAll();
 

@@ -52,12 +52,11 @@ class AdvanceRequestController extends Controller
         if ($user["role_id"] == 3) {
             $result = $AdvanceReq->queryBuilder()
                 ->select('*')
-                ->where(new Equal("U_CreatedBy", (string)$user["id"]));
+                ->where([new Equal("U_CreatedBy", (string)$user["id"])]);
         }elseif($user["role_id"] == 2){
             $result = $AdvanceReq->queryBuilder()
             ->select('*')
-            ->where(new Equal("U_Status", 3))
-            ->orWhere(new Equal("U_Status", 5));
+            ->where([new Equal("U_Status", 3),'or',new Equal("U_Status", 5)]);
         }
         else{
             $result = $AdvanceReq->queryBuilder()
@@ -66,8 +65,7 @@ class AdvanceRequestController extends Controller
 
         if($request->search){
             $search = $request->search;
-            $result->where(new Contains("Code", $search))
-                    ->orWhere(new Contains("Name",$search));
+            $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);
         }
 
         if($request->status){
@@ -75,7 +73,7 @@ class AdvanceRequestController extends Controller
             foreach ($req_status_array as $value) {
                 array_push($status_array,(int)$value);
             }
-            $result->where(new InArray("U_Status", $status_array));
+            $result->where([new InArray("U_Status", $status_array)]);
         }
 
         if($request->top){
@@ -114,33 +112,29 @@ class AdvanceRequestController extends Controller
         if ($user["role_id"] == 3) {
             $result = $AdvanceReq->queryBuilder()
                 ->select('*')
-                ->where(new Equal("U_CreatedBy", (string)$user["id"]))
-                ->where(new Equal("U_Status", 5));
+                ->where([new Equal("U_CreatedBy", (string)$user["id"])])
+                ->where([new Equal("U_Status", 5)]);
         }elseif ($user["role_id"] == 2) {
             $result = $AdvanceReq->queryBuilder()
                 ->select('*')
-                ->where(new Equal("U_RealiStatus", 4))
-                ->orWhere(new Equal("U_RealiStatus", 6));
-        }else{
+                ->where([new Equal("U_RealiStatus", 4),'or',new Equal("U_RealiStatus", 6)]);
+            }else{
 
             $result = $AdvanceReq->queryBuilder()
             ->select('*')
-            ->where(new Equal("U_Status", 3))
-            ->orWhere(new Equal("U_Status", 5));
+            ->where([new Equal("U_Status", 3),'or',new Equal("U_Status", 5)]);
         }
 
         if($request->search){
             $search = $request->search;
-            $result->where(new Contains("Code", $search))
-                    ->orWhere(new Contains("Name",$search));
-        }
+            $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);        }
 
         if($request->status){
             $req_status_array = preg_split ("/\,/", $request->status);
             foreach ($req_status_array as $value) {
                 array_push($status_array,(int)$value);
             }
-            $result->where(new InArray("U_RealiStatus", $status_array));
+            $result->where([new InArray("U_RealiStatus", $status_array)]);
         }
 
         if($request->top){

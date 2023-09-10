@@ -56,37 +56,32 @@ class ReimbursementController extends Controller
             $result = $Reimbursement->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
-                ->where(new Equal("U_CreatedBy", (int) $user["id"]));
+                ->where([new Equal("U_CreatedBy", (int) $user["id"])]);
         }elseif($user["role_id"] == 2){
             $result = $Reimbursement->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
-                ->where(new Equal("U_Status", 3))
-                ->orWhere(new Equal("U_Status", 5));
+                ->where([new Equal("U_Status", 3),'or',new Equal("U_Status", 5)]);
         }
         elseif($user["role_id"] == 4){
             $result = $Reimbursement->queryBuilder()
                 ->select('*')
                 ->orderBy('Code', 'desc')
-                ->where(new Equal("U_Status", 2))
-                ->orWhere(new Equal("U_Status", 3));
-        }
+                ->where([new Equal("U_Status", 2),'or',new Equal("U_Status", 3)]);        }
         else{
             $result = $Reimbursement->queryBuilder()
             ->select('*');
         }
         if($request->search){
             $search = $request->search;
-            $result->where(new Contains("Code", $search))
-                    ->orWhere(new Contains("Name",$search));
-        }
+            $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);        }
 
         if($request->status){
             $req_status_array = preg_split ("/\,/", $request->status);
             foreach ($req_status_array as $value) {
                 array_push($status_array,(int)$value);
             }
-            $result->where(new InArray("U_Status", $status_array));
+            $result->where([new InArray("U_Status", $status_array)]);
         }
 
         if($request->top){

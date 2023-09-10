@@ -35,10 +35,10 @@ class MaterialRequestController extends Controller
         try{
             $MaterialReq = $this->sap->getService('MaterialReq');
 
-            $count = $MaterialReq->queryBuilder()->count();
+            $maxCode = $MaterialReq->queryBuilder()->maxcode();
 
             $result = $MaterialReq->create($request->get('oProperty') + [
-                'Code' => 60000001 + $count,
+                'Code' => $maxCode + 1,
                 'U_CreatedBy' => (int)$user->id,
                 'U_RequestorName' => $user->name
             ]);
@@ -59,53 +59,52 @@ class MaterialRequestController extends Controller
                 $this->sap = $this->getSession($request->company);
             }
             $MaterialReq = $this->sap->getService('MaterialReq');
-            // $MaterialReq->headers(['OData-Version' => '4.0',
-            // "B1S-CaseInsensitive" => true,
-            // 'Prefer' => 'odata.maxpagesize=500']);
-            // $search = "";
-            // $status_array = [];
-            // $result = $MaterialReq->queryBuilder()->select('*');
-            // if($request->search){
-            //     $search = $request->search;
-            //     $result->where([new Contains("Code", $search),'or',new Contains("Name", $search)]);
-            // }
+            $MaterialReq->headers(['OData-Version' => '4.0',
+            "B1S-CaseInsensitive" => true,
+            'Prefer' => 'odata.maxpagesize=500']);
+            $search = "";
+            $status_array = [];
+            $result = $MaterialReq->queryBuilder()->select('*');
+            if($request->search){
+                $search = $request->search;
+                $result->where([new Contains("Code", $search),'or',new Contains("Name", $search)]);
+            }
 
-            // if ($user["role_id"] == 3) {
-            //     $result->where([new Equal("U_CreatedBy", (int) $user["id"])]);
-            // }
-            // elseif($user["role_id"] == 4){
-            //     $result = $result->where([new Equal("U_Status", 2),'or',new Equal("U_Status", 3)]);
-            // }elseif($user["role_id"] == 5){
-            //     $result = $result->select('*')->where([new Equal("U_Status", 1),'or',new Equal("U_Status", 2)]);
-            // }
-            // else{
-            //     $result = $result->select('*');
-            // }
+            if ($user["role_id"] == 3) {
+                $result->where([new Equal("U_CreatedBy", (int) $user["id"])]);
+            }
+            elseif($user["role_id"] == 4){
+                $result = $result->where([new Equal("U_Status", 2),'or',new Equal("U_Status", 3)]);
+            }elseif($user["role_id"] == 5){
+                $result = $result->select('*')->where([new Equal("U_Status", 1),'or',new Equal("U_Status", 2)]);
+            }
+            else{
+                $result = $result->select('*');
+            }
 
 
 
-            // if($request->status){
-            //     $req_status_array = preg_split ("/\,/", $request->status);
-            //     foreach ($req_status_array as $value) {
-            //         array_push($status_array,(int)$value);
-            //     }
-            //     $result->where([new InArray("U_Status", $status_array)]);
-            // }
+            if($request->status){
+                $req_status_array = preg_split ("/\,/", $request->status);
+                foreach ($req_status_array as $value) {
+                    array_push($status_array,(int)$value);
+                }
+                $result->where([new InArray("U_Status", $status_array)]);
+            }
 
-            // if($request->top){
-            //     $top = $request->top;
-            // }else{
-            //     $top = 500;
-            // }
+            if($request->top){
+                $top = $request->top;
+            }else{
+                $top = 500;
+            }
 
-            // if($request->skip){
-            //     $skip = $request->skip;
-            // }else{
-            //     $skip = 0;
-            // }
+            if($request->skip){
+                $skip = $request->skip;
+            }else{
+                $skip = 0;
+            }
 
-            // $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
-            $result = $MaterialReq->queryBuilder()->maxcode();
+            $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
             return $result;
 
         }catch(Exception $e){

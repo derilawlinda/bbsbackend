@@ -53,7 +53,7 @@ class BudgetController extends Controller
         if ($user["role_id"] == 3) {
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
-                ->where(new Equal(["U_CreatedBy", (string) $user["id"]]));
+                ->where([new Equal("U_CreatedBy", (string) $user["id"])]);
         }elseif($user["role_id"] == 4){
             $result = $BudgetReq->queryBuilder()
                 ->select('*')
