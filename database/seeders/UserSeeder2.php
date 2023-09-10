@@ -25,10 +25,10 @@ class UserSeeder2 extends Seeder
             //     'role_id' => Role::where('name', 'Manager')->first()->id,
             // ],
             [
-                'name' => 'Rosa Staff',
-                'email' => 'rosapriskila1108@gmail.com',
-                'password' => Hash::make('BaliUnited1234'),
-                'role_id' => Role::where('name', 'Staff')->first()->id,
+                'name' => 'Admin',
+                'email' => 'admin@gmail.com',
+                'password' => Hash::make('password'),
+                'role_id' => Role::where('name', 'Admin')->first()->id,
             ]
         ];
 

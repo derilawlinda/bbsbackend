@@ -153,10 +153,10 @@ class MaterialIssueController extends Controller
                 $this->sap = $this->getSession($request->company);
             }
             $user = Auth::user();
-            $material_request = $this->sap->getService('MaterialIssue');
+            $material_issue = $this->sap->getService('MaterialIssue');
 
             if ($user["role_id"] == 5) {
-                $result = $material_request->update($code, [
+                $result = $material_issue->update($code, [
                     'U_Status' => 2,
                     'U_ManagerApp'=> $user->name,
                     'U_ManagerAppAt' => date("Y-m-d")
@@ -187,14 +187,19 @@ class MaterialIssueController extends Controller
                 $good_issue = $this->sap->getService('InventoryGenExits');
                 $result = $good_issue->create($goodIssueInput);
                 if($result){
-                    $result = $material_request->update($code, [
+                    $result = $material_issue->update($code, [
                         'U_Status' => 3,
                         'U_DirectorApp'=> $user->name,
                         'U_DirectorAppAt' => date("Y-m-d")
                     ]);
                 }
 
+
             }
+            if($result == 1){
+                $result = $material_issue->queryBuilder()
+                ->select('*')->find($code);
+            };
             return $result;
         }catch(Exception $e){
             return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);

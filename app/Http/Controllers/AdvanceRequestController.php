@@ -260,126 +260,141 @@ class AdvanceRequestController extends Controller
 
     public function confirmAdvanceRealization(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('company'));
-        }
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get('company'));
+            }
 
-        $user = Auth::user();
-        $array_req = $request->get('oProperty');
+            $user = Auth::user();
+            $array_req = $request->get('oProperty');
 
-        $budgetCode = (string)$array_req["U_BudgetCode"];
-        $budget = $this->sap->getService('BudgetReq');
-        $arbudget = $budget->queryBuilder()
-            ->select('*')
-            ->find($budgetCode); // DocEntry value
-        $array_budget = json_decode(json_encode($arbudget), true);
+            $budgetCode = (string)$array_req["U_BudgetCode"];
+            $budget = $this->sap->getService('BudgetReq');
+            $arbudget = $budget->queryBuilder()
+                ->select('*')
+                ->find($budgetCode); // DocEntry value
+            $array_budget = json_decode(json_encode($arbudget), true);
 
-        if($array_req["U_DifferenceAmt"] > 0){
+            if($array_req["U_DifferenceAmt"] > 0){
 
 
-            try {
-            $incomingPaymentInput = array();
-            $incomingPaymentInput["PaymentAccounts"] = [];
-            $incomingPaymentInput["ReferenceDate"] = $array_req["U_RealizationDate"];
-            $incomingPaymentInput["TransferAccount"] = $array_req["U_TransferFrom"];
-            $incomingPaymentInput["DocType"] = 'rAccount';
-            $incomingPaymentInput["DocCurrency"] = 'IDR';
-            $incomingPaymentInput["TransferSum"] = $array_req["U_RealizationAmt"];
-            $incomingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
-            $incomingPaymentInput["Remarks"] = "Advance Realization ".$array_req["Code"];
+                try {
+                $incomingPaymentInput = array();
+                $incomingPaymentInput["PaymentAccounts"] = [];
+                $incomingPaymentInput["ReferenceDate"] = $array_req["U_RealizationDate"];
+                $incomingPaymentInput["TransferAccount"] = $array_req["U_TransferFrom"];
+                $incomingPaymentInput["DocType"] = 'rAccount';
+                $incomingPaymentInput["DocCurrency"] = 'IDR';
+                $incomingPaymentInput["TransferSum"] = $array_req["U_RealizationAmt"];
+                $incomingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
+                $incomingPaymentInput["Remarks"] = "Advance Realization ".$array_req["Code"];
 
-            array_push($incomingPaymentInput["PaymentAccounts"], (object)[
-                'AccountCode' => '11720.2000',
-                'SumPaid' => $array_req["U_DifferenceAmt"],
-                'ProfitCenter' => $array_budget["U_PillarCode"],
-                'ProjectCode' => $array_budget["U_ProjectCode"],
-                "ProfitCenter2" => $array_budget["U_ClassificationCode"],
-                "ProfitCenter3" => $array_budget["U_SubClassCode"],
-                "ProfitCenter4" => $array_budget["U_SubClass2Code"]
-            ]);
-
-            $incoming_payment = $this->sap->getService('IncomingPayments');
-            $incomingResult = $incoming_payment->create($incomingPaymentInput);
-
-            if($incomingResult){
-
-                $BudgetReq = $this->sap->getService('BudgetReq');
-                $result = $BudgetReq->update($budgetCode, [
-                    "BUDGETUSEDCollection" => [
-                        [
-                            "U_Amount" => $array_req["U_DifferenceAmt"] * -1,
-                            "U_Source" => "Advance Request Return",
-                            "U_DocNum" => $array_req["Code"],
-                            "U_UsedBy" => $array_req["U_RequestorName"]
-                        ]
-                    ]
+                array_push($incomingPaymentInput["PaymentAccounts"], (object)[
+                    'AccountCode' => '11720.2000',
+                    'SumPaid' => $array_req["U_DifferenceAmt"],
+                    'ProfitCenter' => $array_budget["U_PillarCode"],
+                    'ProjectCode' => $array_budget["U_ProjectCode"],
+                    "ProfitCenter2" => $array_budget["U_ClassificationCode"],
+                    "ProfitCenter3" => $array_budget["U_SubClassCode"],
+                    "ProfitCenter4" => $array_budget["U_SubClass2Code"]
                 ]);
+
+                $incoming_payment = $this->sap->getService('IncomingPayments');
+                $incomingResult = $incoming_payment->create($incomingPaymentInput);
+
+                if($incomingResult){
+
+                    $BudgetReq = $this->sap->getService('BudgetReq');
+                    $result = $BudgetReq->update($budgetCode, [
+                        "BUDGETUSEDCollection" => [
+                            [
+                                "U_Amount" => $array_req["U_DifferenceAmt"] * -1,
+                                "U_Source" => "Advance Request Return",
+                                "U_DocNum" => $array_req["Code"],
+                                "U_UsedBy" => $array_req["U_RequestorName"]
+                            ]
+                        ]
+                    ]);
+
+                }
+
+                }catch(Exception $e) {
+
+                    return response()->json(['message' => 'Error inserting data to SAP'], 500);
+
+                };
+
 
             }
 
-            }catch(Exception $e) {
+            $journal_entry = $this->sap->getService('JournalEntries');
+            $journalEntryInput = array();
+            $journalEntryInput["JournalEntryLines"] = [];
+            $journalEntryInput["Memo"] = "Advance Realization ".$array_req["Code"];;
 
-                return response()->json(['message' => 'Error inserting data to SAP'], 500);
-
-            };
-
-
-        }
-
-        $journal_entry = $this->sap->getService('JournalEntries');
-        $journalEntryInput = array();
-        $journalEntryInput["JournalEntryLines"] = [];
-        $journalEntryInput["Memo"] = "Advance Realization ".$array_req["Code"];;
-
-        array_push($journalEntryInput["JournalEntryLines"], (object)[
-            'AccountCode' => '11120.1001', //BANK BCA
-            'Credit' => $array_req["U_RealizationAmt"],
-            'CostingCode' => $array_budget["U_PillarCode"],
-            'ProjectCode' => $array_budget["U_ProjectCode"],
-            'CostingCode2' => $array_budget["U_ClassificationCode"],
-            'CostingCode3' => $array_budget["U_SubClassCode"],
-            'CostingCode4' => $array_budget["U_SubClass2Code"],
-            'CashFlowAssignments' => [
-                [
-                    "AmountLC" => $array_req["U_RealizationAmt"]
-                ]
-            ]
-        ]);
-
-        for ($i = 0; $i < count($array_req["REALIZATIONREQLINESCollection"]); $i++)
-        {
             array_push($journalEntryInput["JournalEntryLines"], (object)[
-                'AccountCode' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_AccountCode"],
-                'Debit'=> $array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"],
+                'AccountCode' => '11120.1001', //BANK BCA
+                'Credit' => $array_req["U_RealizationAmt"],
                 'CostingCode' => $array_budget["U_PillarCode"],
                 'ProjectCode' => $array_budget["U_ProjectCode"],
                 'CostingCode2' => $array_budget["U_ClassificationCode"],
                 'CostingCode3' => $array_budget["U_SubClassCode"],
-                'CostingCode4' => $array_budget["U_SubClass2Code"]
+                'CostingCode4' => $array_budget["U_SubClass2Code"],
+                'CashFlowAssignments' => [
+                    [
+                        "AmountLC" => $array_req["U_RealizationAmt"]
+                    ]
+                ]
             ]);
+
+            for ($i = 0; $i < count($array_req["REALIZATIONREQLINESCollection"]); $i++)
+            {
+                array_push($journalEntryInput["JournalEntryLines"], (object)[
+                    'AccountCode' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_AccountCode"],
+                    'Debit'=> $array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"],
+                    'CostingCode' => $array_budget["U_PillarCode"],
+                    'ProjectCode' => $array_budget["U_ProjectCode"],
+                    'CostingCode2' => $array_budget["U_ClassificationCode"],
+                    'CostingCode3' => $array_budget["U_SubClassCode"],
+                    'CostingCode4' => $array_budget["U_SubClass2Code"]
+                ]);
+            }
+
+            $result = $journal_entry->create($journalEntryInput);
+            $advance_request = $this->sap->getService('AdvanceReq');
+            $array_req["U_RealiStatus"] = 6;
+            $code = $array_req["Code"];
+            $result = $advance_request->update($code, $array_req);
+
+            if($result == 1){
+                $result = $advance_request->select("*")->find($code);
+            }
+            return $result;
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
 
-        $result = $journal_entry->create($journalEntryInput);
-        $advance_request = $this->sap->getService('AdvanceReq');
-        $array_req["U_RealiStatus"] = 6;
-        $code = $array_req["Code"];
-        $result = $advance_request->update($code, $array_req);
-        return $array_req;
+
 
     }
 
     public function getAdvanceRequestById(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
+
+            $advanceReq = $this->sap->getService('AdvanceReq');
+            $result = $advanceReq->queryBuilder()
+                ->select('*')
+                ->find($request->code); // DocEntry value
+            return $result;
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
 
-        $budgets = $this->sap->getService('AdvanceReq');
-
-        $result = $budgets->queryBuilder()
-            ->select('*')
-            ->find($request->code); // DocEntry value
-        return $result;
 
     }
 
@@ -388,156 +403,216 @@ class AdvanceRequestController extends Controller
     public function approveAR(Request $request)
     {
 
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
+            $user = Auth::user();
+            $advance_request = $this->sap->getService('AdvanceReq');
+            $code = $request->get('oProperty')["Code"];
+
+            if($user["role_id"] == 4){
+                $result = $advance_request->update($code, [
+                    'U_Status' => 3,
+                    'U_DirectorApp'=> $user->name,
+                    'U_DirectorAppAt' => date("Y-m-d")
+                ]);
+            }
+
+            elseif ($user["role_id"] == 5) {
+                $result = $advance_request->update($code, [
+                    'U_Status' => 2,
+                    'U_ManagerApp'=> $user->name,
+                    'U_ManagerAppAt' => date("Y-m-d")
+                ]);
+
+            }
+
+            if($result == 1){
+                $result = $advance_request->queryBuilder()
+                ->select('*')->find($code);
+            };
+            return $result;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $user = Auth::user();
-        $advance_request = $this->sap->getService('AdvanceReq');
-        $code = $request->get('oProperty')["Code"];
-
-        if($user["role_id"] == 4){
-            $result = $advance_request->update($code, [
-                'U_Status' => 3,
-                'U_DirectorApp'=> $user->name,
-                'U_DirectorAppAt' => date("Y-m-d")
-            ]);
-        }
-
-        elseif ($user["role_id"] == 5) {
-            $result = $advance_request->update($code, [
-                'U_Status' => 2,
-                'U_ManagerApp'=> $user->name,
-                'U_ManagerAppAt' => date("Y-m-d")
-            ]);
-
-        }
-
-
-        return $result;
-
     }
 
     public function saveAR(Request $request)
     {
 
+       try{
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->get('company'));
         }
-        $user = Auth::user();
-        $AdvanceReq = $this->sap->getService('AdvanceReq');
-        $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->get('data')["Code"];
-        $result = $AdvanceReq->update($code,$request->get('data'),false);
-        return $result;
+            $user = Auth::user();
+            $AdvanceReq = $this->sap->getService('AdvanceReq');
+            $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $code = $request->get('data')["Code"];
+            $result = $AdvanceReq->update($code,$request->get('data'),false);
+            return $result;
+
+       }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+       }
 
     }
 
     public function rejectAR(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
+            $user = Auth::user();
+            $AdvanceReq = $this->sap->getService('AdvanceReq');
+            $code = $request->Code;
+            $remarks = $request->Remarks;
+            $result = $AdvanceReq->update($code, [
+                'U_Remarks' => $remarks,
+                'U_Status' => 4,
+                'U_RejectedBy' => $user->name
+            ]);
+            return $result;
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $user = Auth::user();
-        $AdvanceReq = $this->sap->getService('AdvanceReq');
-        $code = $request->Code;
-        $remarks = $request->Remarks;
-        $result = $AdvanceReq->update($code, [
-            'U_Remarks' => $remarks,
-            'U_Status' => 4,
-            'U_RejectedBy' => $user->name
-        ]);
-        return $result;
 
     }
 
     public function rejectAdvanceRealization(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
+            $user = Auth::user();
+            $AdvanceReq = $this->sap->getService('AdvanceReq');
+            $code = $request->Code;
+            $remarks = $request->Remarks;
+            $result = $AdvanceReq->update($code, [
+                'U_RealizationRemarks' => $remarks,
+                'U_RealiStatus' => 5,
+                'U_RejectedBy' => $user->name
+            ]);
+            if($result == 1){
+                $result = $AdvanceReq->select("*")->find($code);
+            }
+            return $result;
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $user = Auth::user();
-        $AdvanceReq = $this->sap->getService('AdvanceReq');
-        $code = $request->Code;
-        $remarks = $request->Remarks;
-        $result = $AdvanceReq->update($code, [
-            'U_RealizationRemarks' => $remarks,
-            'U_RealiStatus' => 5,
-            'U_RejectedBy' => $user->name
-        ]);
-        return $result;
+
     }
 
     public function resubmitAR(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('company'));
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get('company'));
+            }
+            $user = Auth::user();
+            $AdvanceReq = $this->sap->getService('AdvanceReq');
+            $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $inputArray = $request->get('data');
+            $code = $inputArray["Code"];
+            $inputArray["U_Status"] = 2;
+            $result = $AdvanceReq->update($code,$inputArray,false);
+            if($result == 1){
+                $result = $AdvanceReq->select("*")->find($code);
+            }
+            return $result;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $user = Auth::user();
-        $AdvanceReq = $this->sap->getService('AdvanceReq');
-        $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $inputArray = $request->get('data');
-        $code = $inputArray["Code"];
-        $inputArray["U_Status"] = 2;
-        $result = $AdvanceReq->update($code,$inputArray,false);
-        return $result;
+
     }
 
     public function resubmitRealization(Request $request)
     {
-        $json = json_encode($request->all());
+        try{
+            $json = json_encode($request->all());
 
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('company'));
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get('company'));
+            }
+            $user = Auth::user();
+            $AdvanceReq = $this->sap->getService('AdvanceReq');
+            $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $code = $request->get('data')["Code"];
+            $inputArray = $request->get('data');
+            $inputArray["U_RealiStatus"] = 1;
+            $result = $AdvanceReq->update($code,$inputArray,false);
+            if($result == 1){
+                $result = $AdvanceReq->select("*")->find($code);
+            }
+            return $result;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $user = Auth::user();
-        $AdvanceReq = $this->sap->getService('AdvanceReq');
-        $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->get('data')["Code"];
-        $inputArray = $request->get('data');
-        $inputArray["U_RealiStatus"] = 1;
-        $result = $AdvanceReq->update($code,$inputArray,false);
-        return $result;
+
+
     }
 
     public function submitAdvanceRealization(Request $request)
     {
-        $array_req = $request->get('oProperty');
-        $code = $array_req["Code"];
-        $array_req["U_RealiStatus"] = 2;
+        try{
+            $array_req = $request->get('oProperty');
+            $code = $array_req["Code"];
+            $array_req["U_RealiStatus"] = 2;
 
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('company'));
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get('company'));
+            }
+            $advance_request = $this->sap->getService('AdvanceReq');
+            $result = $advance_request->update($code, $array_req);
+            if($result == 1){
+                $result = $advance_request->select("*")->find($code);
+            }
+            return $array_req;
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $advance_request = $this->sap->getService('AdvanceReq');
-        $result = $advance_request->update($code, $array_req);
-        return $array_req;
+
     }
 
     public function approveAdvanceRealization(Request $request)
     {
-        $user = Auth::user();
-        $code = $request->get('Code');
+        try{
+            $user = Auth::user();
+            $code = $request->get('Code');
 
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
+
+            $advance_request = $this->sap->getService('AdvanceReq');
+
+            if ($user["role_id"] == 5) {
+                $result = $advance_request->update($code, [
+                    'U_RealiStatus' => 3,
+                    'U_ManagerRealApp'=> $user->name,
+                    'U_ManagerRealAppAt' => date("Y-m-d")
+                ]);
+            }else{
+                $result = $advance_request->update($code, [
+                    'U_RealiStatus' => 4,
+                    'U_DirectorRealApp'=> $user->name,
+                    'U_DirectorRealAppAt' => date("Y-m-d")
+                ]);
+            }
+            if($result == 1){
+                $result = $advance_request->find("*")->find($code);
+            }
+            return $result;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
 
-        $advance_request = $this->sap->getService('AdvanceReq');
-
-        if ($user["role_id"] == 5) {
-            $result = $advance_request->update($code, [
-                'U_RealiStatus' => 3,
-                'U_ManagerRealApp'=> $user->name,
-                'U_ManagerRealAppAt' => date("Y-m-d")
-            ]);
-        }else{
-            $result = $advance_request->update($code, [
-                'U_RealiStatus' => 4,
-                'U_DirectorRealApp'=> $user->name,
-                'U_DirectorRealAppAt' => date("Y-m-d")
-            ]);
-        }
-        return $result;
 
     }
 

@@ -207,10 +207,15 @@ class MaterialRequestController extends Controller
 
                 }
 
-                return $result;
 
             }
 
+            if($result == 1){
+                $result = $MaterialReq->queryBuilder()
+                ->select('*')->find($code);
+            }
+
+            return $result;
 
         }
         catch(Exception $e){
