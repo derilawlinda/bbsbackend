@@ -21,20 +21,26 @@ class BudgetController extends Controller
 
     public function createBudget(Request $request)
     {
-        $user = Auth::user();
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->U_Company);
+        try{
+
+            $user = Auth::user();
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->U_Company);
+            }
+
+            $BudgetReq = $this->sap->getService('BudgetReq');
+
+            $maxcode = $BudgetReq->queryBuilder()->maxcode();
+            $request["Code"] = $maxcode + 1;
+            $request["U_CreatedBy"] = $user->id;
+            $request["U_RequestorName"] = $user->name;
+
+            $result = $BudgetReq->create($request->all());
+            return $result;
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
 
-        $BudgetReq = $this->sap->getService('BudgetReq');
-
-        $maxcode = $BudgetReq->queryBuilder()->maxcode();
-        $request["Code"] = $maxcode + 1;
-        $request["U_CreatedBy"] = $user->id;
-        $request["U_RequestorName"] = $user->name;
-
-        $result = $BudgetReq->create($request->all());
-        return $result;
     }
     public function getBudget(Request $request)
     {
@@ -166,82 +172,126 @@ class BudgetController extends Controller
 
     public function approveBudget(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
+            $user = Auth::user();
+            $budgets = $this->sap->getService('BudgetReq');
+            $code = $request->Code;
+            if ($user["role_id"] == 5) {
+                $result = $budgets->update($code, [
+                    'U_Status' => 2,
+                    'U_ManagerApp'=> $user->name,
+                    'U_ManagerAppAt' => date("Y-m-d")
+                ]);
+            }else{
+                $result = $budgets->update($code, [
+                    'U_Status' => 3,
+                    'U_DirectorApp'=> $user->name,
+                    'U_DirectorAppAt' => date("Y-m-d")
+                ]);
+            }
+            if($result == 1){
+                $result = $budgets->queryBuilder()
+                ->select('*')
+                ->find($code); // DocEntry value
+            }
+            return $result;
         }
-        $user = Auth::user();
-        $budgets = $this->sap->getService('BudgetReq');
-        $code = $request->Code;
-        if ($user["role_id"] == 5) {
-            $result = $budgets->update($code, [
-                'U_Status' => 2,
-                'U_ManagerApp'=> $user->name,
-                'U_ManagerAppAt' => date("Y-m-d")
-            ]);
-        }else{
-            $result = $budgets->update($code, [
-                'U_Status' => 3,
-                'U_DirectorApp'=> $user->name,
-                'U_DirectorAppAt' => date("Y-m-d")
-            ]);
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+
         }
-        return $result;
+
 
     }
 
     public function rejectBudget(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->Company);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->Company);
+            }
+            $user = Auth::user();
+            $budgets = $this->sap->getService('BudgetReq');
+            $code = $request->Code;
+            $remarks = $request->Remarks;
+            $result = $budgets->update($code, [
+                'U_Status' => 4,
+                'U_Remarks' => $remarks,
+                'U_RejectedBy' => $user->name
+            ]);
+            if($result == 1){
+                $result = $budgets->queryBuilder()
+                ->select('*')
+                ->find($code); // DocEntry value
+            }
+            return $result;
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        $user = Auth::user();
-        $budgets = $this->sap->getService('BudgetReq');
-        $code = $request->Code;
-        $remarks = $request->Remarks;
 
-        $result = $budgets->update($code, [
-            'U_Status' => 4,
-            'U_Remarks' => $remarks,
-            'U_RejectedBy' => $user->name
-        ]);
-        return $result;
 
     }
 
     public function closeBudget(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->Company);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->Company);
+            }
+            $user = Auth::user();
+            $budgets = $this->sap->getService('BudgetReq');
+            $code = $request->Code;
+
+            $result = $budgets->update($code, [
+                'U_Status' => 5,
+                'U_ClosedBy'=> $user->name,
+                'U_ClosedAt' => date("Y-m-d")
+
+            ]);
+            if($result == 1){
+                $result = $budgets->queryBuilder()
+                ->select('*')
+                ->find($code); // DocEntry value
+            }
+            return $result;
         }
-        $user = Auth::user();
-        $budgets = $this->sap->getService('BudgetReq');
-        $code = $request->Code;
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
 
-        $result = $budgets->update($code, [
-            'U_Status' => 5,
-            'U_ClosedBy'=> $user->name,
-            'U_ClosedAt' => date("Y-m-d")
-
-        ]);
-        return $result;
 
     }
 
     public function cancelBudget(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->Company);
-        }
-        $user = Auth::user();
-        $budgets = $this->sap->getService('BudgetReq');
-        $code = $request->Code;
 
-        $result = $budgets->update($code, [
-            'U_Status' => 99,
-            'U_CancelledBy'=> $user->name,
-            'U_CancelledAt' => date("Y-m-d")
-        ]);
-        return $result;
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->Company);
+            }
+            $user = Auth::user();
+            $budgets = $this->sap->getService('BudgetReq');
+            $code = $request->Code;
+
+            $result = $budgets->update($code, [
+                'U_Status' => 99,
+                'U_CancelledBy'=> $user->name,
+                'U_CancelledAt' => date("Y-m-d")
+            ]);
+            if($result == 1){
+                $result = $budgets->queryBuilder()
+                ->select('*')
+                ->find($code); // DocEntry value
+            }
+            return $result;
+        }
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
 
     }
 
@@ -249,36 +299,54 @@ class BudgetController extends Controller
     public function saveBudget(Request $request)
     {
 
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->U_Company);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->U_Company);
+            }
+            $user = Auth::user();
+            $BudgetReq = $this->sap->getService('BudgetReq');
+            $BudgetReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $code = $request->Code;
+            $result = $BudgetReq->update($code,$request->all(),false);
+            if($result == 1){
+                $result = $budgets->queryBuilder()
+                ->select('*')
+                ->find($code); // DocEntry value
+            };
+            return $result;
         }
-        $user = Auth::user();
-        $BudgetReq = $this->sap->getService('BudgetReq');
-        $BudgetReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $result = $BudgetReq->update($code,$request->all(),false);
-        return $result;
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
+
 
     }
 
     public function resubmitBudget(Request $request)
     {
 
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->U_Company);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->U_Company);
+            }
+            $user = Auth::user();
+            $BudgetReq = $this->sap->getService('BudgetReq');
+            $BudgetReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $code = $request->Code;
+            $request["U_Status"] = 1;
+            $result = $BudgetReq->update($code,$request->all(),false);
+            if($result == 1){
+                $result = $BudgetReq->queryBuilder()
+                ->select('*')
+                ->find($code); // DocEntry value
+            }
+            return $result;
+
         }
-        $user = Auth::user();
-        $BudgetReq = $this->sap->getService('BudgetReq');
-        $BudgetReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->Code;
-        $request["U_Status"] = 1;
-        $result = $BudgetReq->update($code,$request->all(),false);
-        if($result == 1){
-            $result = $BudgetReq->queryBuilder()
-            ->select('*')
-            ->find($code); // DocEntry value
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-        return $result;
+
 
     }
 
