@@ -106,12 +106,14 @@
                 <td style="background-color:#CE262A;color:white"><center><strong>Account</strong></center> </td>
                 <td style="background-color:grey;color:white"><center><strong>Item</strong></center> </td>
                 <td style="background-color:#CE262A;color:white"><center><strong>Qty</strong></center> </td>
+                <td style="background-color:grey;color:white"><center><strong>Desc</strong></center> </td>
             </tr>
             @foreach ($material_request["MATERIALREQLINESCollection"] as $item)
                 <tr>
                     <td>{{$item["U_AccountCode"]}} - {{$item["AccountName"]}}</td>
                     <td>{{$item["U_ItemCode"]}} - {{$item["ItemName"]}}</td>
                     <td>{{ $item["U_Qty"] }}</td>
+                    <td>{{ $item["U_Description"] }}</td>
                 </tr>
             @endforeach
         </tbody>
