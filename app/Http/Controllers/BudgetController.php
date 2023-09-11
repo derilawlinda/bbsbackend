@@ -12,6 +12,7 @@ use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
 use App\Libraries\SAPb1\Filters\InArray;
 use PDF;
+use PDF2;
 
 class BudgetController extends Controller
 {
@@ -141,23 +142,66 @@ class BudgetController extends Controller
 
     public function printBudget(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get("U_Company"));
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get("U_Company"));
+            }
+
+            $budgets = $this->sap->getService('BudgetReq');
+
+            $result = $budgets->queryBuilder()
+                ->select('*')
+                ->find($request->get("Code"));
+
+            $array_budget = json_decode(json_encode($result), true);
+            $account_array = [];
+            foreach ($array_budget["BUDGETREQLINESCollection"] as $key => $value) {
+                array_push($account_array,$value["U_AccountCode"]);
+            };
+
+            $accounts = $this->sap->getService('ChartOfAccounts');
+            $get_account_names = $accounts->queryBuilder()
+            ->select('Code,Name')
+            ->where([new InArray("Code", $account_array)])
+            ->findAll();
+            $account_name_array = json_decode(json_encode($get_account_names), true);
+            $accounts = [];
+            foreach($account_name_array["value"] as $account){
+                $accounts[$account['Code']] = $account['Name'];
+            };
+
+            foreach ($array_budget["BUDGETREQLINESCollection"] as $key => $value) {
+                $array_budget["BUDGETREQLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+            };
+
+            // $pdf = PDF::loadview('budget_pdf',['budget'=>$array_budget]);
+            // $pdf->setPaper('A4', 'portrait');
+            // $pdf->getDomPDF()->set_option("enable_php", true);
+            // echo base64_encode($pdf->output());
+            // return $array_budget;
+
+
+            $view = \View::make('budget_pdf',['budget'=>$array_budget]);
+            $html = $view->render();
+            $filename = 'Budget Request #'.$request->get("code");
+            $pdf = new PDF2;
+
+            $pdf::SetTitle('Budget Request #'.$request->get("code"));
+            $pdf::AddPage();
+            $pdf::writeHTML($html, true, false, true, false, '');
+
+            // $pdf::Output(public_path($filename), 'F');
+
+            // $pdf = PDF::loadview('mr_pdf',['material_request'=>$array_mr]);
+            // $pdf->setPaper('A4', 'portrait');
+            // $pdf->getDomPDF()->set_option("enable_php", true);
+            return base64_encode($pdf::Output($filename, 'S'));
+            // echo base64_encode($pdf->output());
+            // return $array_mr;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-
-        $budgets = $this->sap->getService('BudgetReq');
-
-        $result = $budgets->queryBuilder()
-            ->select('*')
-            ->find($request->get("Code")); // DocEntry value
-        $array_result = json_decode(json_encode($result), true);
-        $pdf = PDF::loadview('budget_pdf',['Code'=>$array_result["Code"]]);
-        $pdf->setPaper('A4', 'portrait');
-        $pdf->render();
-        $pdf->stream('transport.pdf', [
-            'compress' => false,
-        ]);
-        echo $pdf;
 
 
     }

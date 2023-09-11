@@ -53,6 +53,7 @@ Route::post('/materialRequest/approveMR', [MaterialRequestController::class, 'ap
 Route::post('/materialRequest/saveMR', [MaterialRequestController::class, 'saveMR'])->middleware('auth:sanctum');
 Route::post('/materialRequest/rejectMR', [MaterialRequestController::class, 'rejectMR'])->middleware('auth:sanctum');
 Route::post('/materialRequest/resubmitMR', [MaterialRequestController::class, 'resubmitMR'])->middleware('auth:sanctum');
+Route::post('/materialRequest/printMR', [MaterialRequestController::class, 'printMR'])->middleware('auth:sanctum');
 
 Route::get('/materialIssue/getMaterialIssues', [MaterialIssueController::class, 'getMaterialIssues'])->middleware('auth:sanctum');
 Route::post('/materialIssue/createMaterialIssue', [MaterialIssueController::class, 'createMaterialIssue'])->middleware('auth:sanctum');
