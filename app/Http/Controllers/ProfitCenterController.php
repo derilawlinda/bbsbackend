@@ -37,7 +37,7 @@ class ProfitCenterController extends Controller
 
         $result = $ProfitCenter->queryBuilder()
             ->select('CenterCode,CenterName')
-            ->where(new Equal("InWhichDimension", 1))
+            ->where([new Equal("InWhichDimension", 1)])
             ->findAll();
 
         return $result;
@@ -60,7 +60,7 @@ class ProfitCenterController extends Controller
 
         $result = $ProfitCenter->queryBuilder()
             ->select('CenterCode,CenterName')
-            ->where(new Equal("InWhichDimension", 2))
+            ->where([new Equal("InWhichDimension", 2)])
             ->findAll();
 
         return $result;
@@ -83,7 +83,7 @@ class ProfitCenterController extends Controller
 
         $result = $ProfitCenter->queryBuilder()
             ->select('CenterCode,CenterName')
-            ->where(new Equal("InWhichDimension", 3))
+            ->where([new Equal("InWhichDimension", 3)])
             ->findAll();
 
         return $result;
@@ -106,7 +106,7 @@ class ProfitCenterController extends Controller
 
         $result = $ProfitCenter->queryBuilder()
             ->select('CenterCode,CenterName')
-            ->where(new Equal("InWhichDimension", 4))
+            ->where([new Equal("InWhichDimension", 4)])
             ->findAll();
 
         return $result;
