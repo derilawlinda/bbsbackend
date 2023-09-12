@@ -112,8 +112,8 @@
         <tbody>
             <tr>
                 <td style="background-color:#CE262A;color:white; width:30%"><center><strong>Account</strong></center> </td>
-                <td style="background-color:grey;color:white;width:35%" ><center><strong>Item</strong></center> </td>
-                <td style="background-color:#CE262A;color:white;width:5%" ><center><strong>Qty</strong></center> </td>
+                <td style="background-color:grey;color:white;width:30%" ><center><strong>Item</strong></center> </td>
+                <td style="background-color:#CE262A;color:white;width:10%" ><center><strong>Qty</strong></center> </td>
                 <td style="background-color:grey;color:white;width:30%"><center><strong>Desc</strong></center> </td>
             </tr>
             @foreach ($material_request["MATERIALREQLINESCollection"] as $item)
