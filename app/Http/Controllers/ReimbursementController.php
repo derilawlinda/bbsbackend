@@ -14,6 +14,7 @@ use App\Libraries\SAPb1\Filters\StartsWith;
 use App\Libraries\SAPb1\Filters\InArray;
 use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
+use PDF2;
 
 class ReimbursementController extends Controller
 {
@@ -414,6 +415,82 @@ class ReimbursementController extends Controller
         } catch(Exception $e) {
             return response()->json(['message' => 'Error inserting data to SAP'], 500);
         };
+
+    }
+
+    public function printReimbursement(Request $request)
+    {
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get("company"));
+            }
+
+            $ReimbursementReq = $this->sap->getService('ReimbursementReq');
+
+            $result = $ReimbursementReq->queryBuilder()
+                ->select('*')
+                ->find($request->get("code"));
+
+            $array_reimbursement = json_decode(json_encode($result), true);
+            $account_array = [];
+
+            $find_budget = $this->sap->getService('BudgetReq');
+            $get_budget = $find_budget->queryBuilder()
+                        ->select('*')
+                        ->find($array_reimbursement["U_BudgetCode"]);
+            $array_budget = json_decode(json_encode($get_budget), true);
+
+            $array_reimbursement["U_Company"] = $array_budget["U_Company"];
+            $array_reimbursement["U_Pillar"] = $array_budget["U_Pillar"];
+            $array_reimbursement["U_Classification"] = $array_budget["U_Classification"];
+            $array_reimbursement["U_SubClass"] = $array_budget["U_SubClass"];
+            $array_reimbursement["U_SubClass2"] = $array_budget["U_SubClass2"];
+            $array_reimbursement["U_Project"] = $array_budget["U_Project"];
+            $array_reimbursement["BudgetName"] = $array_budget["Name"];
+
+
+            foreach ($array_reimbursement["REIMBURSEMENTLINESCollection"] as $key => $value) {
+                array_push($account_array,$value["U_AccountCode"]);
+            };
+
+
+            $accounts = $this->sap->getService('ChartOfAccounts');
+            $get_account_names = $accounts->queryBuilder()
+            ->select('Code,Name')
+            ->where([new InArray("Code", $account_array)])
+            ->findAll();
+            $account_name_array = json_decode(json_encode($get_account_names), true);
+            $accounts = [];
+            foreach($account_name_array["value"] as $account){
+                $accounts[$account['Code']] = $account['Name'];
+            };
+
+            foreach ($array_reimbursement["REIMBURSEMENTLINESCollection"] as $key => $value) {
+                $array_reimbursement["REIMBURSEMENTLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+            };
+
+            $view = \View::make('reimbursement_pdf',['reimbursement'=>$array_reimbursement]);
+            $html = $view->render();
+            $filename = 'Reimbursement #'.$request->get("code");
+            $pdf = new PDF2;
+
+            $pdf::SetTitle('Reimbursement #'.$request->get("code"));
+            $pdf::AddPage();
+            $pdf::writeHTML($html, true, false, true, false, '');
+
+            // $pdf::Output(public_path($filename), 'F');
+
+            // $pdf = PDF::loadview('mr_pdf',['material_request'=>$array_mr]);
+            // $pdf->setPaper('A4', 'portrait');
+            // $pdf->getDomPDF()->set_option("enable_php", true);
+            return base64_encode($pdf::Output($filename, 'S'));
+            // echo base64_encode($pdf->output());
+            // return $array_mr;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
+
 
     }
 
