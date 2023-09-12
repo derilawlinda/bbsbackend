@@ -22,22 +22,30 @@ class ReimbursementController extends Controller
 
     public function createReimbursement(Request $request)
     {
-        $user = Auth::user();
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('company'));
-        }
 
-        $Reimbursement = $this->sap->getService('ReimbursementReq');
+        try{
+            $user = Auth::user();
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get('company'));
+            }
 
-        $count = $Reimbursement->queryBuilder()->count();
+            $Reimbursement = $this->sap->getService('ReimbursementReq');
+
+            $count = $Reimbursement->queryBuilder()->maxcode();
 
 
-        $result = $Reimbursement->create($request->get('oProperty') + [
-            'Code' => 90000001 + $count,
-            'U_CreatedBy' => (int)$user->id,
-            'U_RequestorName' => $user->name
-        ]);
-        return $result;
+            $result = $Reimbursement->create($request->get('oProperty') + [
+                'Code' => $count + 1,
+                'U_CreatedBy' => (int)$user->id,
+                'U_RequestorName' => $user->name
+            ]);
+            return $result;
+        }catch(Exception $e) {
+
+            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+
+        };
+
     }
 
     public function getReimbursements(Request $request)
@@ -163,25 +171,123 @@ class ReimbursementController extends Controller
 
             }
 
+            $outgoingPaymentPreInput = [];
 
             for ($i = 0; $i < count($array_req["REIMBURSEMENTLINESCollection"]); $i++)
             {
+                if($array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"] > 0){
 
-                array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
-                    'AccountCode' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_AccountCode"],
-                    'SumPaid' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"],
-                    'Decription' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Description"],
-                    'ProfitCenter' => $array_budget["U_PillarCode"],
-                    'ProjectCode' => $array_budget["U_ProjectCode"],
-                    "ProfitCenter2" => $array_budget["U_ClassificationCode"],
-                    "ProfitCenter3" => $array_budget["U_SubClassCode"],
-                    "ProfitCenter4" => $array_budget["U_SubClass2Code"],
+                    array_push($outgoingPaymentPreInput, (array)[
 
-                ]);
+                        "NPWP" => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"],
+                        "Amount" => round($array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"] * ((100 - $array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"]) / 100)),
+                        "PaymentFor" => "Fee",
+                        "Account" => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_AccountCode"]
+
+                    ]);
+
+                    array_push($outgoingPaymentPreInput, (array)[
+
+                        "NPWP" => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"],
+                        "Amount" =>  round($array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"] * ($array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"] /100)),
+                        "PaymentFor" => "Tax",
+                        "Account" => "21310.0000"
+
+                    ]);
+
+                }
+
+                else{
+
+                    array_push($outgoingPaymentInput["PaymentAccounts"], (array)[
+                        'AccountCode' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_AccountCode"],
+                        'SumPaid' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"],
+                        'Decription' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Description"],
+                        'ProfitCenter' => $array_budget["U_PillarCode"],
+                        'ProjectCode' => $array_budget["U_ProjectCode"],
+                        "ProfitCenter2" => $array_budget["U_ClassificationCode"],
+                        "ProfitCenter3" => $array_budget["U_SubClassCode"],
+                        "ProfitCenter4" => $array_budget["U_SubClass2Code"],
+
+                    ]);
+                }
+
+            };
+
+            $taxes = array();
+
+            if(count($outgoingPaymentPreInput) > 0){
+
+                $groupbytaxes = array_reduce($outgoingPaymentPreInput, function($taxes, $outgoing){
+                    if(!isset($taxes[$outgoing['PaymentFor']][$outgoing['NPWP']][$outgoing['Account']])){
+                        $taxes[$outgoing['PaymentFor']][$outgoing['NPWP']][$outgoing['Account']] = ['PaymentFor'=> $outgoing['PaymentFor']." ".$outgoing['NPWP']."%",'Amount'=>$outgoing['Amount']];
+                    }
+                    else {
+                        $taxes[$outgoing['PaymentFor']][$outgoing['NPWP']][$outgoing['Account']]["Amount"] += $outgoing['Amount'];
+                    }
+                    return $taxes;
+                });
+
+
+               foreach($groupbytaxes as $index => $value){
+
+                    foreach($value as $key => $val){
+
+                        foreach($val as $k => $v){
+
+                            array_push($outgoingPaymentInput["PaymentAccounts"], (array)[
+                                'AccountCode' => $k,
+                                'SumPaid' => $v["Amount"],
+                                'Decription' => $v["PaymentFor"],
+                                'ProfitCenter' => $array_budget["U_PillarCode"],
+                                'ProjectCode' => $array_budget["U_ProjectCode"],
+                                "ProfitCenter2" => $array_budget["U_ClassificationCode"],
+                                "ProfitCenter3" => $array_budget["U_SubClassCode"],
+                                "ProfitCenter4" => $array_budget["U_SubClass2Code"],
+
+                            ]);
+
+                        }
+
+                    }
+
+               }
+
             }
 
             $outgoing_payment = $this->sap->getService('VendorPayments');
             $outgoingResult = $outgoing_payment->create($outgoingPaymentInput);
+
+            if($outgoingResult){
+
+                $outgoingArray = json_decode(json_encode($outgoingResult), true);
+                $ReimbursementReq = $this->sap->getService('ReimbursementReq');
+                $code = $array_req["Code"];
+                $disbursed_date = $array_req["DisbursedDate"];
+                $result = $ReimbursementReq->update($code, [
+                    'U_Status' => 5,
+                    'U_TransferBy' => $user->name,
+                    'U_DisbursedAt' => $array_req["U_DisbursedAt"]
+                ]);
+                if($result == 1){
+
+                    $BudgetReq = $this->sap->getService('BudgetReq');
+                    $result = $BudgetReq->update($budgetCode, [
+                        "BUDGETUSEDCollection" => [
+                            [
+                                "U_Amount" => floatval($array_req["U_TotalAmount"]) + floatval($bank_adm),
+                                "U_Source" => "Reimbursement Request",
+                                "U_DocNum" => $array_req["Code"],
+                                "U_UsedBy" => $array_req["U_RequestorName"]
+                            ]
+                        ]
+                    ]);
+
+                    $result = $ReimbursementReq->queryBuilder()->select("*")->find($array_req["Code"]);
+                    return $result;
+
+                }
+            }
 
         }catch(Exception $e) {
 
@@ -189,122 +295,125 @@ class ReimbursementController extends Controller
 
         };
 
-
-        if($outgoingResult){
-
-            $outgoingArray = json_decode(json_encode($outgoingResult), true);
-            $ReimbursementReq = $this->sap->getService('ReimbursementReq');
-            $code = $array_req["Code"];
-            $disbursed_date = $array_req["DisbursedDate"];
-            $result = $ReimbursementReq->update($code, [
-                'U_DisbursedAt' => $array_req["DisbursedDate"],
-                'U_Status' => 5,
-                'U_TransferBy' => $user->name
-            ]);
-            if($result == 1){
-
-                $BudgetReq = $this->sap->getService('BudgetReq');
-                $result = $BudgetReq->update($budgetCode, [
-                    "BUDGETUSEDCollection" => [
-                        [
-                            "U_Amount" => floatval($array_req["U_TotalAmount"]) + floatval($bank_adm),
-                            "U_Source" => "Reimbursement Request",
-                            "U_DocNum" => $array_req["Code"],
-                            "U_UsedBy" => $array_req["U_RequestorName"]
-                        ]
-                    ]
-                ]);
-
-            }
-        }
-        return $outgoingResult;
     }
 
     public function approveReimbursement(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('company'));
-        }
-        $user = Auth::user();
-        $reimbursement = $this->sap->getService('ReimbursementReq');
-        $code = $request->get('oProperty')["Code"];
-        if ($user["role_id"] == 5) {
-            $result = $reimbursement->update($code, [
-                'U_Status' => 2,
-                'U_ManagerApp'=> $user->name,
-                'U_ManagerAppAt' => date("Y-m-d")
-            ]);
-        }else{
-            $result = $reimbursement->update($code, [
-                'U_Status' => 3,
-                'U_DirectorApp'=> $user->name,
-                'U_DirectorAppAt' => date("Y-m-d")
-            ]);
-        }
-        return $result;
+
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get('company'));
+            }
+            $user = Auth::user();
+            $reimbursement = $this->sap->getService('ReimbursementReq');
+            $code = $request->get('oProperty')["Code"];
+            if ($user["role_id"] == 5) {
+                $result = $reimbursement->update($code, [
+                    'U_Status' => 2,
+                    'U_ManagerApp'=> $user->name,
+                    'U_ManagerAppAt' => date("Y-m-d")
+                ]);
+            }else{
+                $result = $reimbursement->update($code, [
+                    'U_Status' => 3,
+                    'U_DirectorApp'=> $user->name,
+                    'U_DirectorAppAt' => date("Y-m-d")
+                ]);
+            }
+            $result = $reimbursement->queryBuilder()->select("*")->find($code);
+            return $result;
+        }catch(Exception $e) {
+
+            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+
+        };
+
 
     }
 
     public function saveReimbursement(Request $request)
     {
 
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('company'));
-        }
-        $user = Auth::user();
-        $ReimbursementReq = $this->sap->getService('ReimbursementReq');
-        $ReimbursementReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->get('data')["Code"];
-        $result = $ReimbursementReq->update($code,$request->get('data'),false);
-        return $result;
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get('company'));
+            }
+            $user = Auth::user();
+            $ReimbursementReq = $this->sap->getService('ReimbursementReq');
+            $ReimbursementReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $code = $request->get('data')["Code"];
+            $result = $ReimbursementReq->update($code,$request->get('data'),false);
+            return $result;
 
+        }catch(Exception $e) {
+
+            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+        };
     }
 
     public function sapeReimbursement(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('company'));
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get('company'));
+            }
+            $user = Auth::user();
+            $ReimbursementReq = $this->sap->getService('ReimbursementReq');
+            $ReimbursementReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $code = $request->get('data')["Code"];
+            $result = $ReimbursementReq->update($code,$request->get('data'),false);
+            return $result;
         }
-        $user = Auth::user();
-        $ReimbursementReq = $this->sap->getService('ReimbursementReq');
-        $ReimbursementReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->get('data')["Code"];
-        $result = $ReimbursementReq->update($code,$request->get('data'),false);
-        return $result;
+        catch(Exception $e) {
+
+            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+        };
+
     }
 
     public function rejectReimbursement(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
+            }
+            $user = Auth::user();
+            $reimbursement = $this->sap->getService('ReimbursementReq');
+            $remarks = $request->Remarks;
+            $code = $request->Code;
+            $result = $reimbursement->update($code, [
+                'U_RejRemarks' => $remarks,
+                'U_Status' => 4,
+                'U_RejectedBy' => $user->name
+            ]);
+            $result =  $reimbursement->queryBuilder()->select("*")->find($code);
+            return $result;
         }
-        $user = Auth::user();
-        $reimbursement = $this->sap->getService('ReimbursementReq');
-        $remarks = $request->Remarks;
-        $code = $request->Code;
-        $result = $reimbursement->update($code, [
-            'U_RejRemarks' => $remarks,
-            'U_Status' => 4,
-            'U_RejectedBy' => $user->name
-        ]);
-        return $result;
+        catch(Exception $e) {
 
+            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+        };
     }
 
     public function resubmitReimbursement(Request $request)
     {
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->get('company'));
-        }
-        $user = Auth::user();
-        $MaterialReq = $this->sap->getService('ReimbursementReq');
-        $MaterialReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
-        $code = $request->get('data')["Code"];
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get('company'));
+            }
+            $user = Auth::user();
+            $reimbursement = $this->sap->getService('ReimbursementReq');
+            $reimbursement->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
+            $code = $request->get('data')["Code"];
 
-        $inputArray = $request->get('data');
-        $inputArray["U_Status"] = 1;
-        $result = $MaterialReq->update($code,$inputArray,false);
-        return $result;
+            $inputArray = $request->get('data');
+            $inputArray["U_Status"] = 1;
+            $result = $reimbursement->update($code,$inputArray,false);
+            $result = $reimbursement->queryBuilder()->select("*")->find($code);
+            return $result;
+        } catch(Exception $e) {
+            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+        };
 
     }
 
