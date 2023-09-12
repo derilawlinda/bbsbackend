@@ -137,7 +137,7 @@ class BudgetController extends Controller
             $BudgetReq->headers(['OData-Version' => '4.0',
             'Prefer' => 'odata.maxpagesize=500']);
             $result = $BudgetReq->queryBuilder()
-                ->select('*')
+                ->select('Code,Name')
                 ->orderBy('Code', 'desc')
                 ->where([new Equal("U_Status", 3)])
                 ->findAll();
