@@ -353,7 +353,9 @@ class MaterialRequestController extends Controller
 
             foreach ($array_mr["MATERIALREQLINESCollection"] as $key => $value) {
                 array_push($account_array,$value["U_AccountCode"]);
-                array_push($item_array,$value["U_ItemCode"]);
+                if($value["U_ItemCode"] != ''){
+                    array_push($item_array,$value["U_ItemCode"]);
+                }
             };
 
 
@@ -381,7 +383,11 @@ class MaterialRequestController extends Controller
 
             foreach ($array_mr["MATERIALREQLINESCollection"] as $key => $value) {
                 $array_mr["MATERIALREQLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
-                $array_mr["MATERIALREQLINESCollection"][$key]["ItemName"] = $items[$value["U_ItemCode"]];
+                if($value["U_ItemCode"] != ''){
+                    $array_mr["MATERIALREQLINESCollection"][$key]["ItemName"] = $items[$value["U_ItemCode"]];
+                }else{
+                    $array_mr["MATERIALREQLINESCollection"][$key]["ItemName"] = '-';
+                }
             };
 
             $view = \View::make('mr_pdf',['material_request'=>$array_mr]);
