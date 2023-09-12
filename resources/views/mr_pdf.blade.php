@@ -86,6 +86,8 @@
                         <td>Approved by Manager</td>
                 @elseif($material_request["U_Status"] =='3')
                         <td>Approved by Director</td>
+                @elseif($material_request["U_Status"] =='4')
+                        <td>Rejected</td>
                 @endif
                 <td>Project</td>
                 <td>{{$material_request["U_Project"]}}</td>
