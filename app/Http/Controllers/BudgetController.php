@@ -380,7 +380,7 @@ class BudgetController extends Controller
             $code = $request->Code;
             $result = $BudgetReq->update($code,$request->all(),false);
             if($result == 1){
-                $result = $budgets->queryBuilder()
+                $result = $BudgetReq->queryBuilder()
                 ->select('*')
                 ->find($code); // DocEntry value
             };
