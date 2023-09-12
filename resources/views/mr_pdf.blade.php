@@ -16,6 +16,12 @@
         h4 {
             font-family: 'Arial, Helvetica, sans-serif'
         }
+
+        #signature {
+            width: 100%;
+            border-bottom: 1px solid black;
+            height: 30px;
+        }
 	</style>
 
 
@@ -99,6 +105,8 @@
     <span margin-top="5px">Items</span>
     </p>
 
+
+
     <table border="1" cellpadding="4">
 
         <tbody>
@@ -118,7 +126,20 @@
             @endforeach
         </tbody>
     </table>
+    <div style="margin-top: 20px;"></div>
+    <table border="1" cellpadding="4">
+        <tr>
+            <td style="height:70px" colspan="2"></td>
+            <td>Prepared by,</td>
+            <td>Approved by,</td>
+        </tr>
+    </table>
+
+
+
+
 
 
 </body>
+
 </html>

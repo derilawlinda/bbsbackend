@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\MaterialRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,3 +20,5 @@ Route::get('/', function () {
 });
 
 Route::get('/tes', [BudgetController::class, 'print']);
+
+Route::get('/printPreviewMR', [MaterialRequestController::class, 'printPreview']);

@@ -414,4 +414,78 @@ class MaterialRequestController extends Controller
 
 
     }
+
+    public function printPreview(Request $request)
+    {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession('KKB');
+        }
+
+        $MaterialReq = $this->sap->getService('MaterialReq');
+
+        $result = $MaterialReq->queryBuilder()
+            ->select('*')
+            ->find('60000624');
+
+        $array_mr = json_decode(json_encode($result), true);
+        $account_array = [];
+        $item_array = [];
+
+        $find_budget = $this->sap->getService('BudgetReq');
+        $get_budget = $find_budget->queryBuilder()
+                    ->select('*')
+                    ->find($array_mr["U_BudgetCode"]);
+        $array_budget = json_decode(json_encode($get_budget), true);
+
+        $array_mr["U_Company"] = $array_budget["U_Company"];
+        $array_mr["U_Pillar"] = $array_budget["U_Pillar"];
+        $array_mr["U_Classification"] = $array_budget["U_Classification"];
+        $array_mr["U_SubClass"] = $array_budget["U_SubClass"];
+        $array_mr["U_SubClass2"] = $array_budget["U_SubClass2"];
+        $array_mr["U_Project"] = $array_budget["U_Project"];
+        $array_mr["BudgetName"] = $array_budget["Name"];
+
+
+        foreach ($array_mr["MATERIALREQLINESCollection"] as $key => $value) {
+            array_push($account_array,$value["U_AccountCode"]);
+            if($value["U_ItemCode"] != ''){
+                array_push($item_array,$value["U_ItemCode"]);
+            }
+        };
+
+
+        $accounts = $this->sap->getService('ChartOfAccounts');
+        $get_account_names = $accounts->queryBuilder()
+        ->select('Code,Name')
+        ->where([new InArray("Code", $account_array)])
+        ->findAll();
+        $account_name_array = json_decode(json_encode($get_account_names), true);
+        $accounts = [];
+        foreach($account_name_array["value"] as $account){
+            $accounts[$account['Code']] = $account['Name'];
+        };
+
+        $items = $this->sap->getService('Items');
+        $get_item_names = $items->queryBuilder()
+        ->select('ItemCode,ItemName')
+        ->where([new InArray("ItemCode", $item_array)])
+        ->findAll();
+        $item_name_array = json_decode(json_encode($get_item_names), true);
+        $items = [];
+        foreach($item_name_array["value"] as $item){
+            $items[$item['ItemCode']] = $item['ItemName'];
+        };
+
+        foreach ($array_mr["MATERIALREQLINESCollection"] as $key => $value) {
+            $array_mr["MATERIALREQLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+            if($value["U_ItemCode"] != ''){
+                $array_mr["MATERIALREQLINESCollection"][$key]["ItemName"] = $items[$value["U_ItemCode"]];
+            }else{
+                $array_mr["MATERIALREQLINESCollection"][$key]["ItemName"] = '-';
+            }
+        };
+
+        return view('mr_pdf',['material_request'=>$array_mr]);
+
+    }
 }
