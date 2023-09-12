@@ -64,7 +64,7 @@
 
             <tr>
                 <td>Material Request Name</td>
-                <td>{{$material_request["U_SubClass"]}}</td>
+                <td>{{$material_request["Name"]}}</td>
 
                 <td>SubClass</td>
                 <td>{{$material_request["U_SubClass"]}}</td>
