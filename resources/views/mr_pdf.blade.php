@@ -121,7 +121,13 @@
             @foreach ($material_request["MATERIALREQLINESCollection"] as $item)
                 <tr>
                     <td>{{$item["U_AccountCode"]}} - {{$item["AccountName"]}}</td>
-                    <td>{{$item["U_ItemCode"]}} - {{$item["ItemName"]}}</td>
+                    <td>
+                    @if($item["ItemName"])
+                        {{$item["ItemName"]}}
+                    @else
+                        {{$item["U_ItemCode"]}}
+                    @endif
+                    </td>
                     <td>{{ $item["U_Qty"] }}</td>
                     <td>{{ $item["U_Description"] }}</td>
                 </tr>
