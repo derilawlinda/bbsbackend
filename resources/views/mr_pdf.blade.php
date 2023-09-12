@@ -107,14 +107,14 @@
 
 
 
-    <table border="1" cellpadding="4">
+    <table border="1" cellpadding="4" style="width:100%">
 
         <tbody>
             <tr>
-                <td style="background-color:#CE262A;color:white"><center><strong>Account</strong></center> </td>
-                <td style="background-color:grey;color:white"><center><strong>Item</strong></center> </td>
-                <td style="background-color:#CE262A;color:white"><center><strong>Qty</strong></center> </td>
-                <td style="background-color:grey;color:white"><center><strong>Desc</strong></center> </td>
+                <td style="background-color:#CE262A;color:white; width:30%"><center><strong>Account</strong></center> </td>
+                <td style="background-color:grey;color:white;width:35%" ><center><strong>Item</strong></center> </td>
+                <td style="background-color:#CE262A;color:white;width:5%" ><center><strong>Qty</strong></center> </td>
+                <td style="background-color:grey;color:white;width:30%"><center><strong>Desc</strong></center> </td>
             </tr>
             @foreach ($material_request["MATERIALREQLINESCollection"] as $item)
                 <tr>
@@ -127,11 +127,11 @@
         </tbody>
     </table>
     <div style="margin-top: 20px;"></div>
-    <table border="1" cellpadding="4">
+    <table width="100%" border="1" cellpadding="4">
         <tr>
-            <td style="height:70px" colspan="2"></td>
-            <td>Prepared by,</td>
-            <td>Approved by,</td>
+            <td style="height:70px;width:40%" colspan="2">Notes :</td>
+            <td style="width:30%">Prepared by,</td>
+            <td style="width:30%">Approved by,</td>
         </tr>
     </table>
 
