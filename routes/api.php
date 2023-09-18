@@ -78,6 +78,7 @@ Route::post('/advanceRequest/transferAR', [AdvanceRequestController::class, 'tra
 Route::post('/advanceRequest/approveAdvanceRealization', [AdvanceRequestController::class, 'approveAdvanceRealization'])->middleware('auth:sanctum');
 Route::post('/advanceRequest/advanceRealizationIsClear', [AdvanceRequestController::class, 'advanceRealizationIsClear'])->middleware('auth:sanctum');
 Route::post('/advanceRequest/confirmAdvanceRealization', [AdvanceRequestController::class, 'confirmAdvanceRealization'])->middleware('auth:sanctum');
+Route::post('/advanceRequest/printAR', [AdvanceRequestController::class, 'printAR'])->middleware('auth:sanctum');
 
 Route::get('/coa/getCOAs', [COAController::class, 'getCOAs'])->middleware('auth:sanctum');
 Route::get('/coa/getCOAsByBudget', [COAController::class, 'getCOAsByBudget'])->middleware('auth:sanctum');

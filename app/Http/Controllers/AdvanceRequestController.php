@@ -13,6 +13,10 @@ use App\Libraries\SAPb1\Filters\InArray;
 use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
 
+use Exception;
+use Throwable;
+use PDF2;
+
 class AdvanceRequestController extends Controller
 {
     private $sapsession;
@@ -20,7 +24,8 @@ class AdvanceRequestController extends Controller
 
     public function createAdvanceRequest(Request $request)
     {
-        $user = Auth::user();
+        try{
+            $user = Auth::user();
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->get('company'));
         }
@@ -34,69 +39,76 @@ class AdvanceRequestController extends Controller
             'U_RequestorName' => $user->name
         ]);
         return $result;
+        }
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
     }
     public function getAdvanceRequests(Request $request)
     {
-        $user = Auth::user();
-        if(is_null($this->sap)) {
-            $this->sap = $this->getSession($request->company);
-        }
-        $AdvanceReq = $this->sap->getService('AdvanceReq');
-        $AdvanceReq->headers(['OData-Version' => '4.0',
-        "B1S-CaseInsensitive" => true,
-        'Prefer' => 'odata.maxpagesize=500']);
-
-        $search = "";
-        $status_array = [];
-
-        if ($user["role_id"] == 3) {
-            $result = $AdvanceReq->queryBuilder()
-                ->select('*')
-                ->where([new Equal("U_CreatedBy", (string)$user["id"])]);
-        }elseif($user["role_id"] == 2){
-            $result = $AdvanceReq->queryBuilder()
-            ->select('*')
-            ->where([new Equal("U_Status", 3),'or',new Equal("U_Status", 5)]);
-        }
-        else{
-            $result = $AdvanceReq->queryBuilder()
-            ->select('*');
-        }
-
-        if($request->search){
-            $search = $request->search;
-            $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);
-        }
-
-        if($request->status){
-            $req_status_array = preg_split ("/\,/", $request->status);
-            foreach ($req_status_array as $value) {
-                array_push($status_array,(int)$value);
+        try{
+            $user = Auth::user();
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->company);
             }
-            $result->where([new InArray("U_Status", $status_array)]);
+            $AdvanceReq = $this->sap->getService('AdvanceReq');
+            $AdvanceReq->headers(['OData-Version' => '4.0',
+            "B1S-CaseInsensitive" => true,
+            'Prefer' => 'odata.maxpagesize=500']);
+
+            $search = "";
+            $status_array = [];
+
+            if ($user["role_id"] == 3) {
+                $result = $AdvanceReq->queryBuilder()
+                    ->select('*')
+                    ->where([new Equal("U_CreatedBy", (string)$user["id"])]);
+            }elseif($user["role_id"] == 2){
+                $result = $AdvanceReq->queryBuilder()
+                ->select('*')
+                ->where([new Equal("U_Status", 3),'or',new Equal("U_Status", 5)]);
+            }
+            else{
+                $result = $AdvanceReq->queryBuilder()
+                ->select('*');
+            }
+
+            if($request->search){
+                $search = $request->search;
+                $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);
+            }
+
+            if($request->status){
+                $req_status_array = preg_split ("/\,/", $request->status);
+                foreach ($req_status_array as $value) {
+                    array_push($status_array,(int)$value);
+                }
+                $result->where([new InArray("U_Status", $status_array)]);
+            }
+
+            if($request->top){
+                $top = $request->top;
+            }else{
+                $top = 500;
+            }
+
+            if($request->skip){
+                $skip = $request->skip;
+            }else{
+                $skip = 0;
+            }
+
+            $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
+            return $result;
         }
-
-        if($request->top){
-            $top = $request->top;
-        }else{
-            $top = 500;
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
-
-        if($request->skip){
-            $skip = $request->skip;
-        }else{
-            $skip = 0;
-        }
-
-        $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
-
-
-
-        return $result;
     }
 
     public function getAdvanceRealizations(Request $request)
     {
+        try{
         $user = Auth::user();
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->company);
@@ -152,12 +164,17 @@ class AdvanceRequestController extends Controller
         $result = $result->limit($top,$skip)->orderBy('Code', 'desc')->inlineCount()->findAll();
 
         return $result;
+        }
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
     }
 
 
 
     public function transferAR(Request $request)
     {
+
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->get('company'));
         }
@@ -187,7 +204,7 @@ class AdvanceRequestController extends Controller
             $outgoingPaymentInput["DocType"] = 'rAccount';
             $outgoingPaymentInput["DocCurrency"] = 'IDR';
             $outgoingPaymentInput["TransferSum"] = floatval($array_req["U_Amount"]) + floatval($bank_adm);
-            $outgoingPaymentInput["DocDate"] = $array_req["U_DisbursedAt"];
+            $outgoingPaymentInput["DocDate"] = $array_req["DisbursedDate"];
             $outgoingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
 
             if($bank_adm > 0){
@@ -223,13 +240,6 @@ class AdvanceRequestController extends Controller
             $outgoing_payment = $this->sap->getService('VendorPayments');
             $outgoingResult = $outgoing_payment->create($outgoingPaymentInput);
 
-        }catch(Exception $e) {
-
-            return response()->json(['message' => 'Error inserting data to SAP'], 500);
-
-        };
-
-
         if($outgoingResult){
 
             $outgoingArray = json_decode(json_encode($outgoingResult), true);
@@ -255,7 +265,14 @@ class AdvanceRequestController extends Controller
 
             }
         }
+        $outgoingResult = $AdvanceReq->queryBuilder()
+                        ->select('*')
+                        ->find($code);
         return $outgoingResult;
+        }
+        catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        };
     }
 
     public function confirmAdvanceRealization(Request $request)
@@ -474,6 +491,7 @@ class AdvanceRequestController extends Controller
                 'U_Status' => 4,
                 'U_RejectedBy' => $user->name
             ]);
+            $result = $AdvanceReq->queryBuilder()->find($code);
             return $result;
         }catch(Exception $e){
             return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
@@ -508,19 +526,21 @@ class AdvanceRequestController extends Controller
 
     public function resubmitAR(Request $request)
     {
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->get('company'));
+        }
+        $user = Auth::user();
+
         try{
-            if(is_null($this->sap)) {
-                $this->sap = $this->getSession($request->get('company'));
-            }
-            $user = Auth::user();
+
             $AdvanceReq = $this->sap->getService('AdvanceReq');
             $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
             $inputArray = $request->get('data');
             $code = $inputArray["Code"];
-            $inputArray["U_Status"] = 2;
+            $inputArray["U_Status"] = 1;
             $result = $AdvanceReq->update($code,$inputArray,false);
             if($result == 1){
-                $result = $AdvanceReq->select("*")->find($code);
+                $result = $AdvanceReq->queryBuilder()->select("*")->find($code);
             }
             return $result;
 
@@ -624,6 +644,97 @@ class AdvanceRequestController extends Controller
         $BudgetReq = $this->sap->getService('AdvanceReq');
         $metadata = $BudgetReq->getMetaData();
         return $metadata;
+
+    }
+
+    public function printAR(Request $request)
+    {
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get("company"));
+            }
+
+            $AdvanceReq = $this->sap->getService('AdvanceReq');
+
+            $result = $AdvanceReq->queryBuilder()
+                ->select('*')
+                ->find($request->get("code"));
+
+            $array_ar = json_decode(json_encode($result), true);
+            // return $array_ar;
+            $account_array = [];
+            $item_array = [];
+
+            $find_budget = $this->sap->getService('BudgetReq');
+            $get_budget = $find_budget->queryBuilder()
+                        ->select('*')
+                        ->find(''.($array_ar["U_BudgetCode"]).'');
+            $array_budget = json_decode(json_encode($get_budget), true);
+
+            $array_ar["U_Company"] = $array_budget["U_Company"];
+            $array_ar["U_Pillar"] = $array_budget["U_Pillar"];
+            $array_ar["U_Classification"] = $array_budget["U_Classification"];
+            $array_ar["U_SubClass"] = $array_budget["U_SubClass"];
+            $array_ar["U_SubClass2"] = $array_budget["U_SubClass2"];
+            $array_ar["U_Project"] = $array_budget["U_Project"];
+            $array_ar["BudgetName"] = $array_budget["Name"];
+
+            // COLLECT COA AND ITEMS
+            foreach ($array_ar["ADVANCEREQLINESCollection"] as $key => $value) {
+                array_push($account_array,$value["U_AccountCode"]);
+                if($value["U_ItemCode"] != ''){
+                    array_push($item_array,$value["U_ItemCode"]);
+                }
+            };
+
+            //GET COA NAMES
+            $accounts = $this->sap->getService('ChartOfAccounts');
+            $get_account_names = $accounts->queryBuilder()
+            ->select('Code,Name')
+            ->where([new InArray("Code", $account_array)])
+            ->findAll();
+            $account_name_array = json_decode(json_encode($get_account_names), true);
+            $accounts = [];
+            foreach($account_name_array["value"] as $account){
+                $accounts[$account['Code']] = $account['Name'];
+            };
+
+            //GET ITEM NAMES
+            $items = $this->sap->getService('Items');
+            $get_item_names = $items->queryBuilder()
+            ->select('ItemCode,ItemName')
+            ->where([new InArray("ItemCode", $item_array)])
+            ->findAll();
+            $item_name_array = json_decode(json_encode($get_item_names), true);
+            $items = [];
+            foreach($item_name_array["value"] as $item){
+                $items[$item['ItemCode']] = $item['ItemName'];
+            };
+
+            foreach ($array_ar["ADVANCEREQLINESCollection"] as $key => $value) {
+                $array_ar["ADVANCEREQLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+                if($value["U_ItemCode"] != ''){
+                    $array_ar["ADVANCEREQLINESCollection"][$key]["ItemName"] = $items[$value["U_ItemCode"]];
+                }else{
+                    $array_ar["ADVANCEREQLINESCollection"][$key]["ItemName"] = '-';
+                }
+            };
+
+            $view = \View::make('ar_pdf',['advance_request'=>$array_ar]);
+            $html = $view->render();
+            $filename = 'Advance Employee #'.$request->get("code");
+            $pdf = new PDF2;
+
+            $pdf::SetTitle('Advance Employee #'.$request->get("code"));
+            $pdf::AddPage();
+            $pdf::writeHTML($html, true, false, true, false, '');
+            return base64_encode($pdf::Output($filename, 'S'));
+
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
+
 
     }
 

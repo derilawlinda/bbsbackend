@@ -392,7 +392,7 @@ class MaterialRequestController extends Controller
 
             $view = \View::make('mr_pdf',['material_request'=>$array_mr]);
             $html = $view->render();
-            $filename = 'Budget Request #'.$request->get("code");
+            $filename = 'Material Request #'.$request->get("code");
             $pdf = new PDF2;
 
             $pdf::SetTitle('Material Request #'.$request->get("code"));

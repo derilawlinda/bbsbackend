@@ -33,7 +33,7 @@ class UserSeeder2 extends Seeder
 
             [
                 'name' => 'Ganda Putra',
-                'email' => 'Gandaputra23@gmail.com;',
+                'email' => 'Gandaputra23@gmail.com',
                 'password' => Hash::make('BaliUnited1234'),
                 'role_id' => Role::where('name', 'Staff')->first()->id,
 
