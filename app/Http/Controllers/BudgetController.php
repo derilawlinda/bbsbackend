@@ -60,7 +60,6 @@ class BudgetController extends Controller
             $request["Code"] = $maxcode + 1;
             $request["U_CreatedBy"] = $user->id;
             $request["U_RequestorName"] = $user->name;
-
             $result = $BudgetReq->create($request->all());
             return $result;
         }catch(Exception $e){

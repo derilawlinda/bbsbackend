@@ -24,11 +24,19 @@ class UserSeeder2 extends Seeder
             //     'password' => Hash::make('BaliUnited1234'),
             //     'role_id' => Role::where('name', 'Manager')->first()->id,
             // ],
+            // [
+            //     'name' => 'Admin',
+            //     'email' => 'admin@gmail.com',
+            //     'password' => Hash::make('password'),
+            //     'role_id' => Role::where('name', 'Admin')->first()->id,
+            // ]
+
             [
-                'name' => 'Admin',
-                'email' => 'admin@gmail.com',
-                'password' => Hash::make('password'),
-                'role_id' => Role::where('name', 'Admin')->first()->id,
+                'name' => 'Ganda Putra',
+                'email' => 'Gandaputra23@gmail.com;',
+                'password' => Hash::make('BaliUnited1234'),
+                'role_id' => Role::where('name', 'Staff')->first()->id,
+
             ]
         ];
 
