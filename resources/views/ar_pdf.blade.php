@@ -36,7 +36,7 @@
                 <td width="50%" colspan="2" style="background-color:grey;color:white"><center><strong>Category</strong></center> </td>
             </tr>
             <tr>
-                <td>MR#</td>
+                <td>AE#</td>
                 <td>{{$advance_request["Code"]}}</td>
 
                 <td>Company</td>
