@@ -43,7 +43,7 @@ class ReimbursementController extends Controller
             return $result;
         }catch(Exception $e) {
 
-            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
 
         };
 
@@ -292,7 +292,7 @@ class ReimbursementController extends Controller
 
         }catch(Exception $e) {
 
-            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
 
         };
 
@@ -325,8 +325,7 @@ class ReimbursementController extends Controller
             return $result;
         }catch(Exception $e) {
 
-            return response()->json(['message' => 'Error inserting data to SAP'], 500);
-
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         };
 
 
@@ -348,7 +347,7 @@ class ReimbursementController extends Controller
 
         }catch(Exception $e) {
 
-            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         };
     }
 
@@ -367,7 +366,7 @@ class ReimbursementController extends Controller
         }
         catch(Exception $e) {
 
-            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         };
 
     }
@@ -392,7 +391,7 @@ class ReimbursementController extends Controller
         }
         catch(Exception $e) {
 
-            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         };
     }
 
@@ -413,7 +412,7 @@ class ReimbursementController extends Controller
             $result = $reimbursement->queryBuilder()->select("*")->find($code);
             return $result;
         } catch(Exception $e) {
-            return response()->json(['message' => 'Error inserting data to SAP'], 500);
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         };
 
     }
