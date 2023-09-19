@@ -99,8 +99,8 @@
             </tr>
 
             <tr>
-                <td></td>
-                <td></td>
+                <td>Amount</td>
+                <td>{{$reimbursement["U_TotalAmount"]}}</td>
 
                 <td>Budget</td>
                 <td>{{$reimbursement["U_BudgetCode"]}} - {{$reimbursement["BudgetName"]}}</td>
