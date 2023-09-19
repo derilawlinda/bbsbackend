@@ -100,7 +100,7 @@
 
             <tr>
                 <td>Amount</td>
-                <td>Rp {{ number_format( $account["U_TotalAmount"] , 2 , '.' , ',' )}}</td>
+                <td>Rp {{ number_format( $reimbursement["U_TotalAmount"] , 2 , '.' , ',' )}}</td>
 
                 <td>Budget</td>
                 <td>{{$reimbursement["U_BudgetCode"]}} - {{$reimbursement["BudgetName"]}}</td>
