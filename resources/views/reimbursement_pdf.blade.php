@@ -119,7 +119,7 @@
         <tbody>
             <tr>
                 <td style="background-color:#CE262A;color:white; width:50%"><center><strong>Account</strong></center> </td>
-                <td style="background-color:grey;color:white;width:15%" ><center><strong>Qty</strong></center> </td>
+                <td style="background-color:grey;color:white;width:15%" ><center><strong>Amount</strong></center> </td>
                 <td style="background-color:#CE262A;color:white;width:10%"><center><strong>PPH</strong></center> </td>
                 <td style="background-color:grey;color:white;width:25%"><center><strong>Desc</strong></center> </td>
             </tr>
