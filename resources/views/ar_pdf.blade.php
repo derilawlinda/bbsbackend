@@ -53,7 +53,7 @@
             <tr>
                 <td>Post Date</td>
                 <td>
-                    @if(!empty($advance_request["U_DisbursedAt"] != null))
+                    @if(!empty($advance_request["U_DisbursedAt"]))
                         {{date('d-M-y', strtotime($advance_request["U_DisbursedAt"]))}}
                     @else
                         "-"
