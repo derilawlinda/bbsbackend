@@ -56,7 +56,7 @@
                     @if(!empty($advance_request["U_DisbursedAt"]))
                         {{date('d-M-y', strtotime($advance_request["U_DisbursedAt"]))}}
                     @else
-                        "-"
+                        -
                     @endif
                 </td>
 
