@@ -14,6 +14,7 @@ use App\Libraries\SAPb1\Filters\Equal;
 use App\Libraries\SAPb1\Filters\InArray;
 use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
+use PDF2;
 
 class MaterialIssueController extends Controller
 {
@@ -218,7 +219,7 @@ class MaterialIssueController extends Controller
             $MaterialIssue = $this->sap->getService('MaterialIssue');
             $MaterialIssue->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
             $code = $request->get('data')["Code"];
-            $result = $MaterialIssue->update($code,$request->get('data'),false);
+            $result = $MaterialIssue->queryBuilder()->update($code,$request->get('data'),false);
             return $result;
         }catch(Exception $e){
             return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
@@ -242,6 +243,9 @@ class MaterialIssueController extends Controller
             $inputArray["U_Status"] = 1;
 
             $result = $MaterialIssue->update($code,$inputArray,false);
+            if($result == 1){
+                $result = $MaterialIssue->queryBuilder()->select("*")->find($code);
+            }
             return $result;
 
         }catch(Exception $e){
@@ -268,10 +272,110 @@ class MaterialIssueController extends Controller
                 'U_Status' => 4,
                 'U_RejectedBy' => $user->name
             ]);
+            if($result == 1){
+                $result = $MaterialIssue->queryBuilder()->select("*")->find($code);
+            }
             return $result;
+
         }catch(Exception $e){
             return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
         }
+
+    }
+
+    public function printMI(Request $request)
+    {
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get("company"));
+            }
+
+            $MaterialIssue = $this->sap->getService('MaterialIssue');
+
+            $result = $MaterialIssue->queryBuilder()
+                ->select('*')
+                ->find($request->get("code"));
+
+            $array_mi = json_decode(json_encode($result), true);
+            $account_array = [];
+            $item_array = [];
+
+            $find_budget = $this->sap->getService('BudgetReq');
+            $get_budget = $find_budget->queryBuilder()
+                        ->select('*')
+                        ->find($array_mi["U_BudgetCode"]);
+            $array_budget = json_decode(json_encode($get_budget), true);
+
+            $array_mi["U_Company"] = $array_budget["U_Company"];
+            $array_mi["U_Pillar"] = $array_budget["U_Pillar"];
+            $array_mi["U_Classification"] = $array_budget["U_Classification"];
+            $array_mi["U_SubClass"] = $array_budget["U_SubClass"];
+            $array_mi["U_SubClass2"] = $array_budget["U_SubClass2"];
+            $array_mi["U_Project"] = $array_budget["U_Project"];
+            $array_mi["BudgetName"] = $array_budget["Name"];
+
+
+            foreach ($array_mi["MATERIALISSUELINESCollection"] as $key => $value) {
+                array_push($account_array,$value["U_AccountCode"]);
+                if($value["U_ItemCode"] != ''){
+                    array_push($item_array,$value["U_ItemCode"]);
+                }
+            };
+
+
+            $accounts = $this->sap->getService('ChartOfAccounts');
+            $get_account_names = $accounts->queryBuilder()
+            ->select('Code,Name')
+            ->where([new InArray("Code", $account_array)])
+            ->findAll();
+            $account_name_array = json_decode(json_encode($get_account_names), true);
+            $accounts = [];
+            foreach($account_name_array["value"] as $account){
+                $accounts[$account['Code']] = $account['Name'];
+            };
+
+            $items = $this->sap->getService('Items');
+            $get_item_names = $items->queryBuilder()
+            ->select('ItemCode,ItemName')
+            ->where([new InArray("ItemCode", $item_array)])
+            ->findAll();
+            $item_name_array = json_decode(json_encode($get_item_names), true);
+            $items = [];
+            foreach($item_name_array["value"] as $item){
+                $items[$item['ItemCode']] = $item['ItemName'];
+            };
+
+            foreach ($array_mi["MATERIALISSUELINESCollection"] as $key => $value) {
+                $array_mi["MATERIALISSUELINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+                if($value["U_ItemCode"] != ''){
+                    $array_mi["MATERIALISSUELINESCollection"][$key]["ItemName"] = $items[$value["U_ItemCode"]];
+                }else{
+                    $array_mi["MATERIALISSUELINESCollection"][$key]["ItemName"] = '-';
+                }
+            };
+
+            $view = \View::make('mi_pdf',['material_issue'=>$array_mi]);
+            $html = $view->render();
+            $filename = 'Material Issue #'.$request->get("code");
+            $pdf = new PDF2;
+
+            $pdf::SetTitle('Material Issue #'.$request->get("code"));
+            $pdf::AddPage();
+            $pdf::writeHTML($html, true, false, true, false, '');
+
+            // $pdf::Output(public_path($filename), 'F');
+
+            // $pdf = PDF::loadview('mr_pdf',['material_request'=>$array_mr]);
+            // $pdf->setPaper('A4', 'portrait');
+            // $pdf->getDomPDF()->set_option("enable_php", true);
+            return base64_encode($pdf::Output($filename, 'S'));
+            // echo base64_encode($pdf->output());
+            // return $array_mr;
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
+
 
     }
 

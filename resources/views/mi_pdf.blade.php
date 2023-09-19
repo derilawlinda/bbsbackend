@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Advance Employee {{$advance_request["Code"]}}</title>
+	<title>Material Issue {{$material_issue["Code"]}}</title>
 </head>
 <body>
 	<style type="text/css">
@@ -25,7 +25,7 @@
 
 
     <p>
-    <h3> Advance Employee #{{$advance_request["Code"]}} </h3>
+    <h3> Material Issue #{{$material_issue["Code"]}} </h3>
 
     </p>
 
@@ -37,69 +37,67 @@
             </tr>
             <tr>
                 <td>MR#</td>
-                <td>{{$advance_request["Code"]}}</td>
+                <td>{{$material_issue["Code"]}}</td>
 
                 <td>Company</td>
-                <td>{{$advance_request["U_Company"]}}</td>
+                <td>{{$material_issue["U_Company"]}}</td>
             </tr>
             <tr>
                 <td>Request Date</td>
-                <td>{{date('d-M-y', strtotime($advance_request["CreateDate"]))}}</td>
+                <td>{{date('d-M-y', strtotime($material_issue["CreateDate"]))}}</td>
 
                 <td>Pillar</td>
-                <td>{{$advance_request["U_Pillar"]}}</td>
+                <td>{{$material_issue["U_Pillar"]}}</td>
 
             </tr>
             <tr>
                 <td>Post Date</td>
-                <td>{{date('d-M-y', strtotime($advance_request["U_DisbursedAt"]))}}</td>
+                <td>{{date('d-M-y', strtotime($material_issue["U_DocDate"]))}}</td>
 
                 <td>Classification</td>
-                <td>{{$advance_request["U_Classification"]}}</td>
+                <td>{{$material_issue["U_Classification"]}}</td>
 
             </tr>
 
 
 
             <tr>
-                <td>Advance Employee Name</td>
-                <td>{{$advance_request["Name"]}}</td>
+                <td>Material Issue Name</td>
+                <td>{{$material_issue["Name"]}}</td>
 
                 <td>SubClass</td>
-                <td>{{$advance_request["U_SubClass"]}}</td>
+                <td>{{$material_issue["U_SubClass"]}}</td>
 
             </tr>
             <tr>
                 <td>Requested By</td>
-                <td>{{$advance_request["U_RequestorName"]}}</td>
+                <td>{{$material_issue["U_RequestorName"]}}</td>
 
                 <td>SubClass2</td>
-                <td>{{$advance_request["U_SubClass2"]}}</td>
+                <td>{{$material_issue["U_SubClass2"]}}</td>
 
             </tr>
             <tr>
                 <td>Status</td>
-                @if($advance_request["U_Status"] =='1')
+                @if($material_issue["U_Status"] =='1')
                         <td>Pending</td>
-                @elseif($advance_request["U_Status"] =='2')
+                @elseif($material_issue["U_Status"] =='2')
                         <td>Approved by Manager</td>
-                @elseif($advance_request["U_Status"] =='3')
+                @elseif($material_issue["U_Status"] =='3')
                         <td>Approved by Director</td>
-                @elseif($advance_request["U_Status"] =='4')
+                @elseif($material_issue["U_Status"] =='4')
                         <td>Rejected</td>
-                @elseif($advance_request["U_Status"] =='5')
-                        <td>Transferred</td>
                 @endif
                 <td>Project</td>
-                <td>{{$advance_request["U_Project"]}}</td>
+                <td>{{$material_issue["U_Project"]}}</td>
             </tr>
 
             <tr>
-                <td>Amount</td>
-                <td>Rp {{ number_format( $advance_request["U_Amount"] , 2 , '.' , ',' )}}</td>
+                <td></td>
+                <td></td>
 
                 <td>Budget</td>
-                <td>{{$advance_request["U_BudgetCode"]}} - {{$advance_request["BudgetName"]}}</td>
+                <td>{{$material_issue["U_BudgetCode"]}} - {{$material_issue["BudgetName"]}}</td>
             </tr>
 		</tbody>
 	</table>
@@ -114,12 +112,12 @@
 
         <tbody>
             <tr>
-                <td style="background-color:#CE262A;color:white; width:25%"><center><strong>Account</strong></center> </td>
-                <td style="background-color:grey;color:white;width:25%" ><center><strong>Item</strong></center> </td>
-                <td style="background-color:#CE262A;color:white;width:30%" ><center><strong>Amount</strong></center> </td>
-                <td style="background-color:grey;color:white;width:20%"><center><strong>Desc</strong></center> </td>
+                <td style="background-color:#CE262A;color:white; width:30%"><center><strong>Account</strong></center> </td>
+                <td style="background-color:grey;color:white;width:30%" ><center><strong>Item</strong></center> </td>
+                <td style="background-color:#CE262A;color:white;width:10%" ><center><strong>Qty</strong></center> </td>
+                <td style="background-color:grey;color:white;width:30%"><center><strong>Desc</strong></center> </td>
             </tr>
-            @foreach ($advance_request["ADVANCEREQLINESCollection"] as $item)
+            @foreach ($material_issue["MATERIALISSUELINESCollection"] as $item)
                 <tr>
                     <td>{{$item["U_AccountCode"]}} - {{$item["AccountName"]}}</td>
                     <td>
@@ -129,7 +127,7 @@
                         {{$item["U_ItemCode"]}}
                     @endif
                     </td>
-                    <td>Rp {{ number_format( $item["U_Amount"] , 2 , '.' , ',' )}}</td>
+                    <td>{{ $item["U_Qty"] }}</td>
                     <td>{{ $item["U_Description"] }}</td>
                 </tr>
             @endforeach
