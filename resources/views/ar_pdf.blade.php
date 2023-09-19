@@ -52,7 +52,13 @@
             </tr>
             <tr>
                 <td>Post Date</td>
-                <td>{{date('d-M-y', strtotime($advance_request["U_DisbursedAt"]))}}</td>
+                <td>
+                    @if(!empty($advance_request["U_DisbursedAt"] != null))
+                        {{date('d-M-y', strtotime($advance_request["U_DisbursedAt"]))}}
+                    @else
+                        "-"
+                    @endif
+                </td>
 
                 <td>Classification</td>
                 <td>{{$advance_request["U_Classification"]}}</td>
