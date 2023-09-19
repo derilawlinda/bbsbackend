@@ -79,6 +79,7 @@ Route::post('/advanceRequest/approveAdvanceRealization', [AdvanceRequestControll
 Route::post('/advanceRequest/advanceRealizationIsClear', [AdvanceRequestController::class, 'advanceRealizationIsClear'])->middleware('auth:sanctum');
 Route::post('/advanceRequest/confirmAdvanceRealization', [AdvanceRequestController::class, 'confirmAdvanceRealization'])->middleware('auth:sanctum');
 Route::post('/advanceRequest/printAR', [AdvanceRequestController::class, 'printAR'])->middleware('auth:sanctum');
+Route::post('/advanceRequest/printRealization', [AdvanceRequestController::class, 'printRealization'])->middleware('auth:sanctum');
 
 Route::get('/coa/getCOAs', [COAController::class, 'getCOAs'])->middleware('auth:sanctum');
 Route::get('/coa/getCOAsByBudget', [COAController::class, 'getCOAsByBudget'])->middleware('auth:sanctum');
@@ -95,6 +96,7 @@ Route::post('/reimbursement/rejectReimbursement', [ReimbursementController::clas
 Route::post('/reimbursement/transferReimbursement', [ReimbursementController::class, 'transferReimbursement'])->middleware('auth:sanctum');
 Route::post('/reimbursement/resubmitReimbursement', [ReimbursementController::class, 'resubmitReimbursement'])->middleware('auth:sanctum');
 Route::post('/reimbursement/printReimbursement', [ReimbursementController::class, 'printReimbursement'])->middleware('auth:sanctum');
+
 
 Route::get('/profitCenter/getPillars', [ProfitCenterController::class, 'getPillars'])->middleware('auth:sanctum');
 Route::get('/profitCenter/getClassifications', [ProfitCenterController::class, 'getClassifications'])->middleware('auth:sanctum');

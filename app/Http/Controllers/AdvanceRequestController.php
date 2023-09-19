@@ -379,12 +379,17 @@ class AdvanceRequestController extends Controller
 
             $result = $journal_entry->create($journalEntryInput);
             $advance_request = $this->sap->getService('AdvanceReq');
-            $array_req["U_RealiStatus"] = 6;
             $code = $array_req["Code"];
-            $result = $advance_request->update($code, $array_req);
+
+
+            $result = $AdvanceReq->update($code, [
+                'U_RealConfirmAt' => date("Y-m-d"),
+                'U_RealiStatus' => 6,
+                'U_RealConfirmBy' => $user->name
+            ]);
 
             if($result == 1){
-                $result = $advance_request->select("*")->find($code);
+                $result = $advance_request->queryBuilder()->select("*")->find($code);
             }
             return $result;
         }catch(Exception $e){
@@ -491,7 +496,7 @@ class AdvanceRequestController extends Controller
                 'U_Status' => 4,
                 'U_RejectedBy' => $user->name
             ]);
-            $result = $AdvanceReq->queryBuilder()->find($code);
+            $result = $AdvanceReq->queryBuilder()->select("*")->find($code);
             return $result;
         }catch(Exception $e){
             return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
@@ -515,7 +520,7 @@ class AdvanceRequestController extends Controller
                 'U_RejectedBy' => $user->name
             ]);
             if($result == 1){
-                $result = $AdvanceReq->select("*")->find($code);
+                $result = $AdvanceReq->queryBuilder()->select("*")->find($code);
             }
             return $result;
         }catch(Exception $e){
@@ -566,7 +571,7 @@ class AdvanceRequestController extends Controller
             $inputArray["U_RealiStatus"] = 1;
             $result = $AdvanceReq->update($code,$inputArray,false);
             if($result == 1){
-                $result = $AdvanceReq->select("*")->find($code);
+                $result = $AdvanceReq->queryBuilder()->select("*")->find($code);
             }
             return $result;
 
@@ -590,7 +595,7 @@ class AdvanceRequestController extends Controller
             $advance_request = $this->sap->getService('AdvanceReq');
             $result = $advance_request->update($code, $array_req);
             if($result == 1){
-                $result = $advance_request->select("*")->find($code);
+                $result = $advance_request->queryBuilder()->select("*")->find($code);
             }
             return $array_req;
         }catch(Exception $e){
@@ -625,7 +630,7 @@ class AdvanceRequestController extends Controller
                 ]);
             }
             if($result == 1){
-                $result = $advance_request->find("*")->find($code);
+                $result = $advance_request->queryBuilder()->select("*")->find($code);
             }
             return $result;
 
@@ -726,6 +731,97 @@ class AdvanceRequestController extends Controller
             $pdf = new PDF2;
 
             $pdf::SetTitle('Advance Employee #'.$request->get("code"));
+            $pdf::AddPage();
+            $pdf::writeHTML($html, true, false, true, false, '');
+            return base64_encode($pdf::Output($filename, 'S'));
+
+
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
+
+
+    }
+
+    public function printRealization(Request $request)
+    {
+        try{
+            if(is_null($this->sap)) {
+                $this->sap = $this->getSession($request->get("company"));
+            }
+
+            $AdvanceReq = $this->sap->getService('AdvanceReq');
+
+            $result = $AdvanceReq->queryBuilder()
+                ->select('*')
+                ->find($request->get("code"));
+
+            $array_ar = json_decode(json_encode($result), true);
+            // return $array_ar;
+            $account_array = [];
+            $item_array = [];
+
+            $find_budget = $this->sap->getService('BudgetReq');
+            $get_budget = $find_budget->queryBuilder()
+                        ->select('*')
+                        ->find(''.($array_ar["U_BudgetCode"]).'');
+            $array_budget = json_decode(json_encode($get_budget), true);
+
+            $array_ar["U_Company"] = $array_budget["U_Company"];
+            $array_ar["U_Pillar"] = $array_budget["U_Pillar"];
+            $array_ar["U_Classification"] = $array_budget["U_Classification"];
+            $array_ar["U_SubClass"] = $array_budget["U_SubClass"];
+            $array_ar["U_SubClass2"] = $array_budget["U_SubClass2"];
+            $array_ar["U_Project"] = $array_budget["U_Project"];
+            $array_ar["BudgetName"] = $array_budget["Name"];
+
+            // COLLECT COA AND ITEMS
+            foreach ($array_ar["ADVANCEREQLINESCollection"] as $key => $value) {
+                array_push($account_array,$value["U_AccountCode"]);
+                if($value["U_ItemCode"] != ''){
+                    array_push($item_array,$value["U_ItemCode"]);
+                }
+            };
+
+            //GET COA NAMES
+            $accounts = $this->sap->getService('ChartOfAccounts');
+            $get_account_names = $accounts->queryBuilder()
+            ->select('Code,Name')
+            ->where([new InArray("Code", $account_array)])
+            ->findAll();
+            $account_name_array = json_decode(json_encode($get_account_names), true);
+            $accounts = [];
+            foreach($account_name_array["value"] as $account){
+                $accounts[$account['Code']] = $account['Name'];
+            };
+
+            //GET ITEM NAMES
+            $items = $this->sap->getService('Items');
+            $get_item_names = $items->queryBuilder()
+            ->select('ItemCode,ItemName')
+            ->where([new InArray("ItemCode", $item_array)])
+            ->findAll();
+            $item_name_array = json_decode(json_encode($get_item_names), true);
+            $items = [];
+            foreach($item_name_array["value"] as $item){
+                $items[$item['ItemCode']] = $item['ItemName'];
+            };
+
+            foreach ($array_ar["ADVANCEREQLINESCollection"] as $key => $value) {
+                $array_ar["ADVANCEREQLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+                if($value["U_ItemCode"] != ''){
+                    $array_ar["ADVANCEREQLINESCollection"][$key]["ItemName"] = $items[$value["U_ItemCode"]];
+                }else{
+                    $array_ar["ADVANCEREQLINESCollection"][$key]["ItemName"] = '-';
+                }
+            };
+
+            $view = \View::make('realization_pdf',['advance_request'=>$array_ar]);
+            $html = $view->render();
+            $filename = 'Realization Advance Employee #'.$request->get("code");
+            $pdf = new PDF2;
+
+            $pdf::SetTitle('Realization Advance Employee #'.$request->get("code"));
             $pdf::AddPage();
             $pdf::writeHTML($html, true, false, true, false, '');
             return base64_encode($pdf::Output($filename, 'S'));
