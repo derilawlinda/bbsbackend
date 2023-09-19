@@ -135,6 +135,10 @@
                     <td>{{ $account["U_Description"] }}</td>
                 </tr>
             @endforeach
+            <tr>
+                <td style="background-color:gainsboro">Total </td>
+                <td colspan="3"> Rp {{ number_format( $reimbursement["U_TotalAmount"] , 2 , '.' , ',' )}} </td>
+            </tr>
         </tbody>
     </table>
     <div style="margin-top: 20px;"></div>
