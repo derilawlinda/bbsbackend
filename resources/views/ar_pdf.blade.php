@@ -133,6 +133,10 @@
                     <td>{{ $item["U_Description"] }}</td>
                 </tr>
             @endforeach
+            <tr>
+                <td colspan="2" style="background-color:gainsboro">Total </td>
+                <td colspan="2"> Rp {{ number_format( $advance_request["U_Amount"] , 2 , '.' , ',' )}} </td>
+            </tr>
         </tbody>
     </table>
     <div style="margin-top: 20px;"></div>
