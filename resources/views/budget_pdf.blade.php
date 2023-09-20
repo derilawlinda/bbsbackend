@@ -33,7 +33,7 @@
                 <td>Budget#</td>
                 <td>{{$budget["Code"]}}</td>
 
-                <td>Budget#</td>
+                <td>Company</td>
                 <td>{{$budget["U_Company"]}}</td>
 
             </tr>
@@ -76,7 +76,7 @@
 
             <tr>
                 <td>Amount</td>
-                <td>{{$budget["U_TotalAmount"]}}</td>
+                <td>Rp {{ number_format( $budget["U_TotalAmount"] , 2 , '.' , ',' )}}</td>
 
                 <td>Project</td>
                 <td>{{$budget["U_Project"]}}</td>
