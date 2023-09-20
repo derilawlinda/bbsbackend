@@ -761,6 +761,9 @@ class AdvanceRequestController extends Controller
             $account_array = [];
             $item_array = [];
 
+            $account_array_realiazation = [];
+            $item_array_realization = [];
+
             $find_budget = $this->sap->getService('BudgetReq');
             $get_budget = $find_budget->queryBuilder()
                         ->select('*')
@@ -778,6 +781,13 @@ class AdvanceRequestController extends Controller
             // COLLECT COA AND ITEMS
             foreach ($array_ar["ADVANCEREQLINESCollection"] as $key => $value) {
                 array_push($account_array,$value["U_AccountCode"]);
+                if($value["U_ItemCode"] != ''){
+                    array_push($item_array,$value["U_ItemCode"]);
+                }
+            };
+
+            foreach ($array_ar["REALIZATIONREQLINESCollection"] as $key => $value) {
+                array_push($account_array_realiazation,$value["U_AccountCode"]);
                 if($value["U_ItemCode"] != ''){
                     array_push($item_array,$value["U_ItemCode"]);
                 }
@@ -813,6 +823,15 @@ class AdvanceRequestController extends Controller
                     $array_ar["ADVANCEREQLINESCollection"][$key]["ItemName"] = $items[$value["U_ItemCode"]];
                 }else{
                     $array_ar["ADVANCEREQLINESCollection"][$key]["ItemName"] = '-';
+                }
+            };
+
+            foreach ($array_ar["REALIZATIONREQLINESCollection"] as $key => $value) {
+                $array_ar["REALIZATIONREQLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+                if($value["U_ItemCode"] != ''){
+                    $array_ar["REALIZATIONREQLINESCollection"][$key]["ItemName"] = $items[$value["U_ItemCode"]];
+                }else{
+                    $array_ar["REALIZATIONREQLINESCollection"][$key]["ItemName"] = '-';
                 }
             };
 

@@ -160,7 +160,7 @@
                     <td style="background-color:#CE262A;color:white;width:30%" ><center><strong>Amount</strong></center> </td>
                     <td style="background-color:grey;color:white;width:20%"><center><strong>Desc</strong></center> </td>
                 </tr>
-                @foreach ($advance_request["ADVANCEREQLINESCollection"] as $item)
+                @foreach ($advance_request["REALIZATIONREQLINESCollection"] as $item)
                     <tr>
                         <td>{{$item["U_AccountCode"]}} - {{$item["AccountName"]}}</td>
                         <td>
