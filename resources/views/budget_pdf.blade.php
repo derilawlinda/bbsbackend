@@ -76,7 +76,7 @@
 
             <tr>
                 <td>Amount</td>
-                <td>Rp {{ number_format( $budget["U_TotalAmount"] , 2 , '.' , ',' )}}</td>
+                <td style="text-align: right;">Rp {{ number_format( $budget["U_TotalAmount"] , 2 , '.' , ',' )}}</td>
 
                 <td>Project</td>
                 <td>{{$budget["U_Project"]}}</td>
@@ -103,7 +103,7 @@
             @endforeach
             <tr>
                 <td style="background-color:gainsboro">Total </td>
-                <td > <strong> Rp {{ number_format( $budget["U_TotalAmount"] , 2 , '.' , ',' )}} </strong></td>
+                <td style="text-align: right;"> <strong> Rp {{ number_format( $budget["U_TotalAmount"] , 2 , '.' , ',' )}} </strong></td>
             </tr>
         </tbody>
     </table>
