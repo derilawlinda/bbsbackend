@@ -98,7 +98,7 @@
             @foreach ($budget["BUDGETREQLINESCollection"] as $account)
                 <tr>
                     <td>{{$account["U_AccountCode"]}} - {{$account["AccountName"]}}</td>
-                    <td>Rp {{ number_format( $account["U_Amount"] , 2 , '.' , ',' )}}</td>
+                    <td style="text-align: right;">Rp {{ number_format( $account["U_Amount"] , 2 , '.' , ',' )}}</td>
                 </tr>
             @endforeach
             <tr>
