@@ -88,8 +88,8 @@
                 </tr>
             @endforeach
             <tr>
-                <td colspan="2" style="background-color:gainsboro">Total </td>
-                <td colspan="2"> Rp {{ number_format( $budget["U_TotalAmount"] , 2 , '.' , ',' )}} </td>
+                <td style="background-color:gainsboro">Total </td>
+                <td > Rp {{ number_format( $budget["U_TotalAmount"] , 2 , '.' , ',' )}} </td>
             </tr>
         </tbody>
     </table>
