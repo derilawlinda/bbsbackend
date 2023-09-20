@@ -32,27 +32,32 @@
             <tr>
                 <td>Budget#</td>
                 <td>{{$budget["Code"]}}</td>
-                <td>Pillar</td>
-                <td>{{$budget["U_Pillar"]}}</td>
+
+                <td>Budget#</td>
+                <td>{{$budget["U_Company"]}}</td>
+
             </tr>
             <tr>
                 <td>Request Date</td>
                 <td>{{date('d-M-y', strtotime($budget["CreateDate"]))}}</td>
-                <td>Classification</td>
-                <td>{{$budget["U_Classification"]}}</td>
+                <td>Pillar</td>
+                <td>{{$budget["U_Pillar"]}}</td>
+
             </tr>
             <tr>
                 <td>Budget Name</td>
                 <td>{{$budget["Name"]}}</td>
-                <td>SubClass</td>
-                <td>{{$budget["U_SubClass"]}}</td>
+                <td>Classification</td>
+                <td>{{$budget["U_Classification"]}}</td>
+
             </tr>
             <tr>
                 <td>Requested By</td>
                 <td>{{$budget["U_RequestorName"]}}</td>
 
-                <td>SubClass2</td>
-                <td>{{$budget["U_SubClass2"]}}</td>
+                <td>SubClass</td>
+                <td>{{$budget["U_SubClass"]}}</td>
+
             </tr>
             <tr>
                 <td>Status</td>
@@ -63,6 +68,15 @@
                 @elseif($budget["U_Status"] =='3')
                         <td>Approved by Director</td>
                 @endif
+
+                <td>SubClass2</td>
+                <td>{{$budget["U_SubClass2"]}}</td>
+
+            </tr>
+
+            <tr>
+                <td>Amount</td>
+                <td>{{$budget["U_TotalAmount"]}}</td>
 
                 <td>Project</td>
                 <td>{{$budget["U_Project"]}}</td>
