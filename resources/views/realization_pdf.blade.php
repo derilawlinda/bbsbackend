@@ -80,7 +80,7 @@
             <tr>
                 <td>Realization Status</td>
                 @if($advance_request["U_RealiStatus"] =='1')
-                        <td>Pending</td>
+                        <td>Unrealized</td>
                 @elseif($advance_request["U_RealiStatus"] =='2')
                         <td>Submitted</td>
                 @elseif($advance_request["U_RealiStatus"] =='3')
