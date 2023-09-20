@@ -87,9 +87,20 @@
                     <td>Rp {{ number_format( $account["U_Amount"] , 2 , '.' , ',' )}}</td>
                 </tr>
             @endforeach
+            <tr>
+                <td colspan="2" style="background-color:gainsboro">Total </td>
+                <td colspan="2"> Rp {{ number_format( $budget["U_TotalAmount"] , 2 , '.' , ',' )}} </td>
+            </tr>
         </tbody>
     </table>
-
+    <div style="margin-top: 20px;"></div>
+    <table width="100%" border="1" cellpadding="4">
+        <tr>
+            <td style="height:70px;width:40%" colspan="2">Notes :</td>
+            <td style="width:30%">Prepared by,</td>
+            <td style="width:30%">Approved by,</td>
+        </tr>
+    </table>
 
 </body>
 </html>
