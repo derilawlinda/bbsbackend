@@ -26,6 +26,8 @@
 
     <p>
     <h3> Advance Employee #{{$advance_request["Code"]}} </h3>
+    <span  style="font-size:10px"> SAP Document Number {{$advance_request["U_SAP_DocNum"]}} </span>
+
 
     </p>
 
