@@ -225,7 +225,7 @@ class AdvanceRequestController extends Controller
             {
 
                 array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
-                    'AccountCode' => '11720.2000',
+                    'AccountCode' => $array_req["ADVANCEREQLINESCollection"][$i]["U_AccountCode"],
                     'SumPaid' => $array_req["ADVANCEREQLINESCollection"][$i]["U_Amount"],
                     'Decription' => $array_req["ADVANCEREQLINESCollection"][$i]["U_Description"],
                     'ProfitCenter' => $array_budget["U_PillarCode"],
@@ -233,7 +233,6 @@ class AdvanceRequestController extends Controller
                     "ProfitCenter2" => $array_budget["U_ClassificationCode"],
                     "ProfitCenter3" => $array_budget["U_SubClassCode"],
                     "ProfitCenter4" => $array_budget["U_SubClass2Code"],
-
                 ]);
             }
 
@@ -247,20 +246,42 @@ class AdvanceRequestController extends Controller
             $result = $AdvanceReq->update($code, [
                 'U_DisbursedAt' => $array_req["DisbursedDate"],
                 'U_Status' => 5,
-                'U_TransferBy' => $user->name
+                'U_TransferBy' => $user->name,
+                'U_SAP_DocNum' => $outgoingArray["DocNum"]
             ]);
             if($result == 1){
 
+                $account_array = [];
+                foreach ($outgoingArray["PaymentAccounts"] as $key => $value) {
+                    array_push($account_array,$value["AccountCode"]);
+                };
+
+                $accounts_service = $this->sap->getService('ChartOfAccounts');
+                $get_account_names = $accounts_service->queryBuilder()
+                    ->select('Code,Name')
+                    ->where([new InArray("Code", $account_array)])
+                    ->findAll();
+                $account_name_array = json_decode(json_encode($get_account_names), true);
+                $accounts = [];
+                foreach($account_name_array["value"] as $account){
+                    $accounts[$account['Code']] = $account['Name'];
+                };
+
+                $budgetUsed = [];
+                foreach($outgoingArray["PaymentAccounts"] as $index => $value){
+                    array_push($budgetUsed, (array)[
+                        "U_Amount" => $value["SumPaid"],
+                        "U_Source" => "Reimbursement",
+                        "U_DocNum" => $array_req["Code"],
+                        "U_UsedBy" => $array_req["U_RequestorName"],
+                        "U_AccountCode" => $value["AccountCode"],
+                        "U_AccountName" => $accounts[$value["AccountCode"]]
+                    ]);
+                };
+
                 $BudgetReq = $this->sap->getService('BudgetReq');
                 $result = $BudgetReq->update($budgetCode, [
-                    "BUDGETUSEDCollection" => [
-                        [
-                            "U_Amount" => floatval($array_req["U_Amount"]) + floatval($bank_adm),
-                            "U_Source" => "Advance Request",
-                            "U_DocNum" => $array_req["Code"],
-                            "U_UsedBy" => $array_req["U_RequestorName"]
-                        ]
-                    ]
+                    "BUDGETUSEDCollection" => $budgetUsed
                 ]);
 
             }
@@ -307,7 +328,7 @@ class AdvanceRequestController extends Controller
                 $incomingPaymentInput["Remarks"] = "Advance Realization ".$array_req["Code"];
 
                 array_push($incomingPaymentInput["PaymentAccounts"], (object)[
-                    'AccountCode' => '11720.2000',
+                    'AccountCode' => $array_req["U_RealTrfBank"],
                     'SumPaid' => $array_req["U_DifferenceAmt"],
                     'ProfitCenter' => $array_budget["U_PillarCode"],
                     'ProjectCode' => $array_budget["U_ProjectCode"],
@@ -328,7 +349,8 @@ class AdvanceRequestController extends Controller
                                 "U_Amount" => $array_req["U_DifferenceAmt"] * -1,
                                 "U_Source" => "Advance Request Return",
                                 "U_DocNum" => $array_req["Code"],
-                                "U_UsedBy" => $array_req["U_RequestorName"]
+                                "U_UsedBy" => $array_req["U_RequestorName"],
+                                "U_AccountCode" => '11720.2000' // UANG MUKA OPERASIONAL
                             ]
                         ]
                     ]);
@@ -568,7 +590,7 @@ class AdvanceRequestController extends Controller
             $AdvanceReq->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
             $code = $request->get('data')["Code"];
             $inputArray = $request->get('data');
-            $inputArray["U_RealiStatus"] = 1;
+            $inputArray["U_RealiStatus"] = 2;
             $result = $AdvanceReq->update($code,$inputArray,false);
             if($result == 1){
                 $result = $AdvanceReq->queryBuilder()->select("*")->find($code);

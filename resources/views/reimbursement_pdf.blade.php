@@ -26,6 +26,7 @@
 
     <p>
     <h3> Reimbursement #{{$reimbursement["Code"]}} </h3>
+    <span  style="font-size:10px"> SAP Document Number {{$reimbursement["U_SAP_DocNum"]}} </span>
 
     </p>
 

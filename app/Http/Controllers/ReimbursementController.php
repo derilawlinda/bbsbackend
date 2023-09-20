@@ -268,20 +268,44 @@ class ReimbursementController extends Controller
                 $result = $ReimbursementReq->update($code, [
                     'U_Status' => 5,
                     'U_TransferBy' => $user->name,
-                    'U_DisbursedAt' => $array_req["U_DisbursedAt"]
+                    'U_DisbursedAt' => $array_req["U_DisbursedAt"],
+                    "U_SAP_DocNum" => $outgoingArray["DocNum"],
                 ]);
                 if($result == 1){
 
+                    $account_array = [];
+                    foreach ($outgoingArray["PaymentAccounts"] as $key => $value) {
+                        array_push($account_array,$value["AccountCode"]);
+                    };
+
+
+                    $accounts = $this->sap->getService('ChartOfAccounts');
+                    $get_account_names = $accounts->queryBuilder()
+                        ->select('Code,Name')
+                        ->where([new InArray("Code", $account_array)])
+                        ->findAll();
+                    $account_name_array = json_decode(json_encode($get_account_names), true);
+                    $accounts = [];
+                    foreach($account_name_array["value"] as $account){
+                        $accounts[$account['Code']] = $account['Name'];
+                    };
+
+                    $budgetUsed = [];
+                    foreach($outgoingArray["PaymentAccounts"] as $index => $value){
+                        array_push($budgetUsed, (array)[
+                            "U_Amount" => $value["SumPaid"],
+                            "U_Source" => "Reimbursement",
+                            "U_DocNum" => $array_req["Code"],
+                            "U_UsedBy" => $array_req["U_RequestorName"],
+                            "U_AccountCode" => $value["AccountCode"],
+                            "U_AccountName" => $accounts[$value["AccountCode"]]
+                        ]);
+                    };
+
                     $BudgetReq = $this->sap->getService('BudgetReq');
-                    $result = $BudgetReq->update($budgetCode, [
-                        "BUDGETUSEDCollection" => [
-                            [
-                                "U_Amount" => floatval($array_req["U_TotalAmount"]) + floatval($bank_adm),
-                                "U_Source" => "Reimbursement Request",
-                                "U_DocNum" => $array_req["Code"],
-                                "U_UsedBy" => $array_req["U_RequestorName"]
-                            ]
-                        ]
+                    $result = $BudgetReq->update($budgetCode,
+                    [
+                        "BUDGETUSEDCollection" => $budgetUsed
                     ]);
 
                     $result = $ReimbursementReq->queryBuilder()->select("*")->find($array_req["Code"]);
@@ -431,7 +455,6 @@ class ReimbursementController extends Controller
                 ->find($request->get("code"));
 
             $array_reimbursement = json_decode(json_encode($result), true);
-            $account_array = [];
 
             $find_budget = $this->sap->getService('BudgetReq');
             $get_budget = $find_budget->queryBuilder()
@@ -447,7 +470,7 @@ class ReimbursementController extends Controller
             $array_reimbursement["U_Project"] = $array_budget["U_Project"];
             $array_reimbursement["BudgetName"] = $array_budget["Name"];
 
-
+            $account_array = [];
             foreach ($array_reimbursement["REIMBURSEMENTLINESCollection"] as $key => $value) {
                 array_push($account_array,$value["U_AccountCode"]);
             };
