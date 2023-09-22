@@ -206,11 +206,11 @@ class AdvanceRequestController extends Controller
             $outgoingPaymentInput["TransferSum"] = floatval($array_req["U_Amount"]) + floatval($bank_adm);
             $outgoingPaymentInput["DocDate"] = $array_req["DisbursedDate"];
             $outgoingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
-            // $outgoing_payment["CashFlowAssignments"] = [
-            //     "CashFlowLineItemID" => 7,
-            //     "PaymentMeans" => "pmtBankTransfer",
-            //     "AmountLC" => floatval($array_req["U_Amount"]) + floatval($bank_adm)
-            // ];
+            $outgoingPaymentInput["CashFlowAssignments"] = [
+                "CashFlowLineItemID" => 4,
+                "PaymentMeans" => "pmtBankTransfer",
+                "AmountLC" => floatval($array_req["U_Amount"]) + floatval($bank_adm)
+            ];
 
             if($bank_adm > 0){
                 array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
@@ -377,7 +377,7 @@ class AdvanceRequestController extends Controller
             $journalEntryInput["Memo"] = "Advance Realization ".$array_req["Code"];;
 
             array_push($journalEntryInput["JournalEntryLines"], (object)[
-                'AccountCode' => '11120.1001', //BANK BCA
+                'AccountCode' => '11720.2000', //UANG MUKA
                 'Credit' => $array_req["U_RealizationAmt"],
                 'CostingCode' => $array_budget["U_PillarCode"],
                 'ProjectCode' => $array_budget["U_ProjectCode"],
