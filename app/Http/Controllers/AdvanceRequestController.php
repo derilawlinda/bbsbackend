@@ -317,99 +317,194 @@ class AdvanceRequestController extends Controller
                 ->select('*')
                 ->find($budgetCode); // DocEntry value
             $array_budget = json_decode(json_encode($arbudget), true);
-
-            if($array_req["U_DifferenceAmt"] > 0){
-
-
-                try {
-                $incomingPaymentInput = array();
-                $incomingPaymentInput["PaymentAccounts"] = [];
-                $incomingPaymentInput["ReferenceDate"] = $array_req["U_RealizationDate"];
-                $incomingPaymentInput["TransferAccount"] = $array_req["U_TransferFrom"];
-                $incomingPaymentInput["DocType"] = 'rAccount';
-                $incomingPaymentInput["DocCurrency"] = 'IDR';
-                $incomingPaymentInput["TransferSum"] = $array_req["U_RealizationAmt"];
-                $incomingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
-                $incomingPaymentInput["Remarks"] = "Advance Realization ".$array_req["Code"];
-
-                array_push($incomingPaymentInput["PaymentAccounts"], (object)[
-                    'AccountCode' => $array_req["U_RealTrfBank"],
-                    'SumPaid' => $array_req["U_DifferenceAmt"],
-                    'ProfitCenter' => $array_budget["U_PillarCode"],
-                    'ProjectCode' => $array_budget["U_ProjectCode"],
-                    "ProfitCenter2" => $array_budget["U_ClassificationCode"],
-                    "ProfitCenter3" => $array_budget["U_SubClassCode"],
-                    "ProfitCenter4" => $array_budget["U_SubClass2Code"]
-                ]);
-
-                $incoming_payment = $this->sap->getService('IncomingPayments');
-                $incomingResult = $incoming_payment->create($incomingPaymentInput);
-
-                if($incomingResult){
-
-                    $BudgetReq = $this->sap->getService('BudgetReq');
-                    $result = $BudgetReq->update($budgetCode, [
-                        "BUDGETUSEDCollection" => [
-                            [
-                                "U_Amount" => $array_req["U_DifferenceAmt"] * -1,
-                                "U_Source" => "Advance Request Return",
-                                "U_DocNum" => $array_req["Code"],
-                                "U_UsedBy" => $array_req["U_RequestorName"],
-                                "U_AccountCode" => '11720.2000' // UANG MUKA OPERASIONAL
-                            ]
-                        ]
-                    ]);
-
-                }
-
-                }catch(Exception $e) {
-
-                    return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
-
-                };
-
-
-            }
+            $code = $array_req["Code"];
 
             $journal_entry = $this->sap->getService('JournalEntries');
             $journalEntryInput = array();
             $journalEntryInput["JournalEntryLines"] = [];
-            $journalEntryInput["Memo"] = "Advance Realization ".$array_req["Code"];;
+            $journalEntryInput["Memo"] = "Advance Realization ".$array_req["Code"];
+            $BudgetReq = $this->sap->getService('BudgetReq');
 
-            array_push($journalEntryInput["JournalEntryLines"], (object)[
+            array_push($journalEntryInput["JournalEntryLines"], (array)[
                 'AccountCode' => '11720.2000', //UANG MUKA
-                'Credit' => $array_req["U_RealizationAmt"],
+                'Credit' => $array_req["U_RealizationAmt"] ,
                 'CostingCode' => $array_budget["U_PillarCode"],
                 'ProjectCode' => $array_budget["U_ProjectCode"],
                 'CostingCode2' => $array_budget["U_ClassificationCode"],
                 'CostingCode3' => $array_budget["U_SubClassCode"],
                 'CostingCode4' => $array_budget["U_SubClass2Code"],
-                'CashFlowAssignments' => [
-                    [
-                        "AmountLC" => $array_req["U_RealizationAmt"]
-                    ]
-                ]
             ]);
 
-            for ($i = 0; $i < count($array_req["REALIZATIONREQLINESCollection"]); $i++)
-            {
-                array_push($journalEntryInput["JournalEntryLines"], (object)[
-                    'AccountCode' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_AccountCode"],
-                    'Debit'=> $array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"],
+            if($array_req["U_DifferenceAmt"] > 0){
+
+                array_push($journalEntryInput["JournalEntryLines"], (array)[
+                    'AccountCode' => $array_req["U_RealTrfBank"], //BANK
+                    'Credit' => $array_req["U_DifferenceAmt"],
                     'CostingCode' => $array_budget["U_PillarCode"],
                     'ProjectCode' => $array_budget["U_ProjectCode"],
                     'CostingCode2' => $array_budget["U_ClassificationCode"],
                     'CostingCode3' => $array_budget["U_SubClassCode"],
-                    'CostingCode4' => $array_budget["U_SubClass2Code"]
+                    'CostingCode4' => $array_budget["U_SubClass2Code"],
+                    'CashFlowAssignments' => [
+                        [
+                            "AmountLC" => $array_req["U_DifferenceAmt"]
+                        ]
+                    ]
+                ]);
+
+                array_push($journalEntryInput["JournalEntryLines"], (array)[
+                    'AccountCode' => '11720.2000', //UANG MUKA
+                    'Debit' => $array_req["U_DifferenceAmt"],
+                    'CostingCode' => $array_budget["U_PillarCode"],
+                    'ProjectCode' => $array_budget["U_ProjectCode"],
+                    'CostingCode2' => $array_budget["U_ClassificationCode"],
+                    'CostingCode3' => $array_budget["U_SubClassCode"],
+                    'CostingCode4' => $array_budget["U_SubClass2Code"],
                 ]);
             }
 
+            $journalEntryPreInput = [];
+            for ($i = 0; $i < count($array_req["REALIZATIONREQLINESCollection"]); $i++)
+            {
+
+                if($array_req["REALIZATIONREQLINESCollection"][$i]["U_NPWP"] > 0){
+
+                    array_push($journalEntryPreInput, (array)[
+
+                        "NPWP" => $array_req["REALIZATIONREQLINESCollection"][$i]["U_NPWP"],
+                        "Amount" => round($array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"] * ((100 - $array_req["REALIZATIONREQLINESCollection"][$i]["U_NPWP"]) / 100)),
+                        "PaymentFor" => "Fee",
+                        "Account" => $array_req["REALIZATIONREQLINESCollection"][$i]["U_AccountCode"]
+
+                    ]);
+
+                    array_push($journalEntryPreInput, (array)[
+
+                        "NPWP" => $array_req["REALIZATIONREQLINESCollection"][$i]["U_NPWP"],
+                        "Amount" =>  round($array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"] * ($array_req["REALIZATIONREQLINESCollection"][$i]["U_NPWP"] /100)),
+                        "PaymentFor" => "Tax",
+                        "Account" => "21310.0000"
+
+                    ]);
+
+                }else{
+
+                    array_push($journalEntryInput["JournalEntryLines"], (array)[
+                        'AccountCode' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_AccountCode"],
+                        'Debit'=> $array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"],
+                        'CostingCode' => $array_budget["U_PillarCode"],
+                        'ProjectCode' => $array_budget["U_ProjectCode"],
+                        'CostingCode2' => $array_budget["U_ClassificationCode"],
+                        'CostingCode3' => $array_budget["U_SubClassCode"],
+                        'CostingCode4' => $array_budget["U_SubClass2Code"]
+                    ]);
+
+                }
+
+
+            }
+
+            $taxes = array();
+
+            if(count($journalEntryPreInput) > 0){
+
+                $groupbytaxes = array_reduce($journalEntryPreInput, function($taxes, $outgoing){
+                    if(!isset($taxes[$outgoing['PaymentFor']][$outgoing['NPWP']][$outgoing['Account']])){
+                        $taxes[$outgoing['PaymentFor']][$outgoing['NPWP']][$outgoing['Account']] = ['PaymentFor'=> $outgoing['PaymentFor']." ".$outgoing['NPWP']."%",'Amount'=>$outgoing['Amount']];
+                    }
+                    else {
+                        $taxes[$outgoing['PaymentFor']][$outgoing['NPWP']][$outgoing['Account']]["Amount"] += $outgoing['Amount'];
+                    }
+                    return $taxes;
+                });
+
+
+               foreach($groupbytaxes as $index => $value){
+
+                    foreach($value as $key => $val){
+
+                        foreach($val as $k => $v){
+
+                            array_push($journalEntryInput["JournalEntryLines"], (array)[
+                                'AccountCode' => $k,
+                                'Debit'=> $v["Amount"],
+                                'AdditionalReference'=> $v["PaymentFor"],
+                                'CostingCode' => $array_budget["U_PillarCode"],
+                                'ProjectCode' => $array_budget["U_ProjectCode"],
+                                'CostingCode2' => $array_budget["U_ClassificationCode"],
+                                'CostingCode3' => $array_budget["U_SubClassCode"],
+                                'CostingCode4' => $array_budget["U_SubClass2Code"]
+
+                            ]);
+
+                        }
+
+                    }
+
+               }
+
+            }
             $result = $journal_entry->create($journalEntryInput);
+
+            $account_array = [];
+            foreach ($journalEntryInput["JournalEntryLines"] as $value) {
+                array_push($account_array,$value["AccountCode"]);
+            };
+
+            $unique_account = [];
+
+            foreach($account_array as $value){
+                if (!in_array($value, $unique_account))
+                    $unique_account[] = $value;
+            }
+
+
+            $accounts = $this->sap->getService('ChartOfAccounts');
+            $get_account_names = $accounts->queryBuilder()
+                ->select('Code,Name')
+                ->where([new InArray("Code", $unique_account)])
+                ->findAll();
+            $account_name_array = json_decode(json_encode($get_account_names), true);
+            $accounts = [];
+            foreach($account_name_array["value"] as $account){
+                $accounts[$account['Code']] = $account['Name'];
+            };
+
+            $budgetUsed = [];
+            foreach($journalEntryInput["JournalEntryLines"] as $index => $value){
+                if($value["AccountCode"] == $array_req["U_RealTrfBank"]){
+                    array_push($budgetUsed, (array)[
+                        "U_Amount" => $value["Credit"]* -1,
+                        "U_Source" => "Advance Request Return",
+                        "U_DocNum" => $array_req["Code"],
+                        "U_UsedBy" => $array_req["U_RequestorName"],
+                        "U_AccountCode" => '11720.2000', // UANG MUKA OPERASIONAL
+                        "U_AccountName" => $accounts[$value["AccountCode"]]
+                ]);
+
+                }else{
+                    if(isset($value["Debit"]) &&  ($value["Debit"] > 0)){
+                        array_push($budgetUsed, (array)[
+                            "U_Amount" => $value["Debit"],
+                            "U_Source" => "Advance Realization ".$code,
+                            "U_DocNum" => $array_req["Code"],
+                            "U_UsedBy" => $array_req["U_RequestorName"],
+                            "U_AccountCode" => $value["AccountCode"],
+                            "U_AccountName" => $accounts[$value["AccountCode"]]
+                        ]);
+                    }
+                }
+            };
+
+            $BudgetReq = $this->sap->getService('BudgetReq');
+            $result = $BudgetReq->update($budgetCode, [
+                "BUDGETUSEDCollection" => $budgetUsed
+            ]);
+
+
             $advance_request = $this->sap->getService('AdvanceReq');
-            $code = $array_req["Code"];
 
-
-            $result = $AdvanceReq->update($code, [
+            $result = $advance_request->update($code, [
                 'U_RealConfirmAt' => date("Y-m-d"),
                 'U_RealiStatus' => 6,
                 'U_RealConfirmBy' => $user->name
