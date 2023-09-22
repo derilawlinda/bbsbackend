@@ -359,10 +359,17 @@ class MaterialRequestController extends Controller
             };
 
 
+            $unique_account = [];
+
+            foreach($account_array as $value){
+                if (!in_array($value, $unique_account))
+                    $unique_account[] = $value;
+            }
+
             $accounts = $this->sap->getService('ChartOfAccounts');
             $get_account_names = $accounts->queryBuilder()
             ->select('Code,Name')
-            ->where([new InArray("Code", $account_array)])
+            ->where([new InArray("Code", $unique_account)])
             ->findAll();
             $account_name_array = json_decode(json_encode($get_account_names), true);
             $accounts = [];
@@ -370,10 +377,16 @@ class MaterialRequestController extends Controller
                 $accounts[$account['Code']] = $account['Name'];
             };
 
+            $unique_items = [];
+
+            foreach($item_array as $value){
+                if (!in_array($value, $unique_items))
+                    $unique_items[] = $value;
+            }
             $items = $this->sap->getService('Items');
             $get_item_names = $items->queryBuilder()
             ->select('ItemCode,ItemName')
-            ->where([new InArray("ItemCode", $item_array)])
+            ->where([new InArray("ItemCode", $unique_items)])
             ->findAll();
             $item_name_array = json_decode(json_encode($get_item_names), true);
             $items = [];

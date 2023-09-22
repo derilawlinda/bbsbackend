@@ -119,7 +119,6 @@ class AdvanceRequestController extends Controller
         'Prefer' => 'odata.maxpagesize=500']);
 
         $search = "";
-        $status_array = [];
 
         if ($user["role_id"] == 3) {
             $result = $AdvanceReq->queryBuilder()
@@ -128,8 +127,7 @@ class AdvanceRequestController extends Controller
                 ->where([new Equal("U_Status", 5)]);
         }elseif ($user["role_id"] == 2) {
             $result = $AdvanceReq->queryBuilder()
-                ->select('*')
-                ->where([new Equal("U_RealiStatus", 4),'or',new Equal("U_RealiStatus", 6)]);
+                ->select('*');
             }else{
 
             $result = $AdvanceReq->queryBuilder()
@@ -139,14 +137,16 @@ class AdvanceRequestController extends Controller
 
         if($request->search){
             $search = $request->search;
-            $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);        }
+            $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);
+        }
 
         if($request->status){
+            $status_array = [];
             $req_status_array = preg_split ("/\,/", $request->status);
             foreach ($req_status_array as $value) {
                 array_push($status_array,(int)$value);
             }
-            $result->where([new InArray("U_RealiStatus", $status_array)]);
+            $result->where([new InArray("U_RealiStatus", [1,2,3,4,5])]);
         }
 
         if($request->top){
@@ -200,12 +200,17 @@ class AdvanceRequestController extends Controller
         try {
             $outgoingPaymentInput = array();
             $outgoingPaymentInput["PaymentAccounts"] = [];
-            $outgoingPaymentInput["TransferAccount"] = '11120.1001';
+            $outgoingPaymentInput["TransferAccount"] = $array_req["U_TransferFrom"];
             $outgoingPaymentInput["DocType"] = 'rAccount';
             $outgoingPaymentInput["DocCurrency"] = 'IDR';
             $outgoingPaymentInput["TransferSum"] = floatval($array_req["U_Amount"]) + floatval($bank_adm);
             $outgoingPaymentInput["DocDate"] = $array_req["DisbursedDate"];
             $outgoingPaymentInput["U_H_NO_ADV"] = $array_req["Code"];
+            // $outgoing_payment["CashFlowAssignments"] = [
+            //     "CashFlowLineItemID" => 7,
+            //     "PaymentMeans" => "pmtBankTransfer",
+            //     "AmountLC" => floatval($array_req["U_Amount"]) + floatval($bank_adm)
+            // ];
 
             if($bank_adm > 0){
                 array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
@@ -225,7 +230,7 @@ class AdvanceRequestController extends Controller
             {
 
                 array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
-                    'AccountCode' => $array_req["ADVANCEREQLINESCollection"][$i]["U_AccountCode"],
+                    'AccountCode' => '11720.2000',
                     'SumPaid' => $array_req["ADVANCEREQLINESCollection"][$i]["U_Amount"],
                     'Decription' => $array_req["ADVANCEREQLINESCollection"][$i]["U_Description"],
                     'ProfitCenter' => $array_budget["U_PillarCode"],
@@ -249,42 +254,42 @@ class AdvanceRequestController extends Controller
                 'U_TransferBy' => $user->name,
                 'U_SAP_DocNum' => $outgoingArray["DocNum"]
             ]);
-            if($result == 1){
+            // if($result == 1){
 
-                $account_array = [];
-                foreach ($outgoingArray["PaymentAccounts"] as $key => $value) {
-                    array_push($account_array,$value["AccountCode"]);
-                };
+            //     $account_array = [];
+            //     foreach ($outgoingArray["PaymentAccounts"] as $key => $value) {
+            //         array_push($account_array,$value["AccountCode"]);
+            //     };
 
-                $accounts_service = $this->sap->getService('ChartOfAccounts');
-                $get_account_names = $accounts_service->queryBuilder()
-                    ->select('Code,Name')
-                    ->where([new InArray("Code", $account_array)])
-                    ->findAll();
-                $account_name_array = json_decode(json_encode($get_account_names), true);
-                $accounts = [];
-                foreach($account_name_array["value"] as $account){
-                    $accounts[$account['Code']] = $account['Name'];
-                };
+            //     $accounts_service = $this->sap->getService('ChartOfAccounts');
+            //     $get_account_names = $accounts_service->queryBuilder()
+            //         ->select('Code,Name')
+            //         ->where([new InArray("Code", $account_array)])
+            //         ->findAll();
+            //     $account_name_array = json_decode(json_encode($get_account_names), true);
+            //     $accounts = [];
+            //     foreach($account_name_array["value"] as $account){
+            //         $accounts[$account['Code']] = $account['Name'];
+            //     };
 
-                $budgetUsed = [];
-                foreach($outgoingArray["PaymentAccounts"] as $index => $value){
-                    array_push($budgetUsed, (array)[
-                        "U_Amount" => $value["SumPaid"],
-                        "U_Source" => "Reimbursement",
-                        "U_DocNum" => $array_req["Code"],
-                        "U_UsedBy" => $array_req["U_RequestorName"],
-                        "U_AccountCode" => $value["AccountCode"],
-                        "U_AccountName" => $accounts[$value["AccountCode"]]
-                    ]);
-                };
+                // $budgetUsed = [];
+                // foreach($outgoingArray["PaymentAccounts"] as $index => $value){
+                //     array_push($budgetUsed, (array)[
+                //         "U_Amount" => $value["SumPaid"],
+                //         "U_Source" => "Reimbursement",
+                //         "U_DocNum" => $array_req["Code"],
+                //         "U_UsedBy" => $array_req["U_RequestorName"],
+                //         "U_AccountCode" => $value["AccountCode"],
+                //         "U_AccountName" => $accounts[$value["AccountCode"]]
+                //     ]);
+                // };
 
-                $BudgetReq = $this->sap->getService('BudgetReq');
-                $result = $BudgetReq->update($budgetCode, [
-                    "BUDGETUSEDCollection" => $budgetUsed
-                ]);
+                // $BudgetReq = $this->sap->getService('BudgetReq');
+                // $result = $BudgetReq->update($budgetCode, [
+                //     "BUDGETUSEDCollection" => $budgetUsed
+                // ]);
 
-            }
+            // }
         }
         $outgoingResult = $AdvanceReq->queryBuilder()
                         ->select('*')
@@ -359,7 +364,7 @@ class AdvanceRequestController extends Controller
 
                 }catch(Exception $e) {
 
-                    return response()->json(['message' => 'Error inserting data to SAP'], 500);
+                    return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
 
                 };
 
