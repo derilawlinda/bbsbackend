@@ -499,8 +499,6 @@ class ReimbursementController extends Controller
                     $array_reimbursement["REIMBURSEMENTLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
                 }
             };
-            return $array_reimbursement;
-
             $view = \View::make('reimbursement_pdf',['reimbursement'=>$array_reimbursement]);
             $html = $view->render();
             $filename = 'Reimbursement #'.$request->get("code");
