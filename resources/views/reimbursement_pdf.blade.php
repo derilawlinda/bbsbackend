@@ -106,6 +106,10 @@
                 <td>Budget</td>
                 <td>{{$reimbursement["U_BudgetCode"]}} - {{$reimbursement["BudgetName"]}}</td>
             </tr>
+            <tr>
+                <td>Transfer Remarks</td>
+                <td>{{$reimbursement["U_TransferRemarks"]}}</td>
+            </tr>
 		</tbody>
 	</table>
 
