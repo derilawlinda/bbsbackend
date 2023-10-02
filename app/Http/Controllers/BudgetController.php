@@ -14,6 +14,10 @@ use App\Libraries\SAPb1\Filters\InArray;
 use PDF;
 use PDF2;
 
+
+use Exception;
+use Throwable;
+
 class MYPDF extends PDF2 {
 
     //Page header

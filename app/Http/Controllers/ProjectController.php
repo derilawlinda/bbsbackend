@@ -13,6 +13,9 @@ use App\Libraries\SAPb1\Filters\StartsWith;
 use App\Libraries\SAPb1\Filters\InArray;
 use Illuminate\Support\Facades\Auth;
 
+use Exception;
+use Throwable;
+
 class ProjectController extends Controller
 {
     private $sapsession;

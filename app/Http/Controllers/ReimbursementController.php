@@ -16,6 +16,9 @@ use App\Libraries\SAPb1\Filters\Contains;
 use Illuminate\Support\Facades\Auth;
 use PDF2;
 
+use Exception;
+use Throwable;
+
 class ReimbursementController extends Controller
 {
     private $sapsession;
@@ -472,7 +475,9 @@ class ReimbursementController extends Controller
 
             $account_array = [];
             foreach ($array_reimbursement["REIMBURSEMENTLINESCollection"] as $key => $value) {
-                array_push($account_array,$value["U_AccountCode"]);
+                if(!is_null($value["U_AccountCode"]) || $value["U_AccountCode"] != ''){
+                    array_push($account_array,$value["U_AccountCode"]);
+                };
             };
 
 
@@ -484,12 +489,17 @@ class ReimbursementController extends Controller
             $account_name_array = json_decode(json_encode($get_account_names), true);
             $accounts = [];
             foreach($account_name_array["value"] as $account){
-                $accounts[$account['Code']] = $account['Name'];
+                if(!is_null($account['Code']) || $account['Code'] =! ''){
+                    $accounts[$account['Code']] = $account['Name'];
+                }
             };
 
             foreach ($array_reimbursement["REIMBURSEMENTLINESCollection"] as $key => $value) {
-                $array_reimbursement["REIMBURSEMENTLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+                if($value["U_AccountCode"] != '' || !is_null($value["U_AccountCode"])){
+                    $array_reimbursement["REIMBURSEMENTLINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+                }
             };
+            return $array_reimbursement;
 
             $view = \View::make('reimbursement_pdf',['reimbursement'=>$array_reimbursement]);
             $html = $view->render();

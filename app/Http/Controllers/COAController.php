@@ -14,6 +14,9 @@ use App\Libraries\SAPb1\Filters\InArray;
 use App\Libraries\SAPb1\Filters\MoreThan;
 use Illuminate\Support\Facades\Auth;
 
+use Exception;
+use Throwable;
+
 class COAController extends Controller
 {
     private $sapsession;
