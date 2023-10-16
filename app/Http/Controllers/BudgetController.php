@@ -373,6 +373,7 @@ class BudgetController extends Controller
     public function saveBudget(Request $request)
     {
 
+        // return $request->all();
         try{
             if(is_null($this->sap)) {
                 $this->sap = $this->getSession($request->U_Company);

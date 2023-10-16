@@ -135,62 +135,60 @@ class ReimbursementController extends Controller
 
         $user = Auth::user();
 
-        $array_req = $request->get('oProperty');
-        $budgetCode = (string)$array_req["U_BudgetCode"];
 
-        $budget = $this->sap->getService('BudgetReq');
-        $arbudget = $budget->queryBuilder()
-            ->select('*')
-            ->find($budgetCode); // DocEntry value
-        $array_budget = json_decode(json_encode($arbudget), true);
-
-        $bank_adm = 0;
-
-        if($array_req["U_BankAdm"]){
-            $bank_adm = $array_req["U_BankAdm"];
-        }
 
         try {
-            $outgoingPaymentInput = array();
-            $outgoingPaymentInput["PaymentAccounts"] = [];
-            $outgoingPaymentInput["TransferAccount"] = $array_req["U_TransferFrom"];
-            $outgoingPaymentInput["DocType"] = 'rAccount';
-            $outgoingPaymentInput["DocCurrency"] = 'IDR';
-            $outgoingPaymentInput["TransferSum"] = floatval($array_req["U_TotalAmount"]) + floatval($bank_adm);
-            $outgoingPaymentInput["U_H_NO_REIMBURSE"] = $array_req["Code"];
-            $outgoingPaymentInput["DocDate"] = $array_req["U_DisbursedAt"];
+            $array_req = $request->get('oProperty');
+            $budgetCode = (string)$array_req["U_BudgetCode"];
+
+            $budget = $this->sap->getService('BudgetReq');
+            $arbudget = $budget->queryBuilder()
+                ->select('*')
+                ->find($budgetCode); // DocEntry value
+            $array_budget = json_decode(json_encode($arbudget), true);
+
+            $bank_adm = 0;
+
+            if($array_req["U_BankAdm"]){
+                $bank_adm = $array_req["U_BankAdm"];
+            }
+
+            $journal_entry = $this->sap->getService('JournalEntries');
+            $journalEntryInput = array();
+            $journalEntryInput["JournalEntryLines"] = [];
+            $journalEntryInput["Memo"] = "Reimbursement ".$array_req["Code"];
+            $BudgetReq = $this->sap->getService('BudgetReq');
 
             if($bank_adm > 0){
-                array_push($outgoingPaymentInput["PaymentAccounts"], (object)[
+
+                array_push($journalEntryInput["JournalEntryLines"], (array)[
                     'AccountCode' => '80100.0100',
-                    'Decription' => 'Bank Admin',
-                    'SumPaid' => floatval($bank_adm),
-                    'ProfitCenter' => $array_budget["U_PillarCode"],
+                    'AdditionalReference'=> "Bank Admin",
+                    'Debit' => floatval($bank_adm),
+                    'CostingCode' => $array_budget["U_PillarCode"],
                     'ProjectCode' => $array_budget["U_ProjectCode"],
-                    "ProfitCenter2" => $array_budget["U_ClassificationCode"],
-                    "ProfitCenter3" => $array_budget["U_SubClassCode"],
-                    "ProfitCenter4" => $array_budget["U_SubClass2Code"],
+                    'CostingCode2' => $array_budget["U_ClassificationCode"],
+                    'CostingCode3' => $array_budget["U_SubClassCode"],
+                    'CostingCode4' => $array_budget["U_SubClass2Code"]
 
                 ]);
 
             }
 
-            $outgoingPaymentPreInput = [];
-
+            $journalEntryPreInput = [];
             for ($i = 0; $i < count($array_req["REIMBURSEMENTLINESCollection"]); $i++)
             {
                 if($array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"] > 0){
-
-                    array_push($outgoingPaymentPreInput, (array)[
+                    array_push($journalEntryPreInput, (array)[
 
                         "NPWP" => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"],
-                        "Amount" => round($array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"] * ((100 - $array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"]) / 100)),
+                        "Amount" => round($array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"]),
                         "PaymentFor" => "Fee",
                         "Account" => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_AccountCode"]
 
                     ]);
 
-                    array_push($outgoingPaymentPreInput, (array)[
+                    array_push($journalEntryPreInput, (array)[
 
                         "NPWP" => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"],
                         "Amount" =>  round($array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"] * ($array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"] /100)),
@@ -199,30 +197,31 @@ class ReimbursementController extends Controller
 
                     ]);
 
-                }
+                }else{
 
-                else{
-
-                    array_push($outgoingPaymentInput["PaymentAccounts"], (array)[
+                    array_push($journalEntryInput["JournalEntryLines"], (array)[
                         'AccountCode' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_AccountCode"],
-                        'SumPaid' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"],
-                        'Decription' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Description"],
-                        'ProfitCenter' => $array_budget["U_PillarCode"],
+                        'Debit'=> $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"],
+                        'AdditionalReference'=> $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Description"],
+                        'CostingCode' => $array_budget["U_PillarCode"],
                         'ProjectCode' => $array_budget["U_ProjectCode"],
-                        "ProfitCenter2" => $array_budget["U_ClassificationCode"],
-                        "ProfitCenter3" => $array_budget["U_SubClassCode"],
-                        "ProfitCenter4" => $array_budget["U_SubClass2Code"],
-
+                        'CostingCode2' => $array_budget["U_ClassificationCode"],
+                        'CostingCode3' => $array_budget["U_SubClassCode"],
+                        'CostingCode4' => $array_budget["U_SubClass2Code"]
                     ]);
+
                 }
 
-            };
+
+            }
 
             $taxes = array();
+            $sum_all_taxes = 0;
+            $sum_fee = 0;
 
-            if(count($outgoingPaymentPreInput) > 0){
+            if(count($journalEntryPreInput) > 0){
 
-                $groupbytaxes = array_reduce($outgoingPaymentPreInput, function($taxes, $outgoing){
+                $groupbytaxes = array_reduce($journalEntryPreInput, function($taxes, $outgoing){
                     if(!isset($taxes[$outgoing['PaymentFor']][$outgoing['NPWP']][$outgoing['Account']])){
                         $taxes[$outgoing['PaymentFor']][$outgoing['NPWP']][$outgoing['Account']] = ['PaymentFor'=> $outgoing['PaymentFor']." ".$outgoing['NPWP']."%",'Amount'=>$outgoing['Amount']];
                     }
@@ -239,17 +238,34 @@ class ReimbursementController extends Controller
 
                         foreach($val as $k => $v){
 
-                            array_push($outgoingPaymentInput["PaymentAccounts"], (array)[
-                                'AccountCode' => $k,
-                                'SumPaid' => $v["Amount"],
-                                'Decription' => $v["PaymentFor"],
-                                'ProfitCenter' => $array_budget["U_PillarCode"],
-                                'ProjectCode' => $array_budget["U_ProjectCode"],
-                                "ProfitCenter2" => $array_budget["U_ClassificationCode"],
-                                "ProfitCenter3" => $array_budget["U_SubClassCode"],
-                                "ProfitCenter4" => $array_budget["U_SubClass2Code"],
+                            if($k == '21310.0000'){
+                                $sum_all_taxes += $v["Amount"];
+                                array_push($journalEntryInput["JournalEntryLines"], (array)[
+                                    'AccountCode' => $k,
+                                    'Credit'=> $v["Amount"],
+                                    'AdditionalReference'=> $v["PaymentFor"],
+                                    'CostingCode' => $array_budget["U_PillarCode"],
+                                    'ProjectCode' => $array_budget["U_ProjectCode"],
+                                    'CostingCode2' => $array_budget["U_ClassificationCode"],
+                                    'CostingCode3' => $array_budget["U_SubClassCode"],
+                                    'CostingCode4' => $array_budget["U_SubClass2Code"]
 
-                            ]);
+                                ]);
+                            }else{
+                                $sum_fee += $v["Amount"];
+                                array_push($journalEntryInput["JournalEntryLines"], (array)[
+                                    'AccountCode' => $k,
+                                    'Debit'=> $v["Amount"],
+                                    'AdditionalReference'=> $v["PaymentFor"],
+                                    'CostingCode' => $array_budget["U_PillarCode"],
+                                    'ProjectCode' => $array_budget["U_ProjectCode"],
+                                    'CostingCode2' => $array_budget["U_ClassificationCode"],
+                                    'CostingCode3' => $array_budget["U_SubClassCode"],
+                                    'CostingCode4' => $array_budget["U_SubClass2Code"]
+
+                                ]);
+                            }
+
 
                         }
 
@@ -259,12 +275,33 @@ class ReimbursementController extends Controller
 
             }
 
-            $outgoing_payment = $this->sap->getService('VendorPayments');
-            $outgoingResult = $outgoing_payment->create($outgoingPaymentInput);
 
-            if($outgoingResult){
+            array_push($journalEntryInput["JournalEntryLines"], (array)[
+                'AccountCode' => $array_req["U_TransferFrom"],
+                'Credit'=> $sum_fee - $sum_all_taxes + floatval($bank_adm),
+                'AdditionalReference'=> "Bank Transfer",
+                'CostingCode' => $array_budget["U_PillarCode"],
+                'ProjectCode' => $array_budget["U_ProjectCode"],
+                'CostingCode2' => $array_budget["U_ClassificationCode"],
+                'CostingCode3' => $array_budget["U_SubClassCode"],
+                'CostingCode4' => $array_budget["U_SubClass2Code"],
+                'CashFlowAssignments' => [
+                    [
+                        "AmountLC" => $sum_fee - $sum_all_taxes + floatval($bank_adm)
+                    ]
+                ]
 
-                $outgoingArray = json_decode(json_encode($outgoingResult), true);
+            ]);
+            $result = $journal_entry->create($journalEntryInput);
+
+            $account_array = [];
+            foreach ($journalEntryInput["JournalEntryLines"] as $value) {
+                array_push($account_array,$value["AccountCode"]);
+            };
+
+            if($result){
+
+                $journalArray = json_decode(json_encode($result), true);
                 $ReimbursementReq = $this->sap->getService('ReimbursementReq');
                 $code = $array_req["Code"];
                 $disbursed_date = $array_req["DisbursedDate"];
@@ -272,15 +309,14 @@ class ReimbursementController extends Controller
                     'U_Status' => 5,
                     'U_TransferBy' => $user->name,
                     'U_DisbursedAt' => $array_req["U_DisbursedAt"],
-                    "U_SAP_DocNum" => $outgoingArray["DocNum"],
+                    "U_SAP_DocNum" => $journalArray["Number"],
                 ]);
                 if($result == 1){
 
                     $account_array = [];
-                    foreach ($outgoingArray["PaymentAccounts"] as $key => $value) {
+                    foreach ($journalArray["JournalEntryLines"] as $key => $value) {
                         array_push($account_array,$value["AccountCode"]);
                     };
-
 
                     $accounts = $this->sap->getService('ChartOfAccounts');
                     $get_account_names = $accounts->queryBuilder()
@@ -294,15 +330,19 @@ class ReimbursementController extends Controller
                     };
 
                     $budgetUsed = [];
-                    foreach($outgoingArray["PaymentAccounts"] as $index => $value){
-                        array_push($budgetUsed, (array)[
-                            "U_Amount" => $value["SumPaid"],
-                            "U_Source" => "Reimbursement",
-                            "U_DocNum" => $array_req["Code"],
-                            "U_UsedBy" => $array_req["U_RequestorName"],
-                            "U_AccountCode" => $value["AccountCode"],
-                            "U_AccountName" => $accounts[$value["AccountCode"]]
-                        ]);
+                    foreach($journalArray["JournalEntryLines"] as $index => $value){
+
+                        if($value["Debit"] > 0){
+                            array_push($budgetUsed, (array)[
+                                "U_Amount" => $value["Debit"],
+                                "U_Source" => "Reimbursement",
+                                "U_DocNum" => $array_req["Code"],
+                                "U_UsedBy" => $array_req["U_RequestorName"],
+                                "U_AccountCode" => $value["AccountCode"],
+                                "U_AccountName" => $accounts[$value["AccountCode"]]
+                            ]);
+                        }
+
                     };
 
                     $BudgetReq = $this->sap->getService('BudgetReq');
