@@ -337,6 +337,7 @@ class AdvanceRequestController extends Controller
                     'CostingCode2' => $array_budget["U_ClassificationCode"],
                     'CostingCode3' => $array_budget["U_SubClassCode"],
                     'CostingCode4' => $array_budget["U_SubClass2Code"],
+                    'AdditionalReference' => 'Realization Difference',
                     'CashFlowAssignments' => [
                         [
                             "AmountLC" => $array_req["U_DifferenceAmt"]
@@ -352,13 +353,16 @@ class AdvanceRequestController extends Controller
                     'CostingCode2' => $array_budget["U_ClassificationCode"],
                     'CostingCode3' => $array_budget["U_SubClassCode"],
                     'CostingCode4' => $array_budget["U_SubClass2Code"],
+                    'AdditionalReference' => 'Realization Difference',
                 ]);
             }
 
             $journalEntryPreInput = [];
+            $sum_fee = 0;
+
             for ($i = 0; $i < count($array_req["REALIZATIONREQLINESCollection"]); $i++)
             {
-
+                $sum_fee += $array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"];
                 if($array_req["REALIZATIONREQLINESCollection"][$i]["U_NPWP"] > 0){
 
                     array_push($journalEntryPreInput, (array)[
@@ -388,7 +392,8 @@ class AdvanceRequestController extends Controller
                         'ProjectCode' => $array_budget["U_ProjectCode"],
                         'CostingCode2' => $array_budget["U_ClassificationCode"],
                         'CostingCode3' => $array_budget["U_SubClassCode"],
-                        'CostingCode4' => $array_budget["U_SubClass2Code"]
+                        'CostingCode4' => $array_budget["U_SubClass2Code"],
+                        'AdditionalReference' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_Description"],
                     ]);
 
                 }
@@ -398,7 +403,6 @@ class AdvanceRequestController extends Controller
 
             $taxes = array();
             $sum_all_taxes = 0;
-            $sum_fee = 0;
 
             if(count($journalEntryPreInput) > 0){
 
@@ -433,7 +437,7 @@ class AdvanceRequestController extends Controller
 
                                 ]);
                             }else{
-                                $sum_fee += $v["Amount"];
+
                                 array_push($journalEntryInput["JournalEntryLines"], (array)[
                                     'AccountCode' => $k,
                                     'Debit'=> $v["Amount"],
@@ -463,7 +467,9 @@ class AdvanceRequestController extends Controller
                 'CostingCode2' => $array_budget["U_ClassificationCode"],
                 'CostingCode3' => $array_budget["U_SubClassCode"],
                 'CostingCode4' => $array_budget["U_SubClass2Code"],
+                'AdditionalReference'=> 'Uang Muka',
             ]);
+
             $result = $journal_entry->create($journalEntryInput);
 
             $account_array = [];
@@ -503,7 +509,7 @@ class AdvanceRequestController extends Controller
                 ]);
 
                 }else{
-                    if(isset($value["Debit"]) &&  ($value["Debit"] > 0)){
+                    if(isset($value["Debit"]) &&  ($value["Debit"] > 0) && ($value["AccountCode"] != '11720.2000')){
                         array_push($budgetUsed, (array)[
                             "U_Amount" => $value["Debit"],
                             "U_Source" => "Advance Realization ".$code,

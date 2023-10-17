@@ -176,8 +176,12 @@ class ReimbursementController extends Controller
             }
 
             $journalEntryPreInput = [];
+
+            $sum_fee = 0;
+
             for ($i = 0; $i < count($array_req["REIMBURSEMENTLINESCollection"]); $i++)
             {
+                $sum_fee += $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"];
                 if($array_req["REIMBURSEMENTLINESCollection"][$i]["U_NPWP"] > 0){
                     array_push($journalEntryPreInput, (array)[
 
@@ -198,7 +202,6 @@ class ReimbursementController extends Controller
                     ]);
 
                 }else{
-
                     array_push($journalEntryInput["JournalEntryLines"], (array)[
                         'AccountCode' => $array_req["REIMBURSEMENTLINESCollection"][$i]["U_AccountCode"],
                         'Debit'=> $array_req["REIMBURSEMENTLINESCollection"][$i]["U_Amount"],
@@ -217,7 +220,6 @@ class ReimbursementController extends Controller
 
             $taxes = array();
             $sum_all_taxes = 0;
-            $sum_fee = 0;
 
             if(count($journalEntryPreInput) > 0){
 
@@ -252,7 +254,6 @@ class ReimbursementController extends Controller
 
                                 ]);
                             }else{
-                                $sum_fee += $v["Amount"];
                                 array_push($journalEntryInput["JournalEntryLines"], (array)[
                                     'AccountCode' => $k,
                                     'Debit'=> $v["Amount"],
