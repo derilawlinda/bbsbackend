@@ -498,17 +498,17 @@ class AdvanceRequestController extends Controller
 
             $budgetUsed = [];
             foreach($journalEntryInput["JournalEntryLines"] as $index => $value){
-                if($value["AccountCode"] == $array_req["U_RealTrfBank"]){
-                    array_push($budgetUsed, (array)[
-                        "U_Amount" => $value["Credit"]* -1,
-                        "U_Source" => "Advance Request Return",
-                        "U_DocNum" => $array_req["Code"],
-                        "U_UsedBy" => $array_req["U_RequestorName"],
-                        "U_AccountCode" => '11720.2000', // UANG MUKA OPERASIONAL
-                        "U_AccountName" => $accounts[$value["AccountCode"]]
-                ]);
+                // if($value["AccountCode"] == $array_req["U_RealTrfBank"]){
+                //     array_push($budgetUsed, (array)[
+                //         "U_Amount" => $value["Credit"]* -1,
+                //         "U_Source" => "Advance Request Return",
+                //         "U_DocNum" => $array_req["Code"],
+                //         "U_UsedBy" => $array_req["U_RequestorName"],
+                //         "U_AccountCode" => '11720.2000', // UANG MUKA OPERASIONAL
+                //         "U_AccountName" => $accounts[$value["AccountCode"]]
+                // ]);
 
-                }else{
+                // }else{
                     if(isset($value["Debit"]) &&  ($value["Debit"] > 0) && ($value["AccountCode"] != '11720.2000')){
                         array_push($budgetUsed, (array)[
                             "U_Amount" => $value["Debit"],
@@ -519,7 +519,7 @@ class AdvanceRequestController extends Controller
                             "U_AccountName" => $accounts[$value["AccountCode"]]
                         ]);
                     }
-                }
+                // }
             };
 
             $BudgetReq = $this->sap->getService('BudgetReq');
