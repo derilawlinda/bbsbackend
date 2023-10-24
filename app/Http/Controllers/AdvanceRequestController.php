@@ -331,7 +331,7 @@ class AdvanceRequestController extends Controller
 
                 array_push($journalEntryInput["JournalEntryLines"], (array)[
                     'AccountCode' => $array_req["U_RealTrfBank"], //BANK
-                    'Credit' => $array_req["U_DifferenceAmt"],
+                    'Debit' => $array_req["U_DifferenceAmt"],
                     'CostingCode' => $array_budget["U_PillarCode"],
                     'ProjectCode' => $array_budget["U_ProjectCode"],
                     'CostingCode2' => $array_budget["U_ClassificationCode"],
@@ -347,7 +347,7 @@ class AdvanceRequestController extends Controller
 
                 array_push($journalEntryInput["JournalEntryLines"], (array)[
                     'AccountCode' => '11720.2000', //UANG MUKA
-                    'Debit' => $array_req["U_DifferenceAmt"],
+                    'Credit' => $array_req["U_DifferenceAmt"],
                     'CostingCode' => $array_budget["U_PillarCode"],
                     'ProjectCode' => $array_budget["U_ProjectCode"],
                     'CostingCode2' => $array_budget["U_ClassificationCode"],

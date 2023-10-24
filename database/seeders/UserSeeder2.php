@@ -32,8 +32,15 @@ class UserSeeder2 extends Seeder
             // ]
 
             [
-                'name' => 'Elisabeth Suryani',
-                'email' => 'elisabeth.suryani@unitedcreative.co.id',
+                'name' => 'Ratna Wulandari',
+                'email' => 'ratna.wulandari@unitedcreative.co.id',
+                'password' => Hash::make('BaliUnited1234'),
+                'role_id' => Role::where('name', 'Staff')->first()->id,
+
+            ],
+            [
+                'name' => 'Bayu Setyawan',
+                'email' => 'bayu.setyawan@unitedcreative.id',
                 'password' => Hash::make('BaliUnited1234'),
                 'role_id' => Role::where('name', 'Staff')->first()->id,
 
