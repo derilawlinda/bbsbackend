@@ -65,5 +65,10 @@ class AuthController extends Controller
         return response($users);
     }
 
+    public function getRoles(){
+        $roles = Role::all();
+        return response($roles);
+    }
+
 
 }

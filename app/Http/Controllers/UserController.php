@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Response;
 use Session;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Exception;
+use Throwable;
+
 
 class UserController extends Controller
 {
@@ -43,6 +48,20 @@ class UserController extends Controller
     public function store(Request $request)
     {
         //
+        Validator::make($request->all(), [
+            'email'=>['required','unique:users'],
+            'name'=>['required'],
+            'password' => ['required'],
+            'role_id' => ['required']
+        ]);
+        $request['password'] = Hash::make($request['password']);
+        try{
+            $usercreate = User::create($request->all());
+            return response($usercreate);
+        }catch(Exception $e){
+            return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
+        }
+
     }
 
     /**

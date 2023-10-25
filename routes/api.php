@@ -38,6 +38,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/checkToken', [AuthController::class, 'checkToken'])->middleware('auth:sanctum');
 Route::get('/getUsers', [AuthController::class, 'getUsers'])->middleware('auth:sanctum');
+Route::get('/getRoles', [AuthController::class, 'getRoles'])->middleware('auth:sanctum');
+Route::post('/user/createUser', [UserController::class, 'store'])->middleware('auth:sanctum');
 
 
 Route::post('/budget/createBudget', [BudgetController::class, 'createBudget'])->middleware('auth:sanctum');
