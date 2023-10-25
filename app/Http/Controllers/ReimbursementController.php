@@ -156,6 +156,8 @@ class ReimbursementController extends Controller
             $journal_entry = $this->sap->getService('JournalEntries');
             $journalEntryInput = array();
             $journalEntryInput["ReferenceDate"] = $array_req["U_DisbursedAt"];
+            $journalEntryInput["U_H_NO_REMBES"] = $array_req["Code"];
+            $journalEntryInput["U_H_NO_BUDGET"] = $array_req["U_BudgetCode"];
             $journalEntryInput["JournalEntryLines"] = [];
             $journalEntryInput["Memo"] = "Reimbursement ".$array_req["Code"];
             $BudgetReq = $this->sap->getService('BudgetReq');

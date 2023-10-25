@@ -322,6 +322,8 @@ class AdvanceRequestController extends Controller
             $journal_entry = $this->sap->getService('JournalEntries');
             $journalEntryInput = array();
             $journalEntryInput["JournalEntryLines"] = [];
+            $journalEntryInput["U_H_NO_ADVANCE"] = $array_req["Code"];
+            $journalEntryInput["U_H_NO_BUDGET"] = $array_req["U_BudgetCode"];
             $journalEntryInput["Memo"] = "Advance Realization ".$array_req["Code"];
             $BudgetReq = $this->sap->getService('BudgetReq');
 
