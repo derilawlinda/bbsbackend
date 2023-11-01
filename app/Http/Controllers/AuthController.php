@@ -59,7 +59,7 @@ class AuthController extends Controller
     }
 
     public function getUsers(){
-        $users = User::where('id','>', 289)
+        $users = User::where('id','>', 200)
         ->orderBy('id')->get();
 
         return response($users);

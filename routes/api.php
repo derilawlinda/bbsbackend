@@ -40,6 +40,8 @@ Route::post('/checkToken', [AuthController::class, 'checkToken'])->middleware('a
 Route::get('/getUsers', [AuthController::class, 'getUsers'])->middleware('auth:sanctum');
 Route::get('/getRoles', [AuthController::class, 'getRoles'])->middleware('auth:sanctum');
 Route::post('/user/createUser', [UserController::class, 'store'])->middleware('auth:sanctum');
+Route::get('/user/getUserById', [UserController::class, 'show'])->middleware('auth:sanctum');
+Route::post('/user/editUser', [UserController::class, 'edit'])->middleware('auth:sanctum');
 
 
 Route::post('/budget/createBudget', [BudgetController::class, 'createBudget'])->middleware('auth:sanctum');

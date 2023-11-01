@@ -70,9 +70,12 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request)
     {
         //
+        $id = $request->id;
+        $user = User::find($id);
+        return response($user);
     }
 
     /**
@@ -81,9 +84,13 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Request $request)
     {
-        //
+        $id = $request->id;
+        $request['password'] = Hash::make($request['password']);
+        $user = User::find($id);
+        $user->update($request->all());
+        return response($user);
     }
 
     /**
