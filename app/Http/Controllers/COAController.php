@@ -46,6 +46,21 @@ class COAController extends Controller
         return $result;
     }
 
+    public function getWarehouses(Request $request)
+    {
+        $user = Auth::user();
+        if(is_null($this->sap)) {
+            $this->sap = $this->getSession($request->company);
+        }
+        $COAReq = $this->sap->getService('Warehouses');
+        $COAReq->headers(['Prefer' => 'odata.maxpagesize=500']);
+        $result = $COAReq->queryBuilder()
+            ->select('WarehouseCode,WarehouseName')
+            ->orderBy('WarehouseCode', 'desc')
+            ->findAll();
+        return $result;
+    }
+
     public function getCOAsByAR(Request $request)
     {
         $user = Auth::user();

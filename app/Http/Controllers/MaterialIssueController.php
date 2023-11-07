@@ -169,6 +169,7 @@ class MaterialIssueController extends Controller
                 for($i = 0; $i < count($request_array["MATERIALISSUELINESCollection"]); ++$i) {
                     $request_array["MATERIALISSUELINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
                     $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
+                    $request_array["MATERIALISSUELINESCollection"][$i]['WarehouseCode'] =$request_array["MATERIALISSUELINESCollection"][$i]['U_WhsCode'];
                     $request_array["MATERIALISSUELINESCollection"][$i]['U_H_KET'] = $request_array["MATERIALISSUELINESCollection"][$i]['U_Description'];
                     $request_array["MATERIALISSUELINESCollection"][$i]['U_COA'] = $request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'];
                     $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_MR'] = $request_array["Code"];
@@ -176,6 +177,7 @@ class MaterialIssueController extends Controller
                     $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
                     $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
                     $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
+
                 }
                 $goodIssueInput = array(
                     "DocDate" => $request_array["U_DocDate"],
@@ -219,7 +221,7 @@ class MaterialIssueController extends Controller
             $MaterialIssue = $this->sap->getService('MaterialIssue');
             $MaterialIssue->headers(['B1S-ReplaceCollectionsOnPatch' => 'true']);
             $code = $request->get('data')["Code"];
-            $result = $MaterialIssue->queryBuilder()->update($code,$request->get('data'),false);
+            $result = $MaterialIssue->update($code,$request->get('data'),false);
             return $result;
         }catch(Exception $e){
             return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
@@ -299,6 +301,7 @@ class MaterialIssueController extends Controller
             $array_mi = json_decode(json_encode($result), true);
             $account_array = [];
             $item_array = [];
+            $warehouse_array = [];
 
             $find_budget = $this->sap->getService('BudgetReq');
             $get_budget = $find_budget->queryBuilder()
@@ -317,6 +320,9 @@ class MaterialIssueController extends Controller
 
             foreach ($array_mi["MATERIALISSUELINESCollection"] as $key => $value) {
                 array_push($account_array,$value["U_AccountCode"]);
+                if($value["U_WhsCode"] != ''){
+                    array_push($warehouse_array,$value["U_WhsCode"]);
+                }
                 if($value["U_ItemCode"] != ''){
                     array_push($item_array,$value["U_ItemCode"]);
                 }
@@ -345,8 +351,28 @@ class MaterialIssueController extends Controller
                 $items[$item['ItemCode']] = $item['ItemName'];
             };
 
+            if(count($warehouse_array) > 0){
+                $warehouses = $this->sap->getService('Warehouses');
+                $get_warehouse_names = $warehouses->queryBuilder()
+                ->select('WarehouseCode,WarehouseName')
+                ->where([new InArray("WarehouseCode", $warehouse_array)])
+                ->findAll();
+                $warehouse_name_array = json_decode(json_encode($get_warehouse_names), true);
+                $warehouses = [];
+                foreach($warehouse_name_array["value"] as $warehouse){
+                    $warehouses[$warehouse['WarehouseCode']] = $warehouse['WarehouseName'];
+                };
+            }
+
+
             foreach ($array_mi["MATERIALISSUELINESCollection"] as $key => $value) {
+
                 $array_mi["MATERIALISSUELINESCollection"][$key]["AccountName"] = $accounts[$value["U_AccountCode"]];
+                if($value["U_WhsCode"] != ''){
+                    $array_mi["MATERIALISSUELINESCollection"][$key]["WarehouseName"] = $warehouses[$value["U_WhsCode"]];
+                }else{
+                    $array_mi["MATERIALISSUELINESCollection"][$key]["WarehouseName"] = '-';
+                }
                 if($value["U_ItemCode"] != ''){
                     $array_mi["MATERIALISSUELINESCollection"][$key]["ItemName"] = $items[$value["U_ItemCode"]];
                 }else{

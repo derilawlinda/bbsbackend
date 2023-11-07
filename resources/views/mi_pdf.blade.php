@@ -113,13 +113,15 @@
         <tbody>
             <tr>
                 <td style="background-color:#CE262A;color:white; width:30%"><center><strong>Account</strong></center> </td>
-                <td style="background-color:grey;color:white;width:30%" ><center><strong>Item</strong></center> </td>
-                <td style="background-color:#CE262A;color:white;width:10%" ><center><strong>Qty</strong></center> </td>
-                <td style="background-color:grey;color:white;width:30%"><center><strong>Desc</strong></center> </td>
+                <td style="background-color:grey;color:white;width:20%" ><center><strong>Warehouse</strong></center> </td>
+                <td style="background-color:#CE262A;color:white;width:30%" ><center><strong>Item</strong></center> </td>
+                <td style="background-color:grey;color:white;width:10%" ><center><strong>Qty</strong></center> </td>
+                <td style="background-color:#CE262Agrey;color:white;width:10%"><center><strong>Desc</strong></center> </td>
             </tr>
             @foreach ($material_issue["MATERIALISSUELINESCollection"] as $item)
                 <tr>
                     <td>{{$item["U_AccountCode"]}} - {{$item["AccountName"]}}</td>
+                    <td>{{ $item["WarehouseName"] }}</td>
                     <td>
                     @if($item["ItemName"])
                         {{$item["ItemName"]}}

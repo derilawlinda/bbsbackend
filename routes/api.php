@@ -97,6 +97,7 @@ Route::get('/coa/getCOAsByBudget', [COAController::class, 'getCOAsByBudget'])->m
 Route::get('/coa/getCOAsByBudgetForMI', [COAController::class, 'getCOAsByBudgetForMI'])->middleware('auth:sanctum');
 Route::get('/coa/getCOAsByAR', [COAController::class, 'getCOAsByAR'])->middleware('auth:sanctum');
 Route::get('/coa/getCOAsForTransfer', [COAController::class, 'getCOAsForTransfer'])->middleware('auth:sanctum');
+Route::get('/warehouse/getWarehouses', [COAController::class, 'getWarehouses'])->middleware('auth:sanctum');
 
 Route::get('/reimbursement/getReimbursements', [ReimbursementController::class, 'getReimbursements'])->middleware('auth:sanctum');
 Route::get('/reimbursement/getReimbursementById', [ReimbursementController::class, 'getReimbursementById'])->middleware('auth:sanctum');
