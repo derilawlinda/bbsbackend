@@ -184,7 +184,9 @@ class MaterialIssueController extends Controller
                     "RequriedDate" => $request_array["CreateDate"],
                     'DocumentLines' => $request_array["MATERIALISSUELINESCollection"],
                     "U_H_NO_BUDGET" => $request_array["U_BudgetCode"],
-                    'Project' => $array_budget["U_ProjectCode"]
+                    'Project' => $array_budget["U_ProjectCode"],
+                    "U_H_NO_MI" => $request_array["Code"]
+
                 );
 
                 $good_issue = $this->sap->getService('InventoryGenExits');
