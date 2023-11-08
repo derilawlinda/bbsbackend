@@ -131,6 +131,8 @@ class ProfitCenterController extends Controller
         ];
         if($company != 'TEST_DERIL'){
             $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
+        }else{
+            $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company);
         }
         $this->sap = $sap;
         return $sap;
