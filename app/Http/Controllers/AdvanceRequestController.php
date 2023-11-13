@@ -472,7 +472,7 @@ class AdvanceRequestController extends Controller
                 'AdditionalReference'=> 'Uang Muka',
             ]);
 
-            $result = $journal_entry->create($journalEntryInput);
+
 
             $account_array = [];
             foreach ($journalEntryInput["JournalEntryLines"] as $value) {
@@ -524,12 +524,6 @@ class AdvanceRequestController extends Controller
                 // }
             };
 
-            $BudgetReq = $this->sap->getService('BudgetReq');
-            $result = $BudgetReq->update($budgetCode, [
-                "BUDGETUSEDCollection" => $budgetUsed
-            ]);
-
-
             $advance_request = $this->sap->getService('AdvanceReq');
 
             $result = $advance_request->update($code, [
@@ -538,7 +532,16 @@ class AdvanceRequestController extends Controller
                 'U_RealConfirmBy' => $user->name
             ]);
 
+
+            $BudgetReq = $this->sap->getService('BudgetReq');
+            $result = $BudgetReq->update($budgetCode, [
+                "BUDGETUSEDCollection" => $budgetUsed
+            ]);
+
+
+
             if($result == 1){
+                $result = $journal_entry->create($journalEntryInput);
                 $result = $advance_request->queryBuilder()->select("*")->find($code);
             }
             return $result;

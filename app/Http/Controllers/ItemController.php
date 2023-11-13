@@ -77,6 +77,14 @@ class ItemController extends Controller
         return json_encode($items);
     }
 
+    // public function getStockByStore(Request $request) {
+
+
+
+    // }
+
+
+
     // public function getItemsByAccount(Request $request) {
 
     //     $user = Auth::user();
