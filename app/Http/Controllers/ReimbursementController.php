@@ -296,7 +296,7 @@ class ReimbursementController extends Controller
                 ]
 
             ]);
-            $result = $journal_entry->create($journalEntryInput);
+
 
             $account_array = [];
             foreach ($journalEntryInput["JournalEntryLines"] as $value) {
@@ -355,6 +355,7 @@ class ReimbursementController extends Controller
                         "BUDGETUSEDCollection" => $budgetUsed
                     ]);
 
+                    $result = $journal_entry->create($journalEntryInput);
                     $result = $ReimbursementReq->queryBuilder()->select("*")->find($array_req["Code"]);
                     return $result;
 
