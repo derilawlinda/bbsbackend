@@ -303,64 +303,64 @@ class ReimbursementController extends Controller
                 array_push($account_array,$value["AccountCode"]);
             };
 
-            if($result){
 
-                $journalArray = json_decode(json_encode($result), true);
-                $ReimbursementReq = $this->sap->getService('ReimbursementReq');
-                $code = $array_req["Code"];
-                $disbursed_date = $array_req["DisbursedDate"];
-                $result = $ReimbursementReq->update($code, [
-                    'U_Status' => 5,
-                    'U_TransferBy' => $user->name,
-                    'U_DisbursedAt' => $array_req["U_DisbursedAt"],
-                    "U_SAP_DocNum" => $journalArray["Number"],
+
+            $journalArray = json_decode(json_encode($result), true);
+            $ReimbursementReq = $this->sap->getService('ReimbursementReq');
+            $code = $array_req["Code"];
+            $disbursed_date = $array_req["DisbursedDate"];
+            $result = $ReimbursementReq->update($code, [
+                'U_Status' => 5,
+                'U_TransferBy' => $user->name,
+                'U_DisbursedAt' => $array_req["U_DisbursedAt"],
+                "U_SAP_DocNum" => $journalArray["Number"],
+            ]);
+            if($result == 1){
+
+                $account_array = [];
+                foreach ($journalArray["JournalEntryLines"] as $key => $value) {
+                    array_push($account_array,$value["AccountCode"]);
+                };
+
+                $accounts = $this->sap->getService('ChartOfAccounts');
+                $get_account_names = $accounts->queryBuilder()
+                    ->select('Code,Name')
+                    ->where([new InArray("Code", $account_array)])
+                    ->findAll();
+                $account_name_array = json_decode(json_encode($get_account_names), true);
+                $accounts = [];
+                foreach($account_name_array["value"] as $account){
+                    $accounts[$account['Code']] = $account['Name'];
+                };
+
+                $budgetUsed = [];
+                foreach($journalArray["JournalEntryLines"] as $index => $value){
+
+                    if($value["Debit"] > 0){
+                        array_push($budgetUsed, (array)[
+                            "U_Amount" => $value["Debit"],
+                            "U_Source" => "Reimbursement",
+                            "U_DocNum" => $array_req["Code"],
+                            "U_UsedBy" => $array_req["U_RequestorName"],
+                            "U_AccountCode" => $value["AccountCode"],
+                            "U_AccountName" => $accounts[$value["AccountCode"]]
+                        ]);
+                    }
+
+                };
+
+                $BudgetReq = $this->sap->getService('BudgetReq');
+                $result = $BudgetReq->update($budgetCode,
+                [
+                    "BUDGETUSEDCollection" => $budgetUsed
                 ]);
-                if($result == 1){
 
-                    $account_array = [];
-                    foreach ($journalArray["JournalEntryLines"] as $key => $value) {
-                        array_push($account_array,$value["AccountCode"]);
-                    };
-
-                    $accounts = $this->sap->getService('ChartOfAccounts');
-                    $get_account_names = $accounts->queryBuilder()
-                        ->select('Code,Name')
-                        ->where([new InArray("Code", $account_array)])
-                        ->findAll();
-                    $account_name_array = json_decode(json_encode($get_account_names), true);
-                    $accounts = [];
-                    foreach($account_name_array["value"] as $account){
-                        $accounts[$account['Code']] = $account['Name'];
-                    };
-
-                    $budgetUsed = [];
-                    foreach($journalArray["JournalEntryLines"] as $index => $value){
-
-                        if($value["Debit"] > 0){
-                            array_push($budgetUsed, (array)[
-                                "U_Amount" => $value["Debit"],
-                                "U_Source" => "Reimbursement",
-                                "U_DocNum" => $array_req["Code"],
-                                "U_UsedBy" => $array_req["U_RequestorName"],
-                                "U_AccountCode" => $value["AccountCode"],
-                                "U_AccountName" => $accounts[$value["AccountCode"]]
-                            ]);
-                        }
-
-                    };
-
-                    $BudgetReq = $this->sap->getService('BudgetReq');
-                    $result = $BudgetReq->update($budgetCode,
-                    [
-                        "BUDGETUSEDCollection" => $budgetUsed
-                    ]);
-
-                    $result = $journal_entry->create($journalEntryInput);
-                    $result = $ReimbursementReq->queryBuilder()->select("*")->find($array_req["Code"]);
-                    return $result;
+                $result = $journal_entry->create($journalEntryInput);
+                $result = $ReimbursementReq->queryBuilder()->select("*")->find($array_req["Code"]);
+                return $result;
 
                 }
-            }
+
 
         }catch(Exception $e) {
 
