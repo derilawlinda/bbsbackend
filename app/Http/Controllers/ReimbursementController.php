@@ -304,6 +304,7 @@ class ReimbursementController extends Controller
             };
 
 
+            $result = $journal_entry->create($journalEntryInput);
 
             $journalArray = json_decode(json_encode($result), true);
             $ReimbursementReq = $this->sap->getService('ReimbursementReq');
@@ -355,7 +356,6 @@ class ReimbursementController extends Controller
                     "BUDGETUSEDCollection" => $budgetUsed
                 ]);
 
-                $result = $journal_entry->create($journalEntryInput);
                 $result = $ReimbursementReq->queryBuilder()->select("*")->find($array_req["Code"]);
                 return $result;
 
