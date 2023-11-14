@@ -359,8 +359,7 @@ class ReimbursementController extends Controller
                 $result = $ReimbursementReq->queryBuilder()->select("*")->find($array_req["Code"]);
                 return $result;
 
-                }
-
+            }
 
         }catch(Exception $e) {
 

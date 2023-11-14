@@ -511,7 +511,7 @@ class AdvanceRequestController extends Controller
                 // ]);
 
                 // }else{
-                    if(isset($value["Debit"]) &&  ($value["Debit"] > 0) && ($value["AccountCode"] != '11720.2000')){
+                    if(isset($value["Debit"]) &&  ($value["Debit"] > 0) && (!str_starts_with($value["AccountCode"], '1112')) && ($value["AccountCode"] != '11720.2000')){
                         array_push($budgetUsed, (array)[
                             "U_Amount" => $value["Debit"],
                             "U_Source" => "Advance Realization ".$code,
