@@ -302,12 +302,12 @@ class AdvanceRequestController extends Controller
                 $budgetUsed = [];
                 foreach($advance_groupbyaccount as $index => $value){
                     array_push($budgetUsed, (array)[
-                        "U_Amount" => $value[$value["AccountCode"]],
+                        "U_Amount" => $value[$index],
                         "U_Source" => "Advance Request",
                         "U_DocNum" => $array_req["Code"],
                         "U_UsedBy" => $array_req["U_RequestorName"],
                         "U_AccountCode" => $index,
-                        "U_AccountName" => $accounts[$value["AccountCode"]]
+                        "U_AccountName" => $accounts[$value[$index]]
                     ]);
                 };
 
