@@ -307,7 +307,7 @@ class AdvanceRequestController extends Controller
                         "U_DocNum" => $array_req["Code"],
                         "U_UsedBy" => $array_req["U_RequestorName"],
                         "U_AccountCode" => $index,
-                        "U_AccountName" => $accounts[$value[$index]]
+                        "U_AccountName" => $accounts[$index]
                     ]);
                 };
 
