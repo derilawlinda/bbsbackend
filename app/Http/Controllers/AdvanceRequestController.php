@@ -193,6 +193,25 @@ class AdvanceRequestController extends Controller
         $code = $array_req["Code"];
         $budgetCode = (string)$array_req["U_BudgetCode"];
 
+        $array_req = $request->get('oProperty');
+        $array_req_advance = $array_req["ADVANCEREQLINESCollection"];
+
+        $advance_account = array();
+
+
+        if(count($array_req_advance) > 0){
+
+            $advance_groupbyaccount = array_reduce($array_req_advance, function($advance_account, $advance){
+                if(!isset($advance_account[$advance['U_AccountCode']])){
+                    $advance_account[$advance["U_AccountCode"]] = $advance["U_Amount"];
+                }
+                else {
+                    $advance_account[$advance["U_AccountCode"]] += $advance['U_Amount'];
+                }
+                return $advance_account;
+            });
+        }
+
         $budget = $this->sap->getService('BudgetReq');
         $arbudget = $budget->queryBuilder()
             ->select('*')
@@ -281,13 +300,13 @@ class AdvanceRequestController extends Controller
                 };
 
                 $budgetUsed = [];
-                foreach($outgoingArray["PaymentAccounts"] as $index => $value){
+                foreach($advance_groupbyaccount as $index => $value){
                     array_push($budgetUsed, (array)[
-                        "U_Amount" => $value["SumPaid"],
-                        "U_Source" => "Reimbursement",
+                        "U_Amount" => $value[$value["AccountCode"]],
+                        "U_Source" => "Advance Request",
                         "U_DocNum" => $array_req["Code"],
                         "U_UsedBy" => $array_req["U_RequestorName"],
-                        "U_AccountCode" => $value["AccountCode"],
+                        "U_AccountCode" => $index,
                         "U_AccountName" => $accounts[$value["AccountCode"]]
                     ]);
                 };
