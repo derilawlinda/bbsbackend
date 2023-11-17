@@ -284,8 +284,8 @@ class AdvanceRequestController extends Controller
             if($result == 1){
 
                 $account_array = [];
-                foreach ($outgoingArray["PaymentAccounts"] as $key => $value) {
-                    array_push($account_array,$value["AccountCode"]);
+                foreach ($advance_groupbyaccount as $key => $value) {
+                    array_push($account_array,$key);
                 };
 
                 $accounts_service = $this->sap->getService('ChartOfAccounts');
@@ -302,7 +302,7 @@ class AdvanceRequestController extends Controller
                 $budgetUsed = [];
                 foreach($advance_groupbyaccount as $index => $value){
                     array_push($budgetUsed, (array)[
-                        "U_Amount" => $value,
+                        "U_Amount" => $advance_groupbyaccount[$index],
                         "U_Source" => "Advance Request",
                         "U_DocNum" => $array_req["Code"],
                         "U_UsedBy" => $array_req["U_RequestorName"],
