@@ -310,6 +310,27 @@ class AdvanceRequestController extends Controller
 
             $user = Auth::user();
             $array_req = $request->get('oProperty');
+            $array_req_advance = $array_req["ADVANCEREQLINESCollection"];
+
+            $advance_account = array();
+
+
+            if(count($array_req_advance) > 0){
+
+                $advance_groupbyaccount = array_reduce($array_req_advance, function($advance_account, $advance){
+                    if(!isset($advance_account[$advance['U_AccountCode']])){
+                        $advance_account[$advance["U_AccountCode"]] = $advance["U_Amount"];
+                    }
+                    else {
+                        $advance_account[$advance["U_AccountCode"]] += $advance['U_Amount'];
+                    }
+                    return $advance_account;
+                });
+            }
+
+            // return response()->json($advance_groupbyaccount);
+
+
 
             $budgetCode = (string)$array_req["U_BudgetCode"];
             $budget = $this->sap->getService('BudgetReq');
@@ -476,7 +497,9 @@ class AdvanceRequestController extends Controller
 
             $account_array = [];
             foreach ($journalEntryInput["JournalEntryLines"] as $value) {
-                array_push($account_array,$value["AccountCode"]);
+                if($value["AccountCode"]){
+                 array_push($account_array,$value["AccountCode"]);
+                }
             };
 
             $unique_account = [];
@@ -485,6 +508,7 @@ class AdvanceRequestController extends Controller
                 if (!in_array($value, $unique_account))
                     $unique_account[] = $value;
             }
+
 
 
             $accounts = $this->sap->getService('ChartOfAccounts');
@@ -497,6 +521,7 @@ class AdvanceRequestController extends Controller
             foreach($account_name_array["value"] as $account){
                 $accounts[$account['Code']] = $account['Name'];
             };
+
 
             $budgetUsed = [];
             foreach($journalEntryInput["JournalEntryLines"] as $index => $value){
@@ -512,14 +537,18 @@ class AdvanceRequestController extends Controller
 
                 // }else{
                     if(isset($value["Debit"]) &&  ($value["Debit"] > 0) && (!str_starts_with($value["AccountCode"], '1112')) && ($value["AccountCode"] != '11720.2000')){
-                        array_push($budgetUsed, (array)[
-                            "U_Amount" => $value["Debit"],
-                            "U_Source" => "Advance Realization ".$code,
-                            "U_DocNum" => $array_req["Code"],
-                            "U_UsedBy" => $array_req["U_RequestorName"],
-                            "U_AccountCode" => $value["AccountCode"],
-                            "U_AccountName" => $accounts[$value["AccountCode"]]
-                        ]);
+                        if($value["AccountCode"]){
+                            if($value["Debit"] - $advance_groupbyaccount[$value["AccountCode"]] != 0){
+                                array_push($budgetUsed, (array)[
+                                    "U_Amount" =>  $value["Debit"] - $advance_groupbyaccount[$value["AccountCode"]],
+                                    "U_Source" => "Advance Realization ".$code,
+                                    "U_DocNum" => $array_req["Code"],
+                                    "U_UsedBy" => $array_req["U_RequestorName"],
+                                    "U_AccountCode" => $value["AccountCode"],
+                                    "U_AccountName" => $accounts[$value["AccountCode"]]
+                                ]);
+                            }
+                        }
                     }
                 // }
             };
@@ -532,18 +561,18 @@ class AdvanceRequestController extends Controller
                 'U_RealConfirmBy' => $user->name
             ]);
 
-
             $BudgetReq = $this->sap->getService('BudgetReq');
-            $result = $BudgetReq->update($budgetCode, [
-                "BUDGETUSEDCollection" => $budgetUsed
-            ]);
+            $result = $journal_entry->create($journalEntryInput);
+            if($result){
+                $result = $BudgetReq->update($budgetCode, [
+                    "BUDGETUSEDCollection" => $budgetUsed
+                ]);
 
-
-
-            if($result == 1){
-                $result = $journal_entry->create($journalEntryInput);
-                $result = $advance_request->queryBuilder()->select("*")->find($code);
+                if($result == 1){
+                    $result = $advance_request->queryBuilder()->select("*")->find($code);
+                }
             }
+
             return $result;
         }catch(Exception $e){
             return response()->json(array('status'=>'error', 'msg'=>$e->getMessage()), 500);
