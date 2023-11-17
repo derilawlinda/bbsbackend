@@ -141,6 +141,14 @@ class AdvanceRequestController extends Controller
         }
 
         if($request->status){
+            $req_status_array = preg_split ("/\,/", $request->status);
+            foreach ($req_status_array as $value) {
+                array_push($status_array,(int)$value);
+            }
+            $result->where([new InArray("U_Status", $status_array)]);
+        }
+
+        if($request->status){
             $status_array = [];
             $req_status_array = preg_split ("/\,/", $request->status);
             foreach ($req_status_array as $value) {
@@ -254,42 +262,42 @@ class AdvanceRequestController extends Controller
                 'U_TransferBy' => $user->name,
                 'U_SAP_DocNum' => $outgoingArray["DocNum"]
             ]);
-            // if($result == 1){
+            if($result == 1){
 
-            //     $account_array = [];
-            //     foreach ($outgoingArray["PaymentAccounts"] as $key => $value) {
-            //         array_push($account_array,$value["AccountCode"]);
-            //     };
+                $account_array = [];
+                foreach ($outgoingArray["PaymentAccounts"] as $key => $value) {
+                    array_push($account_array,$value["AccountCode"]);
+                };
 
-            //     $accounts_service = $this->sap->getService('ChartOfAccounts');
-            //     $get_account_names = $accounts_service->queryBuilder()
-            //         ->select('Code,Name')
-            //         ->where([new InArray("Code", $account_array)])
-            //         ->findAll();
-            //     $account_name_array = json_decode(json_encode($get_account_names), true);
-            //     $accounts = [];
-            //     foreach($account_name_array["value"] as $account){
-            //         $accounts[$account['Code']] = $account['Name'];
-            //     };
+                $accounts_service = $this->sap->getService('ChartOfAccounts');
+                $get_account_names = $accounts_service->queryBuilder()
+                    ->select('Code,Name')
+                    ->where([new InArray("Code", $account_array)])
+                    ->findAll();
+                $account_name_array = json_decode(json_encode($get_account_names), true);
+                $accounts = [];
+                foreach($account_name_array["value"] as $account){
+                    $accounts[$account['Code']] = $account['Name'];
+                };
 
-                // $budgetUsed = [];
-                // foreach($outgoingArray["PaymentAccounts"] as $index => $value){
-                //     array_push($budgetUsed, (array)[
-                //         "U_Amount" => $value["SumPaid"],
-                //         "U_Source" => "Reimbursement",
-                //         "U_DocNum" => $array_req["Code"],
-                //         "U_UsedBy" => $array_req["U_RequestorName"],
-                //         "U_AccountCode" => $value["AccountCode"],
-                //         "U_AccountName" => $accounts[$value["AccountCode"]]
-                //     ]);
-                // };
+                $budgetUsed = [];
+                foreach($outgoingArray["PaymentAccounts"] as $index => $value){
+                    array_push($budgetUsed, (array)[
+                        "U_Amount" => $value["SumPaid"],
+                        "U_Source" => "Reimbursement",
+                        "U_DocNum" => $array_req["Code"],
+                        "U_UsedBy" => $array_req["U_RequestorName"],
+                        "U_AccountCode" => $value["AccountCode"],
+                        "U_AccountName" => $accounts[$value["AccountCode"]]
+                    ]);
+                };
 
-                // $BudgetReq = $this->sap->getService('BudgetReq');
-                // $result = $BudgetReq->update($budgetCode, [
-                //     "BUDGETUSEDCollection" => $budgetUsed
-                // ]);
+                $BudgetReq = $this->sap->getService('BudgetReq');
+                $result = $BudgetReq->update($budgetCode, [
+                    "BUDGETUSEDCollection" => $budgetUsed
+                ]);
 
-            // }
+            }
         }
         $outgoingResult = $AdvanceReq->queryBuilder()
                         ->select('*')
