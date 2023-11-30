@@ -355,7 +355,7 @@ class AdvanceRequestController extends Controller
                 });
             }
 
-            // return response()->json($advance_groupbyaccount);
+            return response()->json($advance_groupbyaccount);
 
 
 
@@ -435,16 +435,22 @@ class AdvanceRequestController extends Controller
 
                 }else{
 
-                    array_push($journalEntryInput["JournalEntryLines"], (array)[
-                        'AccountCode' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_AccountCode"],
-                        'Debit'=> $array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"],
-                        'CostingCode' => $array_budget["U_PillarCode"],
-                        'ProjectCode' => $array_budget["U_ProjectCode"],
-                        'CostingCode2' => $array_budget["U_ClassificationCode"],
-                        'CostingCode3' => $array_budget["U_SubClassCode"],
-                        'CostingCode4' => $array_budget["U_SubClass2Code"],
-                        'AdditionalReference' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_Description"],
-                    ]);
+                    if($array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"] > 0){
+
+                        array_push($journalEntryInput["JournalEntryLines"], (array)[
+                            'AccountCode' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_AccountCode"],
+                            'Debit'=> $array_req["REALIZATIONREQLINESCollection"][$i]["U_Amount"],
+                            'CostingCode' => $array_budget["U_PillarCode"],
+                            'ProjectCode' => $array_budget["U_ProjectCode"],
+                            'CostingCode2' => $array_budget["U_ClassificationCode"],
+                            'CostingCode3' => $array_budget["U_SubClassCode"],
+                            'CostingCode4' => $array_budget["U_SubClass2Code"],
+                            'AdditionalReference' => $array_req["REALIZATIONREQLINESCollection"][$i]["U_Description"],
+                        ]);
+
+                    }
+
+
 
                 }
 
@@ -488,17 +494,20 @@ class AdvanceRequestController extends Controller
                                 ]);
                             }else{
 
-                                array_push($journalEntryInput["JournalEntryLines"], (array)[
-                                    'AccountCode' => $k,
-                                    'Debit'=> $v["Amount"],
-                                    'AdditionalReference'=> $v["PaymentFor"],
-                                    'CostingCode' => $array_budget["U_PillarCode"],
-                                    'ProjectCode' => $array_budget["U_ProjectCode"],
-                                    'CostingCode2' => $array_budget["U_ClassificationCode"],
-                                    'CostingCode3' => $array_budget["U_SubClassCode"],
-                                    'CostingCode4' => $array_budget["U_SubClass2Code"]
+                                if($v["Amount"] > 0){
+                                    array_push($journalEntryInput["JournalEntryLines"], (array)[
+                                        'AccountCode' => $k,
+                                        'Debit'=> $v["Amount"],
+                                        'AdditionalReference'=> $v["PaymentFor"],
+                                        'CostingCode' => $array_budget["U_PillarCode"],
+                                        'ProjectCode' => $array_budget["U_ProjectCode"],
+                                        'CostingCode2' => $array_budget["U_ClassificationCode"],
+                                        'CostingCode3' => $array_budget["U_SubClassCode"],
+                                        'CostingCode4' => $array_budget["U_SubClass2Code"]
 
-                                ]);
+                                    ]);
+                                }
+
                             }
 
                         }
