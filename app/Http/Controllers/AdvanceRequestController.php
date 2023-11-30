@@ -73,9 +73,9 @@ class AdvanceRequestController extends Controller
                 ->select('*');
             }
 
-            if($request->search){
+            if($request->search != ''){
                 $search = $request->search;
-                $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);
+                $result->where([new Contains("Code", $search),'or',new Contains("Name",$search),'or',new Contains("U_RequestorName",$search)]);
             }
 
             if($request->status){
@@ -137,16 +137,9 @@ class AdvanceRequestController extends Controller
 
         if($request->search){
             $search = $request->search;
-            $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);
+            $result->where([new Contains("Code", $search),'or',new Contains("Name",$search),'or',new Contains("U_RequestorName",$search)]);
         }
 
-        if($request->status){
-            $req_status_array = preg_split ("/\,/", $request->status);
-            foreach ($req_status_array as $value) {
-                array_push($status_array,(int)$value);
-            }
-            $result->where([new InArray("U_Status", $status_array)]);
-        }
 
         if($request->status){
             $status_array = [];
@@ -154,7 +147,16 @@ class AdvanceRequestController extends Controller
             foreach ($req_status_array as $value) {
                 array_push($status_array,(int)$value);
             }
-            $result->where([new InArray("U_RealiStatus", [1,2,3,4,5])]);
+            $result->where([new InArray("U_RealiStatus", $status_array)]);
+        }
+
+        if($request->advanceStatus){
+            $advstatus_array = [];
+            $req_advstatus_array = preg_split ("/\,/", $request->advanceStatus);
+            foreach ($req_advstatus_array as $value) {
+                array_push($advstatus_array,(int)$value);
+            }
+            $result->where([new InArray("U_Status", $advstatus_array)]);
         }
 
         if($request->top){

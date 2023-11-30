@@ -69,7 +69,7 @@ class MaterialRequestController extends Controller
             $result = $MaterialReq->queryBuilder()->select('*');
             if($request->search){
                 $search = $request->search;
-                $result->where([new Contains("Code", $search),'or',new Contains("Name", $search)]);
+                $result->where([new Contains("Code", $search),'or',new Contains("Name", $search),'or',new Contains("U_RequestorName",$search)]);
             }
 
             if ($user["role_id"] == 3) {

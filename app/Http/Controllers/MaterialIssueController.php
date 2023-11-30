@@ -76,7 +76,7 @@ class MaterialIssueController extends Controller
 
             if($request->search){
                 $search = $request->search;
-                $result->where([new Contains("Code", $search),'or',new Contains("Name",$search)]);
+                $result->where([new Contains("Code", $search),'or',new Contains("Name",$search),'or',new Contains("U_RequestorName",$search)]);
             }
 
             if($request->status){
