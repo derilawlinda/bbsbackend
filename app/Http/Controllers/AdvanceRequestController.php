@@ -357,7 +357,7 @@ class AdvanceRequestController extends Controller
                 });
             }
 
-            return response()->json($advance_groupbyaccount);
+            // return response()->json($advance_groupbyaccount);
 
 
 
