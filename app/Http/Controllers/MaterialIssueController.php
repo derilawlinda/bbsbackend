@@ -167,16 +167,19 @@ class MaterialIssueController extends Controller
             else{
 
                 for($i = 0; $i < count($request_array["MATERIALISSUELINESCollection"]); ++$i) {
-                    $request_array["MATERIALISSUELINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
-                    $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
-                    $request_array["MATERIALISSUELINESCollection"][$i]['WarehouseCode'] =$request_array["MATERIALISSUELINESCollection"][$i]['U_WhsCode'];
-                    $request_array["MATERIALISSUELINESCollection"][$i]['U_H_KET'] = $request_array["MATERIALISSUELINESCollection"][$i]['U_Description'];
-                    $request_array["MATERIALISSUELINESCollection"][$i]['U_COA'] = $request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'];
-                    $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_MR'] = $request_array["Code"];
-                    $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
-                    $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
-                    $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
-                    $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
+                    if(!empty($request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'])){
+                        $request_array["MATERIALISSUELINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
+                        $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
+                        $request_array["MATERIALISSUELINESCollection"][$i]['WarehouseCode'] =$request_array["MATERIALISSUELINESCollection"][$i]['U_WhsCode'];
+                        $request_array["MATERIALISSUELINESCollection"][$i]['U_H_KET'] = $request_array["MATERIALISSUELINESCollection"][$i]['U_Description'];
+                        $request_array["MATERIALISSUELINESCollection"][$i]['U_COA'] = $request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'];
+                        $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_MR'] = $request_array["Code"];
+                        $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode'] = $array_budget["U_PillarCode"];
+                        $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode2'] = $array_budget["U_ClassificationCode"];
+                        $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
+                        $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
+                    }
+
 
                 }
                 $goodIssueInput = array(
@@ -343,6 +346,9 @@ class MaterialIssueController extends Controller
             };
 
             $items = $this->sap->getService('Items');
+            $items->headers(['OData-Version' => '4.0',
+            "B1S-CaseInsensitive" => true,
+            'Prefer' => 'odata.maxpagesize=9999']);
             $get_item_names = $items->queryBuilder()
             ->select('ItemCode,ItemName')
             ->where([new InArray("ItemCode", $item_array)])
