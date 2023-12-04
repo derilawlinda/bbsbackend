@@ -54,10 +54,19 @@ class COAController extends Controller
         }
         $COAReq = $this->sap->getService('Warehouses');
         $COAReq->headers(['Prefer' => 'odata.maxpagesize=500']);
-        $result = $COAReq->queryBuilder()
+        if($request->company != 'KKB'){
+            $result = $COAReq->queryBuilder()
+            ->select('WarehouseCode,WarehouseName')
+            ->where([new InArray("WarehouseCode", ['V_PE_IN','V_MK_TNG'])])
+            ->orderBy('WarehouseCode', 'desc')
+            ->findAll();
+        }else {
+            $result = $COAReq->queryBuilder()
             ->select('WarehouseCode,WarehouseName')
             ->orderBy('WarehouseCode', 'desc')
             ->findAll();
+        }
+
         return $result;
     }
 

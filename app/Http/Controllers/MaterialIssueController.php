@@ -168,6 +168,16 @@ class MaterialIssueController extends Controller
 
                 for($i = 0; $i < count($request_array["MATERIALISSUELINESCollection"]); ++$i) {
                     if(!empty($request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'])){
+
+                        if($request->company != "KKB"){
+                            if($request_array["MATERIALISSUELINESCollection"][$i]['U_WhsCode'] == 'V_PE_IN'){
+                                $request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'] = '60200.0400';
+                            }else{
+                                $request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'] = '60700.0500';
+                            }
+
+                        }
+
                         $request_array["MATERIALISSUELINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];
                         $request_array["MATERIALISSUELINESCollection"][$i]['U_H_NO_BUDGET'] = $request_array["U_BudgetCode"];
                         $request_array["MATERIALISSUELINESCollection"][$i]['WarehouseCode'] =$request_array["MATERIALISSUELINESCollection"][$i]['U_WhsCode'];
@@ -179,9 +189,9 @@ class MaterialIssueController extends Controller
                         $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode3'] = $array_budget["U_SubClassCode"];
                         $request_array["MATERIALISSUELINESCollection"][$i]['CostingCode4'] = $array_budget["U_SubClass2Code"];
                     }
-
-
                 }
+
+
                 $goodIssueInput = array(
                     "DocDate" => $request_array["U_DocDate"],
                     "RequriedDate" => $request_array["CreateDate"],
@@ -191,6 +201,7 @@ class MaterialIssueController extends Controller
                     "U_H_NO_MI" => $request_array["Code"]
 
                 );
+
 
                 $good_issue = $this->sap->getService('InventoryGenExits');
                 $result = $good_issue->create($goodIssueInput);
