@@ -176,6 +176,12 @@ class MaterialIssueController extends Controller
                                 $request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'] = '60700.0500';
                             }
 
+                        }else{
+                            if($request_array["MATERIALISSUELINESCollection"][$i]['U_WhsCode'] == 'G_DST_GS'){
+                                $request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'] = '50100.0300';
+                            }else{
+                                $request_array["MATERIALISSUELINESCollection"][$i]['AccountCode'] = '60700.500';
+                            }
                         }
 
                         $request_array["MATERIALISSUELINESCollection"][$i]['ProjectCode'] = $array_budget["U_ProjectCode"];

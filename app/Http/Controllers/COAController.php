@@ -60,11 +60,15 @@ class COAController extends Controller
             ->where([new InArray("WarehouseCode", ['V_PE_IN','V_MK_TNG'])])
             ->orderBy('WarehouseCode', 'desc')
             ->findAll();
+
         }else {
+
             $result = $COAReq->queryBuilder()
             ->select('WarehouseCode,WarehouseName')
+            ->where([new InArray("WarehouseCode", ['G_KV_BES','G_TL_AM','G_DST_GS'])])
             ->orderBy('WarehouseCode', 'desc')
             ->findAll();
+
         }
 
         return $result;
