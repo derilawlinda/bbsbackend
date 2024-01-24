@@ -65,7 +65,7 @@ class COAController extends Controller
 
             $result = $COAReq->queryBuilder()
             ->select('WarehouseCode,WarehouseName')
-            ->where([new InArray("WarehouseCode", ['G_KV_BES','G_TL_AM','G_DST_GS'])])
+            ->where([new InArray("WarehouseCode", ['G_KV_BES','G_TL_AM','G_DST_GS','V_PE_IN'])])
             ->orderBy('WarehouseCode', 'desc')
             ->findAll();
 
