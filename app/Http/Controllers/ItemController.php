@@ -29,6 +29,7 @@ class ItemController extends Controller
         $user = Auth::user();
         if(is_null($this->sap)) {
             $this->sap = $this->getSession($request->company);
+            $headers[] = "Cookie: B1SESSION=".$this->sap->getSession()["B1SESSION"]."; ROUTEID=".$this->sap->getSession()["ROUTEID"].";";
         }
 
         $account_code = (string) $request->accountCode;
@@ -55,6 +56,8 @@ class ItemController extends Controller
             new InArray("ExpensesAccount", $account_code_array)])
             ->findAll();
 
+
+
         $results = json_decode(json_encode($result),true);
         $items = array();
 
@@ -70,6 +73,38 @@ class ItemController extends Controller
                     // "ProfitCenter3" => $request_array["budgeting"]["U_SubClass"],
                     // "ProfitCenter4" => $request_array["budgeting"]["U_SubClass2"],
 
+                ]);
+            }
+        }
+
+        $curl = curl_init();
+            curl_setopt_array($curl, array(
+            CURLOPT_URL => "https://".env('SAP_URL').":50000/b1s/v2/SQLQueries('getAccountDetermintaionCodeByAccountCode')/List?account_code=".$account_code,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_POST => false,
+            CURLOPT_HTTPHEADER => $headers,
+            ));
+        $result = curl_exec($curl);
+        $array_result = json_decode($result,true);
+
+
+        if(!empty($array_result)) {
+            $items = array();
+            $determination_code = $array_result["value"][0]["Code"];
+            $itemsQuery = $this->sap->getService('Items');
+            $itemsQuery->headers(['Prefer' => 'odata.maxpagesize=100000']);
+            $result = $itemsQuery->queryBuilder()->select('ItemCode,ItemName')
+                ->where([new Equal("AssetClass", $determination_code)])
+                ->findAll();
+
+            $results = json_decode(json_encode($result),true);
+            foreach ($results["value"] as $values) {
+                array_push($items, (object)[
+                    'ItemCode' => $values["ItemCode"],
+                    'ItemName' => $values["ItemName"],
                 ]);
             }
         }
