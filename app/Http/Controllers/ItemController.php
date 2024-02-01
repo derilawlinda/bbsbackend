@@ -90,8 +90,7 @@ class ItemController extends Controller
         $result = curl_exec($curl);
         $array_result = json_decode($result,true);
 
-
-        if(!empty($array_result)) {
+        if(!empty($array_result["value"])) {
             $items = array();
             $determination_code = $array_result["value"][0]["Code"];
             $itemsQuery = $this->sap->getService('Items');
