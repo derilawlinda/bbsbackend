@@ -109,14 +109,32 @@
                 <td>Budget</td>
                 <td>{{$advance_request["U_BudgetCode"]}} - {{$advance_request["BudgetName"]}}</td>
             </tr>
+
+
 		</tbody>
 	</table>
 
     <p>
-    <span margin-top="5px">Items</span>
+    <span margin-top="5px">Remarks</span>
     </p>
 
+    <table border="1" cellpadding="4" style="width:100%">
 
+        <tbody>
+            <tr>
+                <td>Remarks</td>
+                <td>{{ $advance_request["U_Remarks"] }}</td>
+
+                <td>Transfer Remarks</td>
+                <td>{{ $advance_request["U_TransferRemarks"] }}</td>
+            </tr>
+        </tbody>
+
+    </table>
+
+    <p>
+        <span margin-top="5px">Items</span>
+    </p>
 
     <table border="1" cellpadding="4" style="width:100%">
 
