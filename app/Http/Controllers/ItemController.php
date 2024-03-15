@@ -150,11 +150,8 @@ class ItemController extends Controller
         ];
         try{
             if($company != 'TEST_DERIL'){
-                if($company == 'BBS'){
-                    $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE_LIVE");
-                }else{
-                    $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
-                }
+                $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company."_LIVE");
+
             }else{
                 $sap = SAPClient::createSession($config, env('SAP_USERNAME'), env('SAP_PASSWORD'), $company);
             }
