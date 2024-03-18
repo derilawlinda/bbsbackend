@@ -808,7 +808,7 @@ class AdvanceRequestController extends Controller
             $array_req = $request->get('oProperty');
             $code = $array_req["Code"];
             $array_req["U_RealiStatus"] = 2;
-
+            $array_req["U_RealizationDate"] = date("Y-m-d");
             if(is_null($this->sap)) {
                 $this->sap = $this->getSession($request->get('company'));
             }
